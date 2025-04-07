@@ -2755,6 +2755,10 @@ function SimpleCad() {
 
     var isMagnet30click = false;
     function handlerMagnet30(event) {
+        if (! $('[data-element="pline"]').hasClass('active')) {
+            return;
+        }
+
         if (magnet30.hasClass('active')) {
             magnet30.removeClass('active')
             isMagnet30click = false;
@@ -2766,10 +2770,11 @@ function SimpleCad() {
     }
 
     function checkMagnet30(event) {
-        if (isMagnet30click) {
+        if (isMagnet30click && magnet30.hasClass('active')) {
             return true;
         }
         else if (event && event.shiftKey) {
+            magnet30.addClass('active');
             return true;
         }
         else if (event && ! isMagnet30click && !event.shiftKey) {
