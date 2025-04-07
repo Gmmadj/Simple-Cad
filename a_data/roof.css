@@ -1,0 +1,33 @@
+.d_nav_2 {   height: auto;}
+.d_left_column_widgets {  top: 80px;}
+.d_right_column_widgets {  top: 80px;}
+.d_prop_pline_start{display:none;}
+.d_prop_pline_end{display:none;}
+
+/* hide sz nav */
+.top_row_menu_wrapper, .main-header, h1 {display:none !important;}
+.sz_main_container>section{margin:0 !important; padding:0 !important;}
+.sz_main_container>section>.box-default{ border: none !important; margin: 0 !important; padding: 0 !important;}
+
+
+/* $endcss */
+
+@media (min-width: 768px){
+
+}
+	
+	
+/* md */
+@media (min-width: 992px) AND (max-width: 1199px) {
+
+}
+
+/* sm */
+@media (min-width: 768px) AND (max-width: 991px) {
+
+}
+
+/* xs */
+@media (max-width: 767px){
+
+}
