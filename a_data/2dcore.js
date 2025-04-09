@@ -7,7 +7,7 @@ function SimpleCad() {
     function initializeCadBlock(config) {
         // Устанавливаем глобальную переменную с переданным объектом конфигурации
         ei = config;
-
+        isRotateClick = false;
         // Инициализируем CAD-блок по ID
         Ui = $("#" + ei.cad_block_id);
 
@@ -30,7 +30,8 @@ function SimpleCad() {
             k(event, $(this)); // Обработка клика по кнопке            
         });
         
-        magnet30.on('click', handlerMagnet30);
+        $magnet30.on('click', handlerMagnet30);
+        $rotate.on('click', handlerRotate);
         
         // Привязываем обработчик события "keyup" к документу
         $(document).on("keyup", function (event) {
@@ -289,7 +290,9 @@ function SimpleCad() {
         zl = $("#token_data");
         Ll = $("#nde_tbl_row_size_ang_list");
         Ol = $("#nde_tbl_row_other_list");
-        magnet30 = $('[data-element="magnet_30"]');
+        $magnet30 = $('[data-element="magnet_30"]');
+        isRotateClick = false;
+        $rotate = $('[data-element="rotate"]');
 
         // Создаем объект Konva.Stage для CAD-блока
         Bi = new Konva.Stage({
@@ -907,6 +910,7 @@ function SimpleCad() {
 
     function z(e) {
         var t;
+
         // Determine the action based on the current data-element mode
         switch (Oo["data-element"]) {
             case "default":
@@ -2457,6 +2461,18 @@ function SimpleCad() {
      * @param {number} event.evt.layerY - Координата Y курсора относительно холста
      */
     function handleCanvasMouseMove(event) {
+
+        if (isRotateClick) {
+            // Устанавливаем угол вращения (например, 90 градусов)
+            const angle = 90;
+    
+            // Вызываем действие вращения
+            SimpleCad.Action({
+                type: 'rotate',
+                angle: angle
+            });
+        }
+
         // Обработка в зависимости от текущего режима
         switch (Oo.mode) {
             case "default":
@@ -2759,26 +2775,37 @@ function SimpleCad() {
             return;
         }
 
-        if (magnet30.hasClass('active')) {
-            magnet30.removeClass('active')
+        if ($magnet30.hasClass('active')) {
+            $magnet30.removeClass('active')
             isMagnet30click = false;
         }
         else {
             isMagnet30click = true;
-            magnet30.addClass('active');
+            $magnet30.addClass('active');
+        } 
+    }
+
+    function handlerRotate(event) {
+        if ($rotate.hasClass('active')) {
+            $rotate.removeClass('active')
+            isRotateClick = false;       
+        }
+        else {
+            $rotate.addClass('active');
+            isRotateClick = true;
         } 
     }
 
     function checkMagnet30(event) {
-        if (isMagnet30click && magnet30.hasClass('active')) {
+        if (isMagnet30click && $magnet30.hasClass('active')) {
             return true;
         }
         else if (event && event.shiftKey) {
-            magnet30.addClass('active');
+            $magnet30.addClass('active');
             return true;
         }
         else if (event && ! isMagnet30click && !event.shiftKey) {
-            magnet30.removeClass('active')    
+            $magnet30.removeClass('active')    
         }        
     }
 
@@ -10708,7 +10735,8 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
-    function an(e, t, _, a) {
+    // Изменяет размер отрезка 
+    function an(e, t, _, a) {        
         var r = Bi.findOne("#" + e),
             n = 0,
             s = [],
@@ -12504,12 +12532,13 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
+    // Функционал доборный элемент изменение параметров
     function is(e) {
         var t = 0;
         switch (f_(e.element_id), e.param) {
             case "size":
                 var _ = As(e.num, e.element_id),
-                    a = _ ? 10 : 17;
+                    a = _ ? 10 : 15;
                 t = Math.abs(U(e.thisObject.val())), t = Math.round_precision(t, 1), t < a && (t = a), e.thisObject.val(t), an(e.element_id, e.num, t, !0);
                 break;
             case "angle":
@@ -13212,6 +13241,9 @@ function updatePolylineLastPoint(x, y, event) {
         var _ = !1;
         return (0 == e || e == t / 2 - 1 - 1) && (_ = !0), _
     }
+
+    // Создание объекта
+
     var Ts = "https://cad2.simplecad.ru/",
         Ss = "https://client.simplecad.ru/",
         Ps = "http://glm-test.metallist.g310/"; - 1 < window.location.href.indexOf(".g310") && (Ts = "https://testcad2.simplecad.ru/", Ss = Ps), -1 < window.location.href.indexOf(".loc") && (Ts = "https://cad.simplecad.loc/", Ss = Ps);
@@ -14771,7 +14803,7 @@ function updatePolylineLastPoint(x, y, event) {
                 }
             }
         },
-        Bi, Zi, Ji, Qi, Ui, el, tl, _l, al, rl, nl, sl, ol, il, ll, cl, dl, pl, ml, hl, ul, fl, gl, yl, bl, vl, xl, wl, kl, zl, jl, Cl, Ll, Ol, magnet30;
+        Bi, Zi, Ji, Qi, Ui, el, tl, _l, al, rl, nl, sl, ol, il, ll, cl, dl, pl, ml, hl, ul, fl, gl, yl, bl, vl, xl, wl, kl, zl, jl, Cl, Ll, Ol, isRotateClick, $magnet30, $rotate;
     this.Start = function(t) {
         initializeCadBlock(t)
     }, SimpleCad.Action = function(_) {
@@ -14888,15 +14920,56 @@ function updatePolylineLastPoint(x, y, event) {
                 }
                 break;
             case "rotate":
-                "" == zi ? -1 !== $.inArray(ei.type, ["sznde"]) && gs() : T(zi, {
-                    is_move_show: !1
-                }), "undefined" != typeof Zi && "undefined" !== Zi ? (Kr(Zi, _.angle, !0), "" == zi ? -1 !== $.inArray(ei.type, ["sznde"]) && (_e(), fe(), Zi = "undefined") : (se(), oe(), ce(), Zi.stroke("#ff8223"), Zi = "undefined")) : -1 === $.inArray(ei.type, ["sznde"]) ? SimpleCad.Action({
-                    type: "ModalShow",
-                    target: "rotate_btn_click_error"
-                }) : Yn({
-                    text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
-                    type: "error"
-                });
+                // Если переменная `zi` пустая
+                if ("" == zi) {
+                    // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
+                    if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                        gs(); // Выполняем функцию `gs`, если условие выполнено
+                    }
+                } else {
+                    // Если `zi` не пустая, вызываем функцию `T` с параметрами
+                    T(zi, {
+                        is_move_show: !1 // Устанавливаем флаг `is_move_show` в false
+                    });
+                }
+            
+                // Проверяем, определена ли переменная `Zi`
+                if ("undefined" != typeof Zi && "undefined" !== Zi) {
+                    // Если `Zi` определена, вызываем функцию `Kr` с параметрами
+                    Kr(Zi, _.angle, !0);
+            
+                    // Если `zi` пустая
+                    if ("" == zi) {
+                        // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
+                        if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                            _e(); // Выполняем функцию `_e`
+                            fe(); // Выполняем функцию `fe`
+                            Zi = "undefined"; // Сбрасываем значение переменной `Zi`
+                        }
+                    } else {
+                        // Если `zi` не пустая
+                        se(); // Выполняем функцию `se`
+                        oe(); // Выполняем функцию `oe`
+                        ce(); // Выполняем функцию `ce`
+                        Zi.stroke("#ff8223"); // Устанавливаем цвет обводки для `Zi`
+                        Zi = "undefined"; // Сбрасываем значение переменной `Zi`
+                    }
+                } else {
+                    // Если переменная `Zi` не определена
+                    if (-1 === $.inArray(ei.type, ["sznde"])) {
+                        // Если тип `ei.type` не найден в массиве ["sznde"]
+                        SimpleCad.Action({
+                            type: "ModalShow", // Показываем модальное окно
+                            target: "rotate_btn_click_error" // Указываем цель модального окна
+                        });
+                    } else {
+                        // Если тип `ei.type` найден в массиве ["sznde"]
+                        Yn({
+                            text: "Элементов не найдено", // Выводим сообщение об ошибке
+                            type: "error" // Указываем тип сообщения
+                        });
+                    }
+                }
                 break;
             case "mirror_hor":
                 "" != zi && T(zi, {

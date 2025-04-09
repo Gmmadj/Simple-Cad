@@ -614,51 +614,55 @@ body {
 
 
 .d_e_line {
-    background: url("../image/online/cad_icons_3.png") 0 0;
+    background: url("../image/online/cad_icons_4.png") 0 0;
 }
 
 .d_e_pline {
-    background: url("../image/online/cad_icons_3.png") -34px 0;
+    background: url("../image/online/cad_icons_4.png") -34px 0;
 }
 
 .d_e_pline_mode_glzabor {
-    background: url("../image/online/cad_icons_3.png") -272px 0;
+    background: url("../image/online/cad_icons_4.png") -272px 0;
 }
 
 .d_e_select {
-    background: url("../image/online/cad_icons_3.png") -68px 0;
+    background: url("../image/online/cad_icons_4.png") -68px 0;
 }
 
 .d_e_moveall {
-    background: url("../image/online/cad_icons_3.png") -102px 0;
+    background: url("../image/online/cad_icons_4.png") -102px 0;
 }
 
 .d_e_text {
-    background: url("../image/online/cad_icons_3.png") -136px 0;
+    background: url("../image/online/cad_icons_4.png") -136px 0;
 }
 
 .d_e_arrow {
-    background: url("../image/online/cad_icons_3.png") -170px 0;
+    background: url("../image/online/cad_icons_4.png") -170px 0;
 }
 
 .d_e_lineblock {
-    background: url("../image/online/cad_icons_3.png") -204px 0;
+    background: url("../image/online/cad_icons_4.png") -204px 0;
 }
 
 .d_e_lineblock_mode_glzabor {
-    background: url("../image/online/cad_icons_3.png") -306px 0;
+    background: url("../image/online/cad_icons_4.png") -306px 0;
 }
 
 .d_e_figure {
-    background: url("../image/online/cad_icons_3.png") -238px 0;
+    background: url("../image/online/cad_icons_4.png") -238px 0;
 }
 
 .d_e_doborns {
-    background: url("../image/online/cad_icons_3.png") 0 -32px;
+    background: url("../image/online/cad_icons_4.png") 0 -32px;
 }
 
 .d_e_magnet_30 {
-    background: url("../image/online/cad_icons_3.png") -34px -36px;
+    background: url("../image/online/cad_icons_4.png") -34px -36px;
+}
+
+.d_e_rotate {
+    background: url("../image/online/cad_icons_4.png") -68px -36px;
 }
 
 .loading_1 {
