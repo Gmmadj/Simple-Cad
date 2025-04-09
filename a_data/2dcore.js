@@ -27,7 +27,7 @@ function SimpleCad() {
 
         // Привязываем обработчик клика к кнопкам с классом "d_elements_button"
         $(".d_elements_button").click(function (event) {            
-            k(event, $(this)); // Обработка клика по кнопке            
+            handleElementButtonClick(event, $(this)); // Обработка клика по кнопке            
         });
         
         $magnet30.on('click', handlerMagnet30);
@@ -611,7 +611,7 @@ function SimpleCad() {
 
     function g(e) {
         var t = e.attr("data-layer-num");
-        t = parseInt(t), t != yo && (u(vo), yo = t, vo = "layer_" + yo, f(vo), re(), e.addClass("active"), _e(), ae(), da(), "undefined" == typeof ui[vo] && (ui[vo] = "1", Ke("+", "", !1, !1), Ke("-", "", !0, !0)), -1 !== $.inArray(ei.type, ["roof", "sznde"]) && ca(), 1 == Mo.tabs_re_roof[vo] && q_(), kl.hide(), $o = !1, zi = "")
+        t = parseInt(t), t != yo && (u(vo), yo = t, vo = "layer_" + yo, f(vo), re(), e.addClass("active"), resetCADState(), ae(), da(), "undefined" == typeof ui[vo] && (ui[vo] = "1", Ke("+", "", !1, !1), Ke("-", "", !0, !0)), -1 !== $.inArray(ei.type, ["roof", "sznde"]) && ca(), 1 == Mo.tabs_re_roof[vo] && q_(), kl.hide(), $o = !1, zi = "")
     }
 
     function y() {}
@@ -864,49 +864,99 @@ function SimpleCad() {
         })
     }
 
-    function k(e, t) {
-        if (-1 !== $.inArray(ei.type, ["sznde"]) && -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 0 < b_()) return void Yn({
-            text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
-            type: "error"
-        });
-        switch (_e(), Zi = "undefined", t.addClass("active"), t.attr("data-element")) {
+    /**
+     * Обрабатывает клик по кнопке элемента в панели инструментов CAD.
+     * Переключает режим работы редактора в зависимости от выбранного инструмента.
+     * 
+     * @param {Event} e - Объект события клика.
+     * @param {jQuery} t - jQuery-объект кнопки, на которую кликнули.
+     */
+    function handleElementButtonClick(e, t) {
+        // Проверка для SZNDE-типа: запрещаем выбор инструментов pline и figure_nde, если уже есть элемент
+        if (-1 !== $.inArray(ei.type, ["sznde"]) && 
+            -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 
+            0 < b_()) {
+            // Показываем уведомление об ошибке
+            Yn({
+                text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
+                type: "error"
+            });
+            return;
+        }
+        
+        // Очищаем текущее состояние редактора
+        resetCADState();
+        
+        // Сбрасываем активный элемент
+        Zi = "undefined";
+        
+        // Отмечаем кнопку как активную в интерфейсе
+        t.addClass("active");
+        
+        // Обработка в зависимости от типа выбранного инструмента
+        switch (t.attr("data-element")) {
             case "select":
-                fe();
+                // Включаем режим выбора элементов
+                setDefaultMode();
                 break;
+                
             case "moveall":
+                // Включаем режим перемещения всего содержимого
                 ge();
                 break;
+                
             case "line":
             case "pline":
             case "text":
             case "arrow":
+                // Включаем режим добавления элементов (линия, полилиния, текст, стрелка)
                 var _ = {
                     mode: "add_element",
                     "data-element": t.attr("data-element")
                 };
                 ue(_);
                 break;
+                
             case "lineblock":
-                fe(), SimpleCad.Action({
+                // Для блока линий открываем модальное окно
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "lineblock"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             case "figure":
-                fe(), SimpleCad.Action({
+                // Для фигур открываем модальное окно выбора фигуры
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "figure"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             case "figure_nde":
-                fe(), SimpleCad.Action({
+                // Для доборных элементов открываем специальное модальное окно
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "figure_nde"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             default:
+                // Для неизвестных типов элементов действия не определены
         }
     }
+
+    // Заменяем оригинальную функцию k новой функцией с понятным именем
+    k = handleElementButtonClick;
 
     function z(e) {
         var t;
@@ -1319,7 +1369,7 @@ function SimpleCad() {
     }
 
     function T(e, t) {
-        "undefined" == typeof t.is_move_show && (t.is_move_show = !0), _e(), fe(), S(e, {
+        "undefined" == typeof t.is_move_show && (t.is_move_show = !0), resetCADState(), setDefaultMode(), S(e, {
             is_move_show: t.is_move_show
         }), P(e), D(), j_()
     }
@@ -2225,8 +2275,29 @@ function SimpleCad() {
         $("#add_object_table").append(h)
     }
 
-    function _e() {
-        c_("btn_finish_cad_draw"), c_("btn_finish_cad_draw_close"), ne(), se(), oe(), ie(), je(), Ra(), Ha(), Ja()
+    /**
+     * Сбрасывает состояние CAD редактора и очищает выделенные элементы.
+     * Функция отключает активные кнопки рисования, снимает выделение
+     * с элементов панели и очищает временные объекты.
+     */
+    function resetCADState() {
+        // Отключаем кнопки завершения рисования
+        c_("btn_finish_cad_draw"); 
+        c_("btn_finish_cad_draw_close"); 
+        
+        // Снимаем выделение с элементов управления
+        ne(); // Снимает выделение с элементов аккордеона
+        se(); // Снимает выделение с объектов в списке объектов
+        oe(); // Очищает таблицу объектов
+        
+        // Очищаем рабочую область
+        ie(); // Сбрасывает стили элементов к значениям по умолчанию
+        je(); // Скрывает вспомогательные линии
+        
+        // Обновляем состояние и интерфейс
+        Ra(); // Обновляет координаты указателя
+        Ha(); // Обновляет информацию активного слоя
+        Ja(); // Обновляет доступность кнопок и контролов
     }
 
     function ae() {
@@ -2387,8 +2458,24 @@ function SimpleCad() {
         }
     }
 
-    function fe() {
-        Oo.mode = "default", Oo["data-element"] = "default", nl.addClass("active")
+    /**
+     * Переключает редактор CAD в стандартный режим работы.
+     * Сбрасывает режим и тип элемента на значения по умолчанию, 
+     * активирует кнопку выбора в панели инструментов.
+     * 
+     * Эта функция используется для переключения в режим выбора элементов
+     * из любого другого режима (например, рисования фигур) и визуально
+     * отображает это состояние в интерфейсе.
+     */
+    function setDefaultMode() {
+        // Устанавливаем режим редактора в значение "default"
+        Oo.mode = "default";
+        
+        // Устанавливаем тип активного элемента на "default"
+        Oo["data-element"] = "default";
+        
+        // Делаем кнопку инструмента выбора активной в интерфейсе
+        nl.addClass("active");
     }
 
     function ge() {
@@ -2399,7 +2486,7 @@ function SimpleCad() {
         if (2 == e.evt.button) return e.evt.preventDefault(), ya(e), !1;
         switch ($o && (kl.hide(), $o = !1), Oo.mode) {
             case "default":
-                _e(), fe(), Zi = "undefined", zi = "";
+                resetCADState(), setDefaultMode(), Zi = "undefined", zi = "";
                 break;
             case "add_element":
                 z(e);
@@ -2463,14 +2550,58 @@ function SimpleCad() {
     function handleCanvasMouseMove(event) {
 
         if (isRotateClick) {
-            // Устанавливаем угол вращения (например, 90 градусов)
-            const angle = 90;
-    
-            // Вызываем действие вращения
-            SimpleCad.Action({
-                type: 'rotate',
-                angle: angle
-            });
+            // Если активирован режим вращения, определим направление движения мыши
+            
+            // Сохраняем текущую позицию мыши
+            var currentMouseX = event.evt.layerX;
+            var currentMouseY = event.evt.layerY;
+            
+            // Если у нас еще нет предыдущей позиции мыши
+            if (!window.lastMousePosition) {
+                window.lastMousePosition = {
+                    x: currentMouseX,
+                    y: currentMouseY
+                };
+                return; // Пропускаем первый кадр для сбора начальных данных
+            }
+            
+            // Если выбран элемент и мы можем определить его центр
+            if (typeof Zi !== "undefined" && Zi !== "undefined") {
+
+                // TODO: центр элемента считается неверно.
+                // Определяем центр элемента для расчета угла
+                var elementCenter = getElementCenter(Zi);
+                
+                // Вычисляем углы для предыдущей и текущей позиции мыши относительно центра элемента
+                var previousAngle = Math.atan2(
+                    window.lastMousePosition.y - elementCenter.y, 
+                    window.lastMousePosition.x - elementCenter.x
+                );
+                var currentAngle = Math.atan2(
+                    currentMouseY - elementCenter.y, 
+                    currentMouseX - elementCenter.x
+                );
+                
+                // Вычисляем разницу между углами (в радианах)
+                var deltaAngle = currentAngle - previousAngle;
+                
+                // Нормализация deltaAngle, чтобы избежать скачков при переходе через ±π
+                if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
+                if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
+                
+                // Определяем направление вращения
+                var rotationDirection = deltaAngle > 0 ? 1 : -1;
+                
+                // Применяем вращение к элементу (используем небольшое значение для плавности)
+                var rotationAmount = 1 * rotationDirection;
+                rotateElement(Zi, rotationAmount, true);
+                
+                // Обновляем позицию для следующего кадра
+                window.lastMousePosition = {
+                    x: currentMouseX,
+                    y: currentMouseY
+                };
+            }
         }
 
         // Обработка в зависимости от текущего режима
@@ -2521,6 +2652,43 @@ function SimpleCad() {
                 to[vo].draw();
                 mi = false;
             }
+        }
+    }
+
+
+    /**
+     * Вычисляет центр элемента.
+     * @param {Object} element - Элемент Konva
+     * @returns {Object} - Координаты центра элемента {x, y}
+     */
+    function getElementCenter(element) {
+        // Определяем центр элемента в зависимости от его типа
+        switch (element.className) {
+            case 'Line':
+            case 'Arrow':
+                // Для линий и стрелок вычисляем центр как среднее всех точек
+                var points = element.points();
+                var sumX = 0, sumY = 0;
+                for (var i = 0; i < points.length; i += 2) {
+                    sumX += points[i];
+                    sumY += points[i + 1];
+                }
+                return {
+                    x: sumX / (points.length / 2),
+                    y: sumY / (points.length / 2)
+                };
+            case 'Text':
+                // Для текста центр - это его координаты плюс половина размеров
+                return {
+                    x: element.x() + element.width() / 2,
+                    y: element.y() + element.height() / 2
+                };
+            default:
+                // Для других типов - просто координаты
+                return {
+                    x: element.x(),
+                    y: element.y()
+                };
         }
     }
 
@@ -2786,14 +2954,44 @@ function SimpleCad() {
     }
 
     function handlerRotate(event) {
+        $(".d_elements_button").removeClass('active');
+
+        
+        gs();
+        // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
+
+        polylineId = Zi.id();
+        let points = Zi.points();
+        points = points.slice(0, points.length - 2);        
+
+        Zi.setPoints(points);
+        processAndClearElement(Zi);
+        yt(Zi.id(), false);
+        processElementAndAddMovePoints(Zi, false);        
+
+        En();
+
+        gs();
+
+
         if ($rotate.hasClass('active')) {
             $rotate.removeClass('active')
-            isRotateClick = false;       
+            isRotateClick = false;
         }
         else {
             $rotate.addClass('active');
             isRotateClick = true;
-        } 
+        }
+
+        setTimeout(function() {
+            $(document).on('click', function(event) {
+                if (isRotateClick) {
+                    $rotate.removeClass('active');
+                    isRotateClick = false;
+                    $(document).off('click');
+                }
+            });
+        }, 200)
     }
 
     function checkMagnet30(event) {
@@ -10434,7 +10632,7 @@ function updatePolylineLastPoint(x, y, event) {
                     default:
                 }
             }
-        }), "siding" == Mo.type && q_(), _e(), Wr(), refreshCurrentLayer(), e.history && (di = {
+        }), "siding" == Mo.type && q_(), resetCADState(), Wr(), refreshCurrentLayer(), e.history && (di = {
             type: "h_mirror_hor_tab",
             need_layer_num: yo,
             need_axis: {
@@ -10481,35 +10679,71 @@ function updatePolylineLastPoint(x, y, event) {
         })
     }
 
-    function Kr(e, t, _) {
-        if ("undefined" != typeof e.attrs.id) {
-            var a = e.attrs.id,
-                r = a.substr(0, a.indexOf("__"));
-            switch (e.className) {
+    /**
+     * Поворачивает элемент на заданный угол относительно центра его габаритного прямоугольника.
+     * 
+     * @param {Object} element - Элемент для поворота (Konva.Line).
+     * @param {number} angle - Угол поворота в градусах.
+     * @param {boolean} addToHistory - Флаг, добавлять ли операцию в историю изменений.
+     */
+    function rotateElement(element, angle, addToHistory) {        
+        // Проверяем, имеет ли элемент идентификатор
+        if (typeof element.attrs.id !== "undefined") {
+            // Получаем идентификатор и тип элемента
+            var elementId = element.attrs.id;
+            var elementType = elementId.substr(0, elementId.indexOf("__"));
+            
+            switch (element.className) {
                 case "Line":
-                    switch (r) {
+                    switch (elementType) {
                         case "pline":
-                            var n = G_(e.attrs.points);
-                            e.attrs.points = Vr(e.attrs.points, t, n.x_mid, n.y_mid), oe(), D(), refreshCurrentLayer(), _ && (di = {
-                                type: "h_rotate_element_pline",
-                                need_layer_num: yo,
-                                need_tab_scale: Go.g_scale[vo],
-                                need_axis: {
-                                    g_x: Fo[vo],
-                                    g_y: Ao[vo],
-                                    current_layer_name: vo
-                                },
-                                element_id: e.attrs.id,
-                                angle: t
-                            }, An({
-                                mode: "add",
-                                element: di
-                            }));
+                            // Получаем размеры габаритного прямоугольника для определения центра вращения
+                            var elementBounds = G_(element.attrs.points);
+                            
+                            // Поворачиваем точки полилинии вокруг центра
+                            element.attrs.points = Vr(
+                                element.attrs.points, 
+                                angle, 
+                                elementBounds.x_mid, 
+                                elementBounds.y_mid
+                            );
+                            
+                            // Обновляем отображение
+                            oe();
+                            D();
+                            refreshCurrentLayer();
+                            
+                            // Добавляем действие в историю, если требуется
+                            if (addToHistory) {
+                                di = {
+                                    type: "h_rotate_element_pline",
+                                    need_layer_num: yo,
+                                    need_tab_scale: Go.g_scale[vo],
+                                    need_axis: {
+                                        g_x: Fo[vo],
+                                        g_y: Ao[vo],
+                                        current_layer_name: vo
+                                    },
+                                    element_id: element.attrs.id,
+                                    angle: angle
+                                };
+                                
+                                An({
+                                    mode: "add",
+                                    element: di
+                                });
+                            }
                             break;
+                        
                         default:
+                            // Обработка других типов линий
+                            break;
                     }
                     break;
+                
                 default:
+                    // Обработка других классов элементов
+                    break;
             }
         }
     }
@@ -11736,10 +11970,10 @@ function updatePolylineLastPoint(x, y, event) {
                                 is_move_show: !1
                             }), _) {
                             case "before":
-                                Kr(Zi, -1 * t.angle, !1);
+                                rotateElement(Zi, -1 * t.angle, !1);
                                 break;
                             case "after":
-                                Kr(Zi, t.angle, !1);
+                                rotateElement(Zi, t.angle, !1);
                                 break;
                             default:
                         }
@@ -12657,7 +12891,7 @@ function updatePolylineLastPoint(x, y, event) {
      * @param {Object} e - Элемент, для которого нужно обновить отображение информации.
      */
     function updateElementParametersDisplay(e) {
-        if ("sznde" == ei.type) {
+        if ("sznde" == ei.type && ! isRotateClick) {
             var t = e.attrs.prod_color,
                 _ = e.attrs.prod_cover,
                 a = e.attrs.prod_thickness,
@@ -13267,7 +13501,7 @@ function updatePolylineLastPoint(x, y, event) {
         Qs = !0,
         Us = !0,
         mainColors = {
-            selected_element_color: "#ff0000",
+            selected_element_color: "#000",
             default_element_color: "#000",
             sight_color: "#db4629",
             sight_orto_highlighted_color: "#4caf50",
@@ -14920,6 +15154,7 @@ function updatePolylineLastPoint(x, y, event) {
                 }
                 break;
             case "rotate":
+               
                 // Если переменная `zi` пустая
                 if ("" == zi) {
                     // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
@@ -14928,45 +15163,38 @@ function updatePolylineLastPoint(x, y, event) {
                     }
                 } else {
                     // Если `zi` не пустая, вызываем функцию `T` с параметрами
-                    T(zi, {
-                        is_move_show: !1 // Устанавливаем флаг `is_move_show` в false
-                    });
+                    // T(zi, {
+                    //     is_move_show: !1 // Устанавливаем флаг `is_move_show` в false
+                    // });
                 }
-            
-                // Проверяем, определена ли переменная `Zi`
+
                 if ("undefined" != typeof Zi && "undefined" !== Zi) {
-                    // Если `Zi` определена, вызываем функцию `Kr` с параметрами
-                    Kr(Zi, _.angle, !0);
-            
-                    // Если `zi` пустая
-                    if ("" == zi) {
-                        // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
+                    rotateElement(Zi, _.angle, !0);
+                    
+                    if ("" == zi) {                        
                         if (-1 !== $.inArray(ei.type, ["sznde"])) {
-                            _e(); // Выполняем функцию `_e`
-                            fe(); // Выполняем функцию `fe`
-                            Zi = "undefined"; // Сбрасываем значение переменной `Zi`
+                            resetCADState();
+                            setDefaultMode();
+                            Zi = "undefined";
                         }
                     } else {
-                        // Если `zi` не пустая
-                        se(); // Выполняем функцию `se`
-                        oe(); // Выполняем функцию `oe`
-                        ce(); // Выполняем функцию `ce`
-                        Zi.stroke("#ff8223"); // Устанавливаем цвет обводки для `Zi`
-                        Zi = "undefined"; // Сбрасываем значение переменной `Zi`
+                        se();
+                        oe();
+                        ce();
+                        Zi.stroke("#ff8223");
+                        Zi = "undefined";
                     }
                 } else {
-                    // Если переменная `Zi` не определена
                     if (-1 === $.inArray(ei.type, ["sznde"])) {
-                        // Если тип `ei.type` не найден в массиве ["sznde"]
+                        console.log('zi not2')
                         SimpleCad.Action({
-                            type: "ModalShow", // Показываем модальное окно
-                            target: "rotate_btn_click_error" // Указываем цель модального окна
+                            type: "ModalShow",
+                            target: "rotate_btn_click_error"
                         });
                     } else {
-                        // Если тип `ei.type` найден в массиве ["sznde"]
                         Yn({
-                            text: "Элементов не найдено", // Выводим сообщение об ошибке
-                            type: "error" // Указываем тип сообщения
+                            text: "Элементов не найдено",
+                            type: "error"
                         });
                     }
                 }
