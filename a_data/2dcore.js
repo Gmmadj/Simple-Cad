@@ -3585,7 +3585,7 @@ function updatePolylineLastPoint(x, y, event) {
             default:
         }
         var u = Pe(c.points[0], c.points[1], c.points[2], c.points[3], 4, !1, d);
-        dt(u.points[0], u.points[1], u.points[2], u.points[3], e + 500 * (-1 * p), t + 500 * (-1 * m), o, "", "", "", [], "", i, "", !1);
+        displayDimensionLine(u.points[0], u.points[1], u.points[2], u.points[3], e + 500 * (-1 * p), t + 500 * (-1 * m), o, "", "", "", [], "", i, "", !1);
         var f = mainColors.default_element_color;
         "undefined" != typeof Zi && "undefined" !== Zi && Zi.id() == o && (f = mainColors.selected_element_color);
         var g = new Konva.Line({
@@ -3844,7 +3844,7 @@ function updatePolylineLastPoint(x, y, event) {
             }
 
             // Добавляем сегмент с размерами и декорациями
-            dt(
+            displayDimensionLine(
                 points[2 * i + 0],
                 points[2 * i + 1],
                 points[2 * i + 2],
@@ -3945,98 +3945,399 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
    
-    function dt(e, t, _, a, r, n, s, o, i, c, d, p, m, h, u) {
-        var f = 25,
-            g = !1,
-            y = 0;
-        "undefined" != typeof d && 0 < d.length && (y = d.length, g = !0, f += f * d.length);
-        var b = Se(e, t, _, a),
-            v = b.line_center_x,
-            x = b.line_center_y,
-            w = 0,
-            k = 0,
-            z = Ge(e, t, _, a),
-            j = calculateAngle(e, -1e4, e, t, _, a, !0, !0, !1),
-            C = "";
-        "" == h ? (C = Te(e, t, _, a, !1), C = ut((100 * C / Go.g_scale[vo]).toFixed(yi.length.prec))) : C = h;
-        var L = 1,
-            O = 1,
-            F = j,
-            A = 0,
-            q = 0;
-        switch (n = +n.toFixed(3), x = +x.toFixed(3), r = +r.toFixed(3), v = +v.toFixed(3), z) {
+    /**
+     * Создаёт и отображает размерные линии и размеры для CAD элементов.
+     * 
+     * @param {number} startX - Начальная координата X линии элемента
+     * @param {number} startY - Начальная координата Y линии элемента
+     * @param {number} endX - Конечная координата X линии элемента
+     * @param {number} endY - Конечная координата Y линии элемента
+     * @param {number} massX - Координата X центра масс для определения направления размера
+     * @param {number} massY - Координата Y центра масс для определения направления размера
+     * @param {string} parentId - Идентификатор родительского элемента
+     * @param {string} segmentType - Тип сегмента (например, "first_line_pline", "one_line_pline")
+     * @param {string} startDecoration - Тип оформления начала линии (например, "zavalc_in", "zavalc_out")
+     * @param {string} endDecoration - Тип оформления конца линии (например, "zavalc_in", "zavalc_out")
+     * @param {Array} lineblocks - Массив блоков линий, связанных с сегментом
+     * @param {number} segmentCounter - Счетчик сегмента для нумерации
+     * @param {string} zavalcStartEnd - Параметр для обозначения типа завальцовки
+     * @param {string} segmentLength - Длина сегмента (может быть передана как строка)
+     * @param {boolean} hasBreak - Флаг наличия разрыва в линии
+     */
+    function displayDimensionLine(startX, startY, endX, endY, massX, massY, parentId, segmentType, startDecoration, endDecoration, lineblocks, segmentCounter, zavalcStartEnd, segmentLength, hasBreak) {
+        // Базовое расстояние для размещения размерной линии от элемента
+        var baseOffsetDistance = 25;
+        // Флаг наличия связанных блоков линий
+        var hasLineBlocks = false;
+        // Количество связанных блоков линий
+        var lineBlocksCount = 0;
+
+        // Проверка наличия блоков линий и увеличение расстояния при необходимости
+        if (typeof lineblocks !== "undefined" && lineblocks.length > 0) {
+            lineBlocksCount = lineblocks.length;
+            hasLineBlocks = true;
+            // Увеличиваем расстояние для размерной линии с учетом количества блоков
+            baseOffsetDistance += baseOffsetDistance * lineBlocksCount;
+        }
+
+        // Получаем координаты центра линии
+        var centerPoint = Se(startX, startY, endX, endY);
+        var centerX = centerPoint.line_center_x;
+        var centerY = centerPoint.line_center_y;
+
+        // Инициализация переменных для положения текста размера
+        var textX = 0;
+        var textY = 0;
+        
+        // Определяем квадрант расположения линии
+        var quadrant = Ge(startX, startY, endX, endY);
+        
+        // Вычисляем угол линии
+        var lineAngle = calculateAngle(startX, -10000, startX, startY, endX, endY, true, true, false);
+        
+        // Текст размера (длина сегмента)
+        var dimensionText = "";
+        
+        // Если длина не передана, вычисляем её
+        if (segmentLength === "") {
+            // Вычисляем длину линии
+            var lineLength = Te(startX, startY, endX, endY, false);
+            // Форматируем длину в нужном формате
+            dimensionText = ut((100 * lineLength / Go.g_scale[vo]).toFixed(yi.length.prec));
+        } else {
+            dimensionText = segmentLength;
+        }
+
+        // Коэффициенты направления для размерной линии
+        var directionX = 1;
+        var directionY = 1;
+        var textRotation = lineAngle;
+        var textOffsetX = 0;
+        var textOffsetY = 0;
+
+        // Округляем координаты для точности сравнения
+        massY = +massY.toFixed(3);
+        centerY = +centerY.toFixed(3);
+        massX = +massX.toFixed(3);
+        centerX = +centerX.toFixed(3);
+
+        // Определяем положение размерной линии в зависимости от квадранта
+        switch (quadrant) {
             case "1":
             case "3":
-                var T = "",
-                    S = (n - t) / (a - t) - (r - e) / (_ - e);
-                S = +S.toFixed(3), T = 0 > S && "1" == z || 0 < S && "3" == z ? "up-left" : 0 < S && "1" == z || 0 > S && "3" == z ? "down-right" : 0 == Math.abs(S) ? "up-left" : "up-left", "up-left" == T ? (L = -1, O = -1, !g && ("1" == z && ("zavalc_in" == i || "zavalc_out" == c) || "3" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2)) : "down-right" == T && (L = 1, O = 1, !g && ("1" == z && ("zavalc_out" == i || "zavalc_in" == c) || "3" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2)), w = v + L * Math.abs(f * Math.sin((90 - j) * l["pi/180"])), k = x + L * Math.abs(f * Math.cos((90 - j) * l["pi/180"])), 0 < j ? F -= 90 : F += 90, A = -1, q = -1;
+                // Определяем направление относительно центра масс для 1 и 3 квадрантов
+                var directionIndicator = "";
+                var slopeRatio = (massY - startY) / (endY - startY) - (massX - startX) / (endX - startX);
+                
+                slopeRatio = +slopeRatio.toFixed(3);
+                
+                if ((slopeRatio < 0 && quadrant === "1") || (slopeRatio > 0 && quadrant === "3")) {
+                    directionIndicator = "up-left";
+                } else if ((slopeRatio > 0 && quadrant === "1") || (slopeRatio < 0 && quadrant === "3")) {
+                    directionIndicator = "down-right";
+                } else if (Math.abs(slopeRatio) === 0) {
+                    directionIndicator = "up-left";
+                } else {
+                    directionIndicator = "up-left";
+                }
+                
+                // Настраиваем коэффициенты направления
+                if (directionIndicator === "up-left") {
+                    directionX = -1;
+                    directionY = -1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "1" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "3" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                } else if (directionIndicator === "down-right") {
+                    directionX = 1;
+                    directionY = 1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "1" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) ||
+                        (quadrant === "3" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                }
+                
+                // Вычисляем позицию текста
+                textX = centerX + directionX * Math.abs(baseOffsetDistance * Math.sin((90 - lineAngle) * l["pi/180"]));
+                textY = centerY + directionX * Math.abs(baseOffsetDistance * Math.cos((90 - lineAngle) * l["pi/180"]));
+                
+                // Настраиваем поворот текста
+                if (lineAngle > 0) {
+                    textRotation -= 90;
+                } else {
+                    textRotation += 90;
+                }
+                
+                textOffsetX = -1;
+                textOffsetY = -1;
                 break;
+                
             case "2":
             case "4":
-                var T = "",
-                    S = (n - t) / (a - t) - (r - e) / (_ - e);
-                S = +S.toFixed(3), T = 0 > S && "2" == z || 0 < S && "4" == z ? "down-left" : 0 < S && "2" == z || 0 > S && "4" == z ? "up-right" : 0 == Math.abs(S) ? "up-right" : "up-right", "up-right" == T ? (L = 1, O = -1, !g && ("2" == z && ("zavalc_in" == i || "zavalc_out" == c) || "4" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2)) : "down-left" == T && (L = -1, O = 1, !g && ("2" == z && ("zavalc_out" == i || "zavalc_in" == c) || "4" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2)), w = v + L * Math.abs(f * Math.cos((180 - j) * l["pi/180"])), k = x + O * Math.abs(f * Math.sin((180 - j) * l["pi/180"])), 0 < j ? F -= 90 : F += 90, A = 1, q = -1;
+                // Определяем направление относительно центра масс для 2 и 4 квадрантов
+                var directionIndicator = "";
+                var slopeRatio = (massY - startY) / (endY - startY) - (massX - startX) / (endX - startX);
+                
+                slopeRatio = +slopeRatio.toFixed(3);
+                
+                if ((slopeRatio < 0 && quadrant === "2") || (slopeRatio > 0 && quadrant === "4")) {
+                    directionIndicator = "down-left";
+                } else if ((slopeRatio > 0 && quadrant === "2") || (slopeRatio < 0 && quadrant === "4")) {
+                    directionIndicator = "up-right";
+                } else if (Math.abs(slopeRatio) === 0) {
+                    directionIndicator = "up-right";
+                } else {
+                    directionIndicator = "up-right";
+                }
+                
+                // Настраиваем коэффициенты направления
+                if (directionIndicator === "up-right") {
+                    directionX = 1;
+                    directionY = -1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "2" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "4" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                } else if (directionIndicator === "down-left") {
+                    directionX = -1;
+                    directionY = 1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "2" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "4" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                }
+                
+                // Вычисляем позицию текста
+                textX = centerX + directionX * Math.abs(baseOffsetDistance * Math.cos((180 - lineAngle) * l["pi/180"]));
+                textY = centerY + directionY * Math.abs(baseOffsetDistance * Math.sin((180 - lineAngle) * l["pi/180"]));
+                
+                // Настраиваем поворот текста
+                if (lineAngle > 0) {
+                    textRotation -= 90;
+                } else {
+                    textRotation += 90;
+                }
+                
+                textOffsetX = 1;
+                textOffsetY = -1;
                 break;
+                
             case "up":
             case "down":
-                k = x, r < v ? (!g && ("down" == z && ("zavalc_in" == i || "zavalc_out" == c) || "up" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2), w = v + f) : (!g && ("down" == z && ("zavalc_out" == i || "zavalc_in" == c) || "up" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2), w = v - f), F = -90, A = -1, q = 0;
+                // Вертикальные линии - вверх или вниз
+                textY = centerY;
+                
+                if (massX < centerX) {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "down" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "up" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textX = centerX + baseOffsetDistance;
+                } else {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "down" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "up" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textX = centerX - baseOffsetDistance;
+                }
+                
+                textRotation = -90;
+                textOffsetX = -1;
+                textOffsetY = 0;
                 break;
+                
             case "left":
             case "right":
-                w = v, n < x ? (!g && ("left" == z && ("zavalc_in" == i || "zavalc_out" == c) || "right" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2), k = x + f) : (!g && ("left" == z && ("zavalc_out" == i || "zavalc_in" == c) || "right" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2), k = x - f), F = 0, A = 0, q = -1;
+                // Горизонтальные линии - влево или вправо
+                textX = centerX;
+                
+                if (massY < centerY) {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "left" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "right" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textY = centerY + baseOffsetDistance;
+                } else {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "left" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "right" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textY = centerY - baseOffsetDistance;
+                }
+                
+                textRotation = 0;
+                textOffsetX = 0;
+                textOffsetY = -1;
                 break;
+                
             default:
+                // В непредвиденных случаях используем значения по умолчанию
         }
-        var P = w - v,
-            I = k - x,
-            Y = .15 * P / (y + 1),
-            D = .15 * I / (y + 1);
-        if (y_("size_is_vynos") && (mt(e, t, e + P + Y, t + I + D, s), mt(_, a, _ + P + Y, a + I + D, s), mt(e + P, t + I, _ + P, a + I, s)), y_("size_is_push_to_line")) {
-            var X = 0,
-                G = 0,
-                W = 0,
-                K = 0,
-                N = u ? 3 : 8,
-                V = u ? 1.2 : 1.7,
-                E = u ? 8 : 3,
-                M = u ? 1.2 : 1.7;
-            switch (z) {
+
+        // Расчет линий смещения для размерных линий с блоками
+        var offsetX = textX - centerX;
+        var offsetY = textY - centerY;
+        // Коэффициенты для плавного распределения линий блоков
+        var gradientOffsetX = 0.15 * offsetX / (lineBlocksCount + 1);
+        var gradientOffsetY = 0.15 * offsetY / (lineBlocksCount + 1);
+
+        // Если размеры привязаны к линии, создаём вспомогательные линии
+        if (y_("size_is_vynos")) {
+            // Создаем выносные линии
+            mt(startX, startY, startX + offsetX + gradientOffsetX, startY + offsetY + gradientOffsetY, parentId);
+            mt(endX, endY, endX + offsetX + gradientOffsetX, endY + offsetY + gradientOffsetY, parentId);
+            mt(startX + offsetX, startY + offsetY, endX + offsetX, endY + offsetY, parentId);
+        }
+        
+        // Если размеры привязаны к линии, отображаем размерный текст особым образом
+        if (y_("size_is_push_to_line")) {
+            // Параметры для отображения текста в привязке к линии
+            var textPosX = 0;
+            var textPosY = 0;
+            var textOriginX = 0;
+            var textOriginY = 0;
+            // Масштаб смещения для обычных линий
+            var normalScale = hasBreak ? 3 : 8;
+            var breakScale = hasBreak ? 1.2 : 1.7;
+            // Масштаб смещения для линий с разрывами
+            var normalBreakScale = hasBreak ? 8 : 3;
+            var breakBreakScale = hasBreak ? 1.2 : 1.7;
+
+            // Определяем положение текста в зависимости от квадранта
+            switch (quadrant) {
                 case "1":
                 case "3":
-                    0 < P ? (X = v + (w - v) / N, G = x + (k - x) / N, W = v - (w - v) / 4 - 1, K = x - (k - x) / 4 - 1) : (X = v - (v - w) / V, G = x - (x - k) / V, W = v - (v - w) / 4 - 1, K = x - (x - k) / 4 - 1);
+                    if (offsetX > 0) {
+                        textPosX = centerX + (textX - centerX) / normalScale;
+                        textPosY = centerY + (textY - centerY) / normalScale;
+                        textOriginX = centerX - (textX - centerX) / 4 - 1;
+                        textOriginY = centerY - (textY - centerY) / 4 - 1;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / breakScale;
+                        textPosY = centerY - (centerY - textY) / breakScale;
+                        textOriginX = centerX - (centerX - textX) / 4 - 1;
+                        textOriginY = centerY - (centerY - textY) / 4 - 1;
+                    }
                     break;
+                    
                 case "2":
                 case "4":
-                    0 < P ? (X = v + (w - v) / V, G = x - (x - k) / V, W = v + (w - v) / 4 + 1, K = x - (x - k) / 4 - 1) : (X = v - (v - w) / N, G = x + (k - x) / N, W = v + (v - w) / 4 + 1, K = x - (k - x) / 4 - 1);
+                    if (offsetX > 0) {
+                        textPosX = centerX + (textX - centerX) / breakScale;
+                        textPosY = centerY - (centerY - textY) / breakScale;
+                        textOriginX = centerX + (textX - centerX) / 4 + 1;
+                        textOriginY = centerY - (centerY - textY) / 4 - 1;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / normalScale;
+                        textPosY = centerY + (textY - centerY) / normalScale;
+                        textOriginX = centerX + (centerX - textX) / 4 + 1;
+                        textOriginY = centerY - (textY - centerY) / 4 - 1;
+                    }
                     break;
+                    
                 case "up":
                 case "down":
-                    G = x, K = x, 0 < P ? (X = v + E, W = v - 8) : (X = v - (v - w) / M, W = v - 8);
+                    textPosY = centerY;
+                    textOriginY = centerY;
+                    
+                    if (offsetX > 0) {
+                        textPosX = centerX + normalBreakScale;
+                        textOriginX = centerX - 8;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / breakBreakScale;
+                        textOriginX = centerX - 8;
+                    }
                     break;
+                    
                 case "left":
                 case "right":
-                    X = v, W = v, 0 < I ? (G = x + E, K = x - 8) : (G = x - (x - k) / M, K = x - 8);
+                    textPosX = centerX;
+                    textOriginX = centerX;
+                    
+                    if (offsetY > 0) {
+                        textPosY = centerY + normalBreakScale;
+                        textOriginY = centerY - 8;
+                    } else {
+                        textPosY = centerY - (centerY - textY) / breakBreakScale;
+                        textOriginY = centerY - 8;
+                    }
                     break;
+                    
                 default:
+                    // В непредвиденных случаях используем значения по умолчанию
             }
-            0 < parseFloat(C) && ht(X, 0, G, 0, C, F, s, p, m, u, W, K)
-        } else 0 < parseFloat(C) && ht(w, A, k, q, C, F, s, p, m, !1, 0, 0);
-        if (g) {
-            d = pt(d);
-            var R = 1;
-            $.each(d, function(_, a) {
-                var r = R / (y + 1),
-                    n = P * r,
-                    s = I * r;
-                if (0 < parseFloat(a.offset)) {
-                    mt(a.points[0], a.points[1], a.points[0] + n + Y, a.points[1] + s + D, a.id), mt(e + n, t + s, a.points[0] + n, a.points[1] + s, a.id);
-                    var o = Se(e + n, t + s, a.points[0] + n, a.points[1] + s);
-                    ht(o.line_center_x, A, o.line_center_y, q, a.offset, F, a.id, "", m, !1, 0, 0)
+
+            // Добавляем размерный текст, если длина больше нуля
+            if (parseFloat(dimensionText) > 0) {
+                displayDimensionText(textPosX, textOffsetX, textPosY, textOffsetY, dimensionText, textRotation, parentId, segmentCounter, zavalcStartEnd, hasBreak, textOriginX, textOriginY);
+            }
+        } else {
+            // Стандартное отображение размерного текста
+            if (parseFloat(dimensionText) > 0) {
+                displayDimensionText(textX, textOffsetX, textY, textOffsetY, dimensionText, textRotation, parentId, segmentCounter, zavalcStartEnd, false, 0, 0);
+            }
+        }
+
+        // Обработка блоков линий
+        if (hasLineBlocks) {
+            // Сортируем блоки линий по смещению
+            lineblocks = pt(lineblocks);
+            
+            var blockCounter = 1;
+            
+            // Добавляем размеры для каждого блока линий
+            $.each(lineblocks, function(index, block) {
+                // Коэффициент распределения для текущего блока
+                var ratio = blockCounter / (lineBlocksCount + 1);
+                var blockOffsetX = offsetX * ratio;
+                var blockOffsetY = offsetY * ratio;
+                
+                // Добавляем выносные линии и размеры для блока линии
+                if (parseFloat(block.offset) > 0) {
+                    // Создаём выносные линии для смещения блока
+                    mt(block.points[0], block.points[1], block.points[0] + blockOffsetX + gradientOffsetX, block.points[1] + blockOffsetY + gradientOffsetY, block.id);
+                    mt(startX + blockOffsetX, startY + blockOffsetY, block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.id);
+                    
+                    // Добавляем размер для смещения блока
+                    var offsetCenter = Se(startX + blockOffsetX, startY + blockOffsetY, block.points[0] + blockOffsetX, block.points[1] + blockOffsetY);
+                    displayDimensionText(offsetCenter.line_center_x, textOffsetX, offsetCenter.line_center_y, textOffsetY, block.offset, textRotation, block.id, "", zavalcStartEnd, false, 0, 0);
                 }
-                mt(a.points[2], a.points[3], a.points[2] + n + Y, a.points[3] + s + D, a.id), mt(a.points[0] + n, a.points[1] + s, a.points[2] + n, a.points[3] + s, a.id);
-                var o = Se(a.points[0] + n, a.points[1] + s, a.points[2] + n, a.points[3] + s);
-                ht(o.line_center_x, A, o.line_center_y, q, a.length, F, a.id, "", m, !1, 0, 0), R++
-            })
+                
+                // Создаём выносные линии для длины блока
+                mt(block.points[2], block.points[3], block.points[2] + blockOffsetX + gradientOffsetX, block.points[3] + blockOffsetY + gradientOffsetY, block.id);
+                mt(block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.points[2] + blockOffsetX, block.points[3] + blockOffsetY, block.id);
+                
+                // Добавляем размер для длины блока
+                var blockCenter = Se(block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.points[2] + blockOffsetX, block.points[3] + blockOffsetY);
+                displayDimensionText(blockCenter.line_center_x, textOffsetX, blockCenter.line_center_y, textOffsetY, block.length, textRotation, block.id, "", zavalcStartEnd, false, 0, 0);
+                
+                blockCounter++;
+            });
         }
     }
 
@@ -4059,53 +4360,94 @@ function updatePolylineLastPoint(x, y, event) {
         $s[vo].add(n)
     }
 
-    function ht(e, t, _, a, r, n, s, o, i, l, c, d) {
-        "" != o && y_("size_text_is_line_counter") && (r += " (" + o + ")");
-        var p = new Konva.Text({
-            x: e + 12 * t,
-            y: _ + 12 * a,
-            text: r,
+    /**
+     * Создаёт и отображает текст с размерами элемента на CAD-чертеже.
+     * 
+     * @param {number} x - Координата X для размещения текста
+     * @param {number} xOffset - Смещение по X относительно координаты
+     * @param {number} y - Координата Y для размещения текста
+     * @param {number} yOffset - Смещение по Y относительно координаты
+     * @param {string} text - Текстовое содержимое (обычно размер элемента)
+     * @param {number} rotation - Угол поворота текста в градусах
+     * @param {string} parentId - ID родительского элемента
+     * @param {string|number} lineCounter - Порядковый номер или идентификатор линии
+     * @param {string} zavalcStartEnd - Параметр для обозначения типа завальцовки
+     * @param {boolean} hasBreak - Флаг наличия разрыва в линии
+     * @param {number} breakX - Координата X для разрыва линии 
+     * @param {number} breakY - Координата Y для разрыва линии
+     */
+    function displayDimensionText(x, xOffset, y, yOffset, text, rotation, parentId, lineCounter, zavalcStartEnd, hasBreak, breakX, breakY) {
+        console.log(x.fjsdklfjsdf.fsdf)
+        // Если указан номер линии и включено отображение номера линии в настройках, добавляем его к тексту
+        if (lineCounter !== "" && y_("size_text_is_line_counter")) {
+            text += " (" + lineCounter + ")";
+        }
+
+        // Создаем текстовый объект размера
+        var dimensionText = new Konva.Text({
+            x: x + 12 * xOffset,
+            y: y + 12 * yOffset,
+            text: text,
             fontSize: 14,
             fontFamily: "Arial",
             fontStyle: "bold",
-            rotation: n,
+            rotation: rotation,
             fill: "#333",
-            draggable: y_("draggable_konva_text_line_length"),
-            parent_id: s,
-            visible: !0,
-            line_num_counter: o,
-            listening: y_("listening_konva_text_line_length"),
-            zavalc_start_end: i
+            draggable: y_("draggable_konva_text_line_length"), // Возможность перетаскивания из настроек
+            parent_id: parentId,
+            visible: true,
+            line_num_counter: lineCounter,
+            listening: y_("listening_konva_text_line_length"), // Реагирование на события мыши из настроек
+            zavalc_start_end: zavalcStartEnd
         });
-        if ($s[vo].add(p), l) {
-            var m = new Konva.Label({
-                    x: c,
-                    y: d,
-                    opacity: 1,
-                    draggable: !1,
-                    rotation: n,
-                    visible: !0,
-                    listening: !1,
-                    parent_id: s
-                }),
-                h = new Konva.Tag({
-                    fill: "#fff",
-                    parent_id: s
-                }),
-                u = new Konva.Text({
-                    text: "\u2240\u2240",
-                    fontSize: 17,
-                    fontFamily: "Arial",
-                    fontStyle: "bold",
-                    rotation: 0,
-                    fill: "#000",
-                    draggable: !1,
-                    parent_id: s,
-                    visible: !0,
-                    padding: -1,
-                    listening: !1
-                });
-            u.letterSpacing(-2), m.add(h), m.add(u), Es[vo].add(m)
+
+        // Добавляем текстовый объект в текущий слой размеров
+        $s[vo].add(dimensionText);
+
+        // Если указан разрыв линии, добавляем соответствующий индикатор
+        if (hasBreak) {
+            // Создаем метку для обозначения разрыва
+            var breakLabel = new Konva.Label({
+                x: breakX,
+                y: breakY,
+                opacity: 1,
+                draggable: false,
+                rotation: rotation,
+                visible: true,
+                listening: false,
+                parent_id: parentId
+            });
+
+            // Добавляем фон для метки
+            var breakLabelTag = new Konva.Tag({
+                fill: "#fff",
+                parent_id: parentId
+            });
+
+            // Создаем текст для обозначения разрыва
+            var breakText = new Konva.Text({
+                text: "⁠⁠", // Специальный символ для обозначения разрыва
+                fontSize: 17,
+                fontFamily: "Arial",
+                fontStyle: "bold",
+                rotation: 0,
+                fill: "#000",
+                draggable: false,
+                parent_id: parentId,
+                visible: true,
+                padding: -1,
+                listening: false
+            });
+
+            // Устанавливаем межбуквенный интервал
+            breakText.letterSpacing(-2);
+
+            // Добавляем компоненты к метке разрыва
+            breakLabel.add(breakLabelTag);
+            breakLabel.add(breakText);
+
+            // Добавляем метку разрыва на слой разрывов
+            Es[vo].add(breakLabel);
         }
     }
 
