@@ -360,7 +360,7 @@ function SimpleCad() {
         u(vo);
 
         // Применяем настройки слоя
-        b(options);
+        initializeLayerElements(options);
 
         // Устанавливаем масштаб слоя, если он не определён
         if (typeof Go.g_scale[vo] === "undefined") {
@@ -616,38 +616,103 @@ function SimpleCad() {
 
     function y() {}
 
-    function b(e) {
-        "undefined" != typeof e.set_current_layer_num && -1 < parseInt(e.set_current_layer_num) ? yo = parseInt(e.set_current_layer_num) : (bo++, yo = bo), vo = "layer_" + yo, to[vo] = new Konva.Layer({
+    /**
+     * Инициализирует слой CAD-редактора и добавляет все необходимые элементы взаимодействия.
+     * 
+     * @param {Object} e - Объект параметров для инициализации слоя
+     * @param {number} [e.set_current_layer_num] - Номер слоя для инициализации. Если не задан, будет использовано значение счетчика.
+     * @returns {void}
+     */
+    function initializeLayerElements(e) {
+        // Определяем номер слоя: либо из параметров, либо инкрементируем счетчик
+        if (typeof e.set_current_layer_num !== "undefined" && parseInt(e.set_current_layer_num) > -1) {
+            yo = parseInt(e.set_current_layer_num);
+        } else {
+            bo++;
+            yo = bo;
+        }
+        
+        // Формируем имя слоя и создаем слой Konva
+        vo = "layer_" + yo;
+        to[vo] = new Konva.Layer({
             id: vo
-        }), Bi.add(to[vo]), to[vo].draw(), Ws[vo] = document.createElement("canvas"), Ws[vo].width = Bi.width(), Ws[vo].height = Bi.height(), Ks[vo] = new Konva.Image({
+        });
+        
+        // Добавляем слой на сцену и отрисовываем его
+        Bi.add(to[vo]);
+        to[vo].draw();
+        
+        // Создаем холст HTML5 для каждого слоя
+        Ws[vo] = document.createElement("canvas");
+        Ws[vo].width = Bi.width();
+        Ws[vo].height = Bi.height();
+        
+        // Создаем изображение Konva для холста
+        Ks[vo] = new Konva.Image({
             image: Ws[vo],
             fill: "#fff",
             id: "layer_image__" + yo
-        }), Ks[vo].on("click", function(e) {
-            ye(e)
-        }), Ks[vo].on("mousemove", function(e) {
-            handleCanvasMouseMove(e)
-        }), Ks[vo].on("mousedown", function(e) {
-            be(e)
-        }), Ks[vo].on("mouseup", function(e) {
-            ve(e)
-        }), Ks[vo].on("wheel", function(e) {
-            we(e)
-        }), to[vo].add(Ks[vo]), no[vo] = new Konva.Line({
+        });
+        
+        // Добавляем обработчики событий для изображения
+        Ks[vo].on("click", function(e) {
+            ye(e); // Обработчик клика
+        });
+        
+        Ks[vo].on("mousemove", function(e) {
+            handleCanvasMouseMove(e); // Обработчик движения мыши
+        });
+        
+        Ks[vo].on("mousedown", function(e) {
+            be(e); // Обработчик нажатия кнопки мыши
+        });
+        
+        Ks[vo].on("mouseup", function(e) {
+            ve(e); // Обработчик отпускания кнопки мыши
+        });
+        
+        Ks[vo].on("wheel", function(e) {
+            we(e); // Обработчик колесика мыши
+        });
+        
+        // Добавляем изображение на слой
+        to[vo].add(Ks[vo]);
+        
+        // Создаем линию для подсветки сегментов
+        no[vo] = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.segment_highlighter_hover,
             strokeWidth: 6,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: ""
-        }), no[vo].on("mousemove", function(e) {
-            Rr(e)
-        }), no[vo].on("mouseleave", function() {
-            pi || (no[vo].hide(), so[vo].hide(), to[vo].draw(), mi = !1)
-        }), no[vo].on("click", function(e) {
-            handleSegmentSelection(e)
-        }), to[vo].add(no[vo]), so[vo] = new Konva.Circle({
+        });
+
+        // Добавляем обработчики событий для линии подсветки
+        no[vo].on("mousemove", function(e) {               
+            Rr(e.evt.layerX, e.evt.layerY, e.target.attrs.points); // Обработчик движения мыши над сегментом
+        });
+        
+        no[vo].on("mouseleave", function() {
+            // Скрываем подсветку при уходе курсора, если не активен режим выбора точки
+            if (!pi) {
+                no[vo].hide();
+                so[vo].hide();
+                to[vo].draw();
+                mi = false;
+            }
+        });
+        
+        no[vo].on("click", function(e) {
+            handleSegmentSelection(e); // Обработчик выбора сегмента
+        });
+        
+        // Добавляем линию подсветки на слой
+        to[vo].add(no[vo]);
+        
+        // Создаем круг для маркера точки
+        so[vo] = new Konva.Circle({
             x: 0,
             y: 0,
             radius: 5,
@@ -655,71 +720,107 @@ function SimpleCad() {
             stroke: "black",
             strokeWidth: 1,
             parent_id: "",
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1
-        }), to[vo].add(so[vo]), oo[vo] = {}, oo[vo].x = new Konva.Line({
+        });
+        
+        // Добавляем маркер точки на слой
+        to[vo].add(so[vo]);
+        
+        // Создаем вспомогательные линии для привязок к осям
+        oo[vo] = {};
+        
+        // Горизонтальная линия привязки к оси
+        oo[vo].x = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.regard_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(oo[vo].x), oo[vo].y = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(oo[vo].x);
+        
+        // Вертикальная линия привязки к оси
+        oo[vo].y = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.regard_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(oo[vo].y), io[vo] = {}, io[vo].x = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(oo[vo].y);
+        
+        // Создаем линии для ортогональной привязки
+        io[vo] = {};
+        
+        // Горизонтальная линия ортогональной привязки
+        io[vo].x = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.orto_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(io[vo].x), io[vo].y = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(io[vo].x);
+        
+        // Вертикальная линия ортогональной привязки
+        io[vo].y = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.orto_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(io[vo].y), fo[vo] = new Konva.Rect({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(io[vo].y);
+        
+        // Создаем прямоугольник для выделения области мышью
+        fo[vo] = new Konva.Rect({
             x: 0,
             y: 0,
             width: 0,
             height: 0,
             stroke: mainColors.mouse_select_rect_color,
             strokeWidth: 1,
-            visible: !1,
-            draggable: !1,
-            fillEnabled: !1,
-            listening: !1,
+            visible: false,
+            draggable: false,
+            fillEnabled: false,
+            listening: false,
             object_visible: 1,
             parent_id: ""
-        }), to[vo].add(fo[vo]), co.arrow[vo] = new Konva.Arrow({
+        });
+        to[vo].add(fo[vo]);
+        
+        // Создаем стрелку для обозначения стороны покраски
+        co.arrow[vo] = new Konva.Arrow({
             points: [0, 0, 0, 0],
             pointerLength: 15,
             pointerWidth: 5,
             fill: "#333",
             stroke: "#333",
             strokeWidth: 2,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             name: "side_okras_arrow"
-        })
+        });
+        
+        // Устанавливаем ID для HTML-элемента canvas
         var t = $("#cad_block").find("canvas").length;
-        0 < t && ($("#cad_block").find("canvas")[t - 1].id = "canvas_" + yo)
+        if (t > 0) {
+            $("#cad_block").find("canvas")[t - 1].id = "canvas_" + yo;
+        }
     }
 
     function v() {
@@ -3178,10 +3279,6 @@ function SimpleCad() {
     function handlerRotate(event) {
         $(".d_elements_button").removeClass('active');
 
-        console.log(Oo.mode,'fajsdfs')
-        // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
-        
-        
         if (Oo.mode == 'add_element') {
             gs();
             polylineId = Zi.id();
@@ -4607,7 +4704,7 @@ function updatePolylineLastPoint(x, y, event) {
         if (lineCounter !== "" && y_("size_text_is_line_counter")) {
             text += " (" + lineCounter + ")";
         }
-
+        
         // Создаем текстовый объект размера
         var dimensionText = new Konva.Text({
             x: x + 12 * xOffset,
@@ -4623,7 +4720,25 @@ function updatePolylineLastPoint(x, y, event) {
             visible: true,
             line_num_counter: lineCounter,
             listening: y_("listening_konva_text_line_length"), // Реагирование на события мыши из настроек
-            zavalc_start_end: zavalcStartEnd
+            zavalc_start_end: zavalcStartEnd,
+        });     
+
+        // Добавляем обработчики событий для линии подсветки
+        dimensionText.on("mouseenter", function(e) {
+            if ("undefined" === Zi) {
+                gs()
+            }
+            
+            highlightPolylineSegment(
+                e.evt.layerX,
+                e.evt.layerY,
+                Zi.attrs.points,
+                Zi.attrs.id
+            );
+        });        
+
+        dimensionText.on("click", function(e) {
+            handleSegmentSelection(e); // Обработчик выбора сегмента
         });
 
         // Добавляем текстовый объект в текущий слой размеров
@@ -11440,8 +11555,9 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
 
-    function Rr(e) {
-        updateNearestPoint(e.evt.layerX, e.evt.layerY, e.target.attrs.points), to[vo].draw()
+    function Rr(layerX, layerY, points) {
+        updateNearestPoint(layerX, layerY, points)
+        to[vo].draw()
     }
 
     /**
@@ -11503,7 +11619,7 @@ function updatePolylineLastPoint(x, y, event) {
         hi.segment_points = Mt(hi.segment_num, hi.pline_points);
         
         // Вычисляем длину сегмента в зависимости от режима
-        if (-1 !== $.inArray(ei.type, ["sznde"])) {
+        if (Oo.mode != 'default' && -1 !== $.inArray(ei.type, ["sznde"])) {
             // Для режима "sznde" используем предварительно вычисленные длины
             var t = hi.parent[0].attrs.pline_lengths_ish;
             var _ = t[hi.segment_num];
