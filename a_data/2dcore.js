@@ -49,7 +49,7 @@ function SimpleCad() {
                 $("#modal_second_modal").show();
                 return false;
             } else {
-                g_(event); // Обработка других событий скрытия модального окна
+                handleModalClose(event); // Обработка других событий скрытия модального окна
             }
         });
 
@@ -646,7 +646,7 @@ function SimpleCad() {
         }), no[vo].on("mouseleave", function() {
             pi || (no[vo].hide(), so[vo].hide(), to[vo].draw(), mi = !1)
         }), no[vo].on("click", function(e) {
-            Br(e)
+            handleSegmentSelection(e)
         }), to[vo].add(no[vo]), so[vo] = new Konva.Circle({
             x: 0,
             y: 0,
@@ -884,6 +884,24 @@ function SimpleCad() {
             return;
         }
         
+        if (Oo.mode == 'add_element') {
+            gs();
+            // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
+    
+            polylineId = Zi.id();
+            let points = Zi.points();
+            points = points.slice(0, points.length - 2);        
+    
+            Zi.setPoints(points);
+            processAndClearElement(Zi);
+            yt(Zi.id(), false);
+            processElementAndAddMovePoints(Zi, false);        
+    
+            En();
+    
+            gs();
+        }
+
         // Очищаем текущее состояние редактора
         resetCADState();
         
@@ -1726,32 +1744,81 @@ function SimpleCad() {
         })
     }
 
-    function W(e, t) {
-        switch (Bo = e, $(".modals").hide(), Bo) {
+    /**
+     * Отображает модальное окно в зависимости от указанного типа.
+     * Настраивает содержимое, заголовок и кнопки для различных типов модальных окон.
+     * 
+     * @param {string} e - Тип модального окна для отображения
+     * @param {Object} t - Параметры модального окна, зависящие от типа
+     * @returns {void}
+     */
+    function showModalWindow(e, t) {
+        // Устанавливаем текущий тип модального окна и скрываем все существующие модальные окна
+        Bo = e;
+        $(".modals").hide();
+        
+        switch (Bo) {
             case "roof_crossing_remove_error_no_element":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u0441 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u043E\u0439.</li></ul>"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043B\u0438\u0448\u043D\u0435\u0433\u043E \u043F\u0435\u0440\u0435\u043A\u0440\u044B\u0442\u0438\u044F \u043B\u0438\u0441\u0442\u043E\u0432"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка удаления лишнего перекрытия листов
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u0441 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u043E\u0439.</li></ul>");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043B\u0438\u0448\u043D\u0435\u0433\u043E \u043F\u0435\u0440\u0435\u043A\u0440\u044B\u0442\u0438\u044F \u043B\u0438\u0441\u0442\u043E\u0432");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "calc_trigonom":
-                G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0422\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0430\u043B\u044C\u043A\u0443\u043B\u044F\u0442\u043E\u0440"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Тригонометрический калькулятор
+                G(["modal-lg"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0422\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0430\u043B\u044C\u043A\u0443\u043B\u044F\u0442\u043E\u0440");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_accessories_mch_pn":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u043C\u0435\u0442\u0430\u043B\u043B\u043E\u0447\u0435\u0440\u0435\u043F\u0438\u0446\u0430, \u043F\u0440\u043E\u0444\u043D\u0430\u0441\u0442\u0438\u043B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Комплектующие - металлочерепица, профнастил
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u043C\u0435\u0442\u0430\u043B\u043B\u043E\u0447\u0435\u0440\u0435\u043F\u0438\u0446\u0430, \u043F\u0440\u043E\u0444\u043D\u0430\u0441\u0442\u0438\u043B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_accessories_falc":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u0444\u0430\u043B\u044C\u0446"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Комплектующие - фальц
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u0444\u0430\u043B\u044C\u0446");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roofstat_error_cuts_exist_points_out_polygon":
-                G(["modal-lg"]), $("#modal_info_h").html("\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0438");
+                // Ошибка: вырезы не полностью внутри фигуры ската
+                G(["modal-lg"]);
+                $("#modal_info_h").html("\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0438");
                 var _ = "<p>\u041E\u0448\u0438\u0431\u043A\u0430: \u0435\u0441\u0442\u044C \u0432\u044B\u0440\u0435\u0437\u044B, \u0443 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u043D\u0435 \u0432\u0441\u0435 \u0442\u043E\u0447\u043A\u0438 \u043D\u0430\u0445\u043E\u0434\u044F\u0442\u0441\u044F \u0432\u043D\u0443\u0442\u0440\u0438 \u0444\u0438\u0433\u0443\u0440\u044B \u0441\u043A\u0430\u0442\u0430. \u041F\u0440\u0438 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0435 \u043B\u0438\u0441\u0442\u043E\u0432 \u0442\u0430\u043A\u0438\u0435 \u0432\u044B\u0440\u0435\u0437\u044B \u0443\u0447\u0442\u0435\u043D\u044B, \u043D\u043E \u043F\u0440\u0438 \u0440\u0430\u0441\u0447\u0451\u0442\u0435 \u043F\u043B\u043E\u0449\u0430\u0434\u0438 \u0441\u043A\u0430\u0442\u0430 \u043E\u043D\u0438 \u043D\u0435 \u0443\u0447\u0438\u0442\u044B\u0432\u0430\u044E\u0442\u0441\u044F (\u0438\u0445 \u043F\u043B\u043E\u0449\u0430\u0434\u044C \u043D\u0435 \u0432\u044B\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u0438\u0437 \u043F\u043B\u043E\u0449\u0430\u0434\u0438 \u0441\u043A\u0430\u0442\u0430).</p><p><img src=\"" + Ys + "info/roofstat_scale_without_cuts.png\" class=\"img-responsive center-block\"></p>";
-                $("#modal_info_contents").html(_), vl.show();
+                $("#modal_info_contents").html(_);
+                vl.show();
                 break;
+                
             case "modal_img":
-                G(["modal-full-width"]), $("#modal_info_h").html("&nbsp;");
+                // Модальное окно с изображением
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("&nbsp;");
                 var _ = "<img src=\"" + t.target + "\" class=\"img-responsive center-block\">";
-                $("#modal_info_contents").html(_), vl.show();
+                $("#modal_info_contents").html(_);
+                vl.show();
                 break;
+                
             case "pline_segment_highlight_set_length":
-                G(["modal-yes-no", "modals_right_top"]), $("#modal_info_h").html("\u0421\u043C\u0435\u043D\u0430 \u0434\u043B\u0438\u043D\u044B \u0441\u0442\u043E\u0440\u043E\u043D\u044B");
+                // Смена длины стороны полилинии
+                G(["modal-yes-no", "modals_right_top"]);
+                $("#modal_info_h").html("\u0421\u043C\u0435\u043D\u0430 \u0434\u043B\u0438\u043D\u044B \u0441\u0442\u043E\u0440\u043E\u043D\u044B");
                 var a = {
                     form_id: "pline_segment_highlight_set_length_form",
                     pline_segment_highlight_set_length_length_val: hi.segment_length
@@ -1760,11 +1827,15 @@ function SimpleCad() {
                 var r = {
                     footer_id: "pline_segment_highlight_set_length_footer"
                 };
-                $("#modal_info_footer").html(Dr(r)), vl.show();
+                $("#modal_info_footer").html(Dr(r));
+                vl.show();
                 break;
+                
             case "roof_menu_edit_sheet_rename":
+                // Переименование вкладки, если кнопка не деактивирована
                 if (!$("#nav_li_edit_tab_rename").hasClass("disabled")) {
-                    G(["modal-yes-no"]), $("#modal_info_h").html("\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
+                    G(["modal-yes-no"]);
+                    $("#modal_info_h").html("\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
                     var a = {
                         form_id: "roof_menu_edit_sheet_rename_form",
                         roof_menu_edit_sheet_rename_name_val: rl.find("[data-layer-num=\"" + yo + "\"]").html()
@@ -1773,91 +1844,242 @@ function SimpleCad() {
                     var r = {
                         footer_id: "roof_menu_edit_sheet_rename_footer"
                     };
-                    $("#modal_info_footer").html(Dr(r)), vl.show()
-                } else return;
+                    $("#modal_info_footer").html(Dr(r));
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_specification_full_project":
-                G(["modal-full-width"]), $("#modal_info_h").html("\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Спецификация проекта
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "pline_start":
-                G([""]), $("#modal_linestartend_h").html("\u041D\u0430\u0447\u0430\u043B\u043E \u043B\u0438\u043D\u0438\u0438"), $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", !1);
+                // Настройка начала линии
+                G([""]);
+                $("#modal_linestartend_h").html("\u041D\u0430\u0447\u0430\u043B\u043E \u043B\u0438\u043D\u0438\u0438");
+                $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", false);
                 var n = Zi.attrs.pline_start;
-                $("#linestartend__" + n).prop("checked", !0), $("#linestartend__" + n + "_val").val(Zi.attrs.pline_start_val), $("#modal_linestartend").show();
+                $("#linestartend__" + n).prop("checked", true);
+                $("#linestartend__" + n + "_val").val(Zi.attrs.pline_start_val);
+                $("#modal_linestartend").show();
                 break;
+                
             case "pline_end":
-                G([""]), $("#modal_linestartend_h").html("\u041A\u043E\u043D\u0435\u0446 \u043B\u0438\u043D\u0438\u0438"), $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", !1);
+                // Настройка конца линии
+                G([""]);
+                $("#modal_linestartend_h").html("\u041A\u043E\u043D\u0435\u0446 \u043B\u0438\u043D\u0438\u0438");
+                $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", false);
                 var n = Zi.attrs.pline_end;
-                $("#linestartend__" + n).prop("checked", !0), $("#linestartend__" + n + "_val").val(Zi.attrs.pline_end_val), $("#modal_linestartend").show();
+                $("#linestartend__" + n).prop("checked", true);
+                $("#linestartend__" + n + "_val").val(Zi.attrs.pline_end_val);
+                $("#modal_linestartend").show();
                 break;
+                
             case "save":
+                // Модальное окно сохранения
                 $("#modal_save").show();
                 break;
+                
             case "lineblock":
-                G([""]), $("#modal_lineblock_form").html(Jo), K(Bo, {}), $("#modal_lineblock").show();
+                // Модальное окно блока линий
+                G([""]);
+                $("#modal_lineblock_form").html(Jo);
+                K(Bo, {});
+                $("#modal_lineblock").show();
                 break;
+                
             case "lineblock_type":
-                G([""]), $("#modal_lineblock_type").find("select").val(Zi.attrs.type), $("#modal_lineblock_type").show();
+                // Тип блока линий
+                G([""]);
+                $("#modal_lineblock_type").find("select").val(Zi.attrs.type);
+                $("#modal_lineblock_type").show();
                 break;
+                
             case "roof_has_errors":
-                G([""]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0420\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибки при расчёте кровли
+                G([""]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0420\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "figure":
-                G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0412\u0441\u0442\u0430\u0432\u043A\u0430 \u0444\u0438\u0433\u0443\u0440\u044B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {
+                // Вставка фигуры
+                G(["modal-lg"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0412\u0441\u0442\u0430\u0432\u043A\u0430 \u0444\u0438\u0433\u0443\u0440\u044B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {
                     relative_from_mode: Eo
-                }), vl.show();
+                });
+                vl.show();
                 break;
+                
             case "figure_nde":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u0445 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Шаблоны доборных элементов
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u0445 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "trash_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка удаления объекта
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "mirror_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка отражения элемента
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "mirror_tab_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0434\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F.</li></ul>"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043A\u043B\u0430\u0434\u043A\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка отражения вкладки
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0434\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F.</li></ul>");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043A\u043B\u0430\u0434\u043A\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "rotate_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка вращения элемента
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "roof_new":
-                G(["modal-lg"]), Ho = {}, $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041D\u043E\u0432\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Новый расчёт кровли
+                G(["modal-lg"]);
+                Ho = {};
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041D\u043E\u0432\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_save_as_modal":
-                if (!$("#nav_li_file_save_as").hasClass("disabled")) G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u0430\u043A"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
-                else return;
+                // Сохранить проект как, если кнопка не деактивирована
+                if (!$("#nav_li_file_save_as").hasClass("disabled")) {
+                    G(["modal-lg"]);
+                    $("#modal_info_contents").html(Jo);
+                    $("#modal_info_h").html("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u0430\u043A");
+                    $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                    K(Bo, {});
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_settings":
-                if (!$("#nav_li_file_settings").hasClass("disabled")) G(["modal-lg"]), Ho = {}, $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0440\u0430\u0441\u0447\u0451\u0442\u0430 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {
-                    roof_data_params: Mo
-                }), vl.show();
-                else return;
+                // Настройки параметров расчёта кровли, если кнопка не деактивирована
+                if (!$("#nav_li_file_settings").hasClass("disabled")) {
+                    G(["modal-lg"]);
+                    Ho = {};
+                    $("#modal_info_contents").html(Jo);
+                    $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0440\u0430\u0441\u0447\u0451\u0442\u0430 \u043A\u0440\u043E\u0432\u043B\u0438");
+                    $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                    K(Bo, {
+                        roof_data_params: Mo
+                    });
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_settings_programm":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Настройки программы
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_open_modal":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0440\u0430\u0441\u0447\u0451\u0442"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Открыть расчёт
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0440\u0430\u0441\u0447\u0451\u0442");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "yes_no_roof_menu_edit_sheet_remove":
+                // Подтверждение удаления вкладки, если кнопка не деактивирована
                 if (!$("#nav_li_edit_tab_remove").hasClass("disabled")) {
                     var s = rl.find(".active").html();
-                    G(["modal-full-width", "modal-yes-no"]), $("#modal_info_h").html("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443"), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443 \"" + s + "\" ?</li></ul>"), $("#modal_info_footer").html("<div class=\"row\"><div class=\"col-xs-12 text-center\" ><button type=\"button\" class=\"btn btn-danger mr10\" onclick=\"SimpleCad.Action({'type':'roof_menu_edit_sheet_remove'});\">\u0423\u0434\u0430\u043B\u0438\u0442\u044C</button><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default ml10\">\u041E\u0442\u043C\u0435\u043D\u0430</button></div></div>"), vl.show()
-                } else return;
+                    G(["modal-full-width", "modal-yes-no"]);
+                    $("#modal_info_h").html("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
+                    $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443 \"" + s + "\" ?</li></ul>");
+                    $("#modal_info_footer").html("<div class=\"row\"><div class=\"col-xs-12 text-center\" ><button type=\"button\" class=\"btn btn-danger mr10\" onclick=\"SimpleCad.Action({'type':'roof_menu_edit_sheet_remove'});\">\u0423\u0434\u0430\u043B\u0438\u0442\u044C</button><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default ml10\">\u041E\u0442\u043C\u0435\u043D\u0430</button></div></div>");
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "admin_nomenclature_group":
-                G(["modal-full-width"]), $("#modal_info_h").html("\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u043D\u044B\u0445 \u0433\u0440\u0443\u043F\u043F"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Настройка номенклатурных групп
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u043D\u044B\u0445 \u0433\u0440\u0443\u043F\u043F");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "nde_validate_errors":
-                G([""]), $("#modal_info_h").html("\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0434\u043E\u0431\u043E\u0440\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_contents").html(t.errors_html), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Проверка доборного элемента - ошибки
+                G([""]);
+                $("#modal_info_h").html("\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0434\u043E\u0431\u043E\u0440\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_contents").html(t.errors_html);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "nde_validate_description":
-                G(["modal-lg"]), $("#modal_info_h").html("\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F \u043A \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u043C \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Требования к доборным элементам
+                G(["modal-lg"]);
+                $("#modal_info_h").html("\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F \u043A \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u043C \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             default:
+                // Если тип модального окна не определён, ничего не делаем
         }
-        $("#modal_html").modal("show")
+        
+        // Отображаем модальное окно
+        $("#modal_html").modal("show");
     }
 
     function K(e, t) {
@@ -1974,7 +2196,7 @@ function SimpleCad() {
         //                 Dt(r);
         //                 break;
         //             case "roof_calc":
-        //                 0 < _.errors.length ? W("roof_has_errors", {}) : Y_(_);
+        //                 0 < _.errors.length ? showModalWindow("roof_has_errors", {}) : Y_(_);
         //                 break;
         //             case "roof_save":
         //                 "undefined" != typeof _.data.g_project_file_set_id && (ti.id = _.data.g_project_file_set_id), la();
@@ -2956,20 +3178,24 @@ function SimpleCad() {
     function handlerRotate(event) {
         $(".d_elements_button").removeClass('active');
 
-        
-        gs();
+        console.log(Oo.mode,'fajsdfs')
         // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
+        
+        
+        if (Oo.mode == 'add_element') {
+            gs();
+            polylineId = Zi.id();
+            let points = Zi.points();
+            
+            points = points.slice(0, points.length - 2);        
+    
+            Zi.setPoints(points);
+            processAndClearElement(Zi);
+            yt(Zi.id(), false);
+            processElementAndAddMovePoints(Zi, false);
 
-        polylineId = Zi.id();
-        let points = Zi.points();
-        points = points.slice(0, points.length - 2);        
-
-        Zi.setPoints(points);
-        processAndClearElement(Zi);
-        yt(Zi.id(), false);
-        processElementAndAddMovePoints(Zi, false);        
-
-        En();
+            En();
+        }
 
         gs();
 
@@ -4377,7 +4603,6 @@ function updatePolylineLastPoint(x, y, event) {
      * @param {number} breakY - Координата Y для разрыва линии
      */
     function displayDimensionText(x, xOffset, y, yOffset, text, rotation, parentId, lineCounter, zavalcStartEnd, hasBreak, breakX, breakY) {
-        console.log(x.fjsdklfjsdf.fsdf)
         // Если указан номер линии и включено отображение номера линии в настройках, добавляем его к тексту
         if (lineCounter !== "" && y_("size_text_is_line_counter")) {
             text += " (" + lineCounter + ")";
@@ -4465,7 +4690,7 @@ function updatePolylineLastPoint(x, y, event) {
         ie();
         to[vo].toImage({
             callback: function(e) {
-                $("#modal_save_appendblock").html(e), W("save", {})
+                $("#modal_save_appendblock").html(e), showModalWindow("save", {})
             }
         });
         "undefined" != typeof yaCounter43809814 && yaCounter43809814.reachGoal("action_save_click"), !1
@@ -7072,32 +7297,60 @@ function updatePolylineLastPoint(x, y, event) {
         }), $s[vo].draw(), to[vo].draw()
     }
 
-    function g_() {
+    /**
+     * Обрабатывает действия после закрытия модального окна в зависимости от текущего состояния (Bo).
+     * Очищает содержимое модального окна и удаляет фоновый элемент модального окна.
+     * 
+     * @returns {void}
+     */
+    function handleModalClose() {
         switch (Bo) {
             case "figure":
+                // Переключение на режим оси
                 Eo = "to_axis";
                 break;
+                
             case "pline_segment_highlight_set_length":
-                pi = !1, no[vo].hide(), so[vo].hide(), to[vo].draw(), mi = !1;
+                // Скрытие элементов выделения сегмента и отображение других элементов
+                pi = false;
+                no[vo].hide();
+                so[vo].hide();
+                to[vo].draw();
+                mi = false;
                 break;
+                
             case "lineblock":
-                f_(""), A_();
+                // Очистка и вызов соответствующих функций
+                f_(""); 
+                A_();
                 break;
+                
             case "roof_specification_full_project":
+                // Удаление PDF спецификации крыши для всего проекта
                 SimpleCad.Action({
                     type: "roof_specification_full_project_pdf_remove"
                 });
                 break;
+                
             case "roof_settings_programm":
+                // Вызов функции настроек программы для крыши
                 Oa();
                 break;
+                
             case "roof_new":
             case "roof_settings":
+                // Отображение нижней части информационного модального окна
                 $("#modal_info_footer").show();
                 break;
+                
             default:
+                // Ничего не делаем для других значений Bo
+                break;
         }
-        $("#modal_info_contents").html(""), $(".modal-backdrop").remove()
+        
+        // Очистка содержимого модального окна и удаление фона
+        $("#modal_info_contents").html("");
+        $(".modal-backdrop").remove();
     }
 
     function y_(e) {
@@ -11213,17 +11466,89 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
-    function Br(e) {
-        if (-1 !== $.inArray(ei.type, ["sznde"]) && 2 == e.evt.button) return !1;
-        if (pi = !0, hi = {}, hi.pline_id = e.target.attrs.parent_id, hi.parent = Bi.find("#" + hi.pline_id), hi.layerX = e.evt.layerX, hi.layerY = e.evt.layerY, 2 == e.evt.button) return pi = !1, ga(hi.parent[0], hi.layerX, hi.layerY), hi = {}, !1;
-        if (hi.pline_points = hi.parent[0].attrs.points, hi.segment_num = xa(hi.layerX, hi.layerY, hi.pline_points), hi.segment_points = Mt(hi.segment_num, hi.pline_points), -1 !== $.inArray(ei.type, ["sznde"])) {
-            var t = hi.parent[0].attrs.pline_lengths_ish,
-                _ = t[hi.segment_num];
-            hi.segment_length = _
-        } else hi.segment_length = Te(hi.segment_points[0], hi.segment_points[1], hi.segment_points[2], hi.segment_points[3], !1), hi.segment_length = U((100 * hi.segment_length / Go.g_scale[vo]).toFixed(yi.length.prec));
-        var a = Math.dist(hi.layerX, hi.layerY, hi.segment_points[0], hi.segment_points[1]),
-            r = Math.dist(hi.layerX, hi.layerY, hi.segment_points[2], hi.segment_points[3]);
-        a > r ? (hi.nearest_point_num_in_pline = hi.segment_num + 1, hi.farthest_point_num_in_pline = hi.segment_num) : (hi.nearest_point_num_in_pline = hi.segment_num, hi.farthest_point_num_in_pline = hi.segment_num + 1), W("pline_segment_highlight_set_length", {})
+    /**
+     * Обрабатывает выбор сегмента ломаной линии
+     * @param {Object} e - Событие выбора
+     * @returns {boolean} - False если событие не должно обрабатываться дальше
+     */
+    function handleSegmentSelection(e) {
+        // Проверяем, является ли это правым кликом в режиме "sznde"
+        if (-1 !== $.inArray(ei.type, ["sznde"]) && 2 == e.evt.button) {
+            return false;
+        }
+        
+        // Устанавливаем флаг активности и инициализируем объект для хранения данных сегмента
+        pi = true;
+        hi = {};
+        
+        // Сохраняем идентификатор родительской линии и сам элемент
+        hi.pline_id = e.target.attrs.parent_id;
+        hi.parent = Bi.find("#" + hi.pline_id);
+        
+        // Сохраняем координаты клика
+        hi.layerX = e.evt.layerX;
+        hi.layerY = e.evt.layerY;
+        
+        // Обрабатываем правый клик (кнопка 2)
+        if (2 == e.evt.button) {
+            pi = false;
+            ga(hi.parent[0], hi.layerX, hi.layerY);
+            hi = {};
+            return false;
+        }
+        
+        // Получаем точки ломаной линии и определяем номер сегмента
+        hi.pline_points = hi.parent[0].attrs.points;
+        hi.segment_num = xa(hi.layerX, hi.layerY, hi.pline_points);
+        hi.segment_points = Mt(hi.segment_num, hi.pline_points);
+        
+        // Вычисляем длину сегмента в зависимости от режима
+        if (-1 !== $.inArray(ei.type, ["sznde"])) {
+            // Для режима "sznde" используем предварительно вычисленные длины
+            var t = hi.parent[0].attrs.pline_lengths_ish;
+            var _ = t[hi.segment_num];
+            hi.segment_length = _;
+        } else {
+            // Для других режимов вычисляем длину динамически
+            hi.segment_length = Te(
+                hi.segment_points[0],
+                hi.segment_points[1],
+                hi.segment_points[2],
+                hi.segment_points[3],
+                false
+            );
+            // Масштабируем и округляем длину сегмента с нужной точностью
+            hi.segment_length = U(
+                (100 * hi.segment_length / Go.g_scale[vo]).toFixed(yi.length.prec)
+            );
+        }
+        
+        // Определяем ближайшую и дальнюю точки сегмента относительно места клика
+        var distanceToStart = Math.dist(
+            hi.layerX, 
+            hi.layerY, 
+            hi.segment_points[0], 
+            hi.segment_points[1]
+        );
+        
+        var distanceToEnd = Math.dist(
+            hi.layerX, 
+            hi.layerY, 
+            hi.segment_points[2], 
+            hi.segment_points[3]
+        );
+        
+        // Сохраняем номера точек в зависимости от расстояния
+        if (distanceToStart > distanceToEnd) {
+            hi.nearest_point_num_in_pline = hi.segment_num + 1;
+            hi.farthest_point_num_in_pline = hi.segment_num;
+        } else {
+            hi.nearest_point_num_in_pline = hi.segment_num;
+            hi.farthest_point_num_in_pline = hi.segment_num + 1;
+        }
+        
+        // Показываем модальное окно для редактирования длины выбранного сегмента
+        showModalWindow("pline_segment_highlight_set_length", {});
     }
 
     function Zr(e, t, _, a) {
@@ -12493,7 +12818,7 @@ function updatePolylineLastPoint(x, y, event) {
             });
         if (0 < t.length ? (t = t[0], e = JSON.copy(t.columns_sheets), $.each(e, function(t, _) {
                 e[t] = Nn(_, [], 0)
-            })) : W("roof_crossing_remove_error_no_element", {}), Js) {
+            })) : showModalWindow("roof_crossing_remove_error_no_element", {}), Js) {
             var _ = Bi.findOne("#" + t.id);
             di = {
                 type: "h_roof_columns_sheet_crossing_remove",
@@ -13371,7 +13696,7 @@ function updatePolylineLastPoint(x, y, event) {
         }), 1 == t ? (_ = validateElementConfiguration(e), 0 == _.errors.length ? (Yn({
             text: "\u041E\u0448\u0438\u0431\u043E\u043A \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
             type: "success"
-        }), ho = !0) : (a = vs(_.errors, "modal_nde_validate_errors"), W("nde_validate_errors", {
+        }), ho = !0) : (a = vs(_.errors, "modal_nde_validate_errors"), showModalWindow("nde_validate_errors", {
             errors_html: a
         }))) : 0 == t ? Yn({
             text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
@@ -13706,7 +14031,7 @@ function updatePolylineLastPoint(x, y, event) {
     function js() {
         if (0 == b_()) var e = to[vo].toImage({
             callback: function(e) {
-                $("#modal_save_appendblock").html(e), W("save", {})
+                $("#modal_save_appendblock").html(e), showModalWindow("save", {})
             }
         });
         else {
@@ -13722,7 +14047,7 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
     function Cs(e) {
-        $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), W("save", {})
+        $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), showModalWindow("save", {})
     }
 
     function Ls() {
@@ -15441,7 +15766,7 @@ function updatePolylineLastPoint(x, y, event) {
                     default:
                         s = _.thisObject[0].attributes["data-remote"].value;
                 }
-                W(_.type, {
+                showModalWindow(_.type, {
                     target: s
                 });
                 break;
@@ -15596,7 +15921,7 @@ function updatePolylineLastPoint(x, y, event) {
                 });
                 break;
             case "roof_specification_full_project":
-                W(_.type, {});
+                showModalWindow(_.type, {});
                 var k = S_("roof_specification_full_project");
                 K(_.type, {
                     roof_data: k
@@ -15936,7 +16261,7 @@ function updatePolylineLastPoint(x, y, event) {
                 V();
                 break;
             case "ModalShow":
-                W(_.target, {});
+                showModalWindow(_.target, {});
                 break;
             case "SheetSubmenu":
                 y(_.thisObject);
