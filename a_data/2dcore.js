@@ -972,21 +972,21 @@ function SimpleCad() {
      * @param {Event} e - Объект события клика.
      * @param {jQuery} t - jQuery-объект кнопки, на которую кликнули.
      */
-    function handleElementButtonClick(e, t) {
+    function handleElementButtonClick(e, t) {        
         // Проверка для SZNDE-типа: запрещаем выбор инструментов pline и figure_nde, если уже есть элемент
-        if (-1 !== $.inArray(ei.type, ["sznde"]) && 
-            -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 
-            0 < b_()) {
-            // Показываем уведомление об ошибке
-            Yn({
-                text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
-                type: "error"
-            });
-            return;
-        }
+        // if (-1 !== $.inArray(ei.type, ["sznde"]) && 
+        //     -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 
+        //     0 < b_()) {
+        //     // Показываем уведомление об ошибке
+        //     Yn({
+        //         text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
+        //         type: "error"
+        //     });
+        //     return;
+        // }
         
-        if (Oo.mode == 'add_element') {
-            gs();
+        if (Oo.mode == 'add_element' && Oo["data-element"] == "pline") {
+            setCurrentElement()
             // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
     
             polylineId = Zi.id();
@@ -1000,14 +1000,14 @@ function SimpleCad() {
     
             En();
     
-            gs();
+            setCurrentElement()
         }
 
         // Очищаем текущее состояние редактора
         resetCADState();
         
         // Сбрасываем активный элемент
-        Zi = "undefined";
+        // Zi = "undefined";
         
         // Отмечаем кнопку как активную в интерфейсе
         t.addClass("active");
@@ -1024,10 +1024,79 @@ function SimpleCad() {
                 ge();
                 break;
                 
-            case "line":
-            case "pline":
             case "text":
+                removeStartAndEndIndicators();
+                // Включаем режим добавления элементов (линия, полилиния, текст, стрелка)
+                var _ = {
+                    mode: "add_element",
+                    "data-element": t.attr("data-element")
+                };
+                ue(_);
+                break;
+            case "line":
+            case "pline":                
             case "arrow":
+
+                setCurrentElement()
+                if ("undefined" != typeof Zi && "undefined" !== Zi) {
+                    var points = Zi.points();
+
+                    const startPoint = { x: points[0], y: points[1] };
+                    const endPoint = { x: points[points.length - 2], y: points[points.length - 1] };
+
+                    // Создаем визуальные индикаторы для выбора точек
+                    const startIndicator = createPointIndicator(startPoint.x, startPoint.y, "start");
+                    const endIndicator = createPointIndicator(endPoint.x, endPoint.y, "end");
+                    
+                    // Добавляем индикаторы на слой
+                    to[vo].add(startIndicator);
+                    to[vo].add(endIndicator);
+                    startIndicator.moveToTop();
+                    endIndicator.moveToTop();
+
+                    to[vo].draw();
+
+                    // Обработчик клика на индикатор
+                    function handlePointClick(event) {
+                        const isStart = event.target.attrs.pointType === "start";
+                        const selectedPoint = isStart ? startPoint : endPoint;
+
+                        removeStartAndEndIndicators();
+
+                        var points = Zi.points()
+
+                        if (isStart) {
+                            // Разбиваем массив точек на пары [x, y], инвертируем порядок и собираем обратно
+                            var reversedPoints = [];
+                            for (let i = points.length - 2; i >= 0; i -= 2) {
+                                reversedPoints.push(points[i], points[i + 1]);
+                            }
+
+                            // Устанавливаем инвертированный массив точек
+                            Zi.setPoints(reversedPoints);
+                            to[vo].draw();
+                        }
+
+                        points = Zi.points()
+                        
+                        // Удаляем индикаторы после выбора
+                        points.push(selectedPoint.x + 1, selectedPoint.y + 1); // Добавляем новую точку
+                        Zi.setPoints(points);
+                        to[vo].draw();
+                        
+                        var _ = {
+                            mode: "add_element",
+                            "data-element": t.attr("data-element")
+                        };
+                        ue(_);
+                    }
+
+                    // Привязываем обработчик клика к индикаторам
+                    startIndicator.on("click", handlePointClick);
+                    endIndicator.on("click", handlePointClick);
+                    break;
+                }
+
                 // Включаем режим добавления элементов (линия, полилиния, текст, стрелка)
                 var _ = {
                     mode: "add_element",
@@ -1074,12 +1143,44 @@ function SimpleCad() {
         }
     }
 
-    // Заменяем оригинальную функцию k новой функцией с понятным именем
-    k = handleElementButtonClick;
+    function createPointIndicator(x, y, pointType) {
+        return new Konva.Circle({
+            x: x,
+            y: y,
+            radius: 25,
+            stroke: "black",
+            strokeWidth: 2,
+            pointType: pointType, // Указываем тип точки (start или end)
+            draggable: false,            
+        });
+    }
 
-    function z(e) {
+    function removeStartAndEndIndicators() {
+        var children = []
+        to[vo].children.each(function(child) {           
+            if(child.attrs.pointType) {
+                children.push(child);
+            }           
+        });
+        children.forEach(function(child) {
+            child.destroy();  
+        })
+        to[vo].draw();
+    } 
+
+    /**
+     * Обрабатывает клики мыши на холсте в зависимости от текущего режима рисования и создает или обновляет элементы.
+     * Эта функция обрабатывает создание различных типов элементов, таких как линии, полилинии, текст и стрелки.
+     * 
+     * @param {Object} e - Объект события, содержащий информацию о клике мышью
+     * @param {Object} e.evt - Нативный объект события со свойствами, такими как координаты
+     * @param {number} e.evt.layerX - Координата X клика мыши относительно холста
+     * @param {number} e.evt.layerY - Координата Y клика мыши относительно холста
+     * @returns {void}
+     */
+    function handleCanvasClick(e) {
         var t;
-
+        
         // Determine the action based on the current data-element mode
         switch (Oo["data-element"]) {
             case "default":
@@ -1141,7 +1242,7 @@ function SimpleCad() {
                 l_("btn_finish_cad_draw");
                 break;
 
-            case "pline":
+            case "pline":                
                 // Handle the creation of a polyline
                 if ("undefined" == typeof Zi || "undefined" == Zi) {
                     var startX = 0, startY = 0;
@@ -1167,6 +1268,7 @@ function SimpleCad() {
                     // Extend the existing polyline
                     var isSnapped = false;
                     var points = Zi.points();
+
                     var length = points.length;
                     var indices = {
                         0: length - 4,
@@ -1185,6 +1287,7 @@ function SimpleCad() {
                         isSnapped = true;
                     }
 
+                    // TODO: При зажатом shift неправильно устанавливаются координаты
                     // Если Shift зажат, корректируем координаты для угла 30 градусов
                     if (checkMagnet30(event.evt)) {
                         var deltaX = startX - points[indices[0]];
@@ -1222,8 +1325,7 @@ function SimpleCad() {
                         var newPoint = Ie(points[indices[0]], points[indices[1]], distance, true, angle);
                         startX = newPoint.points[2];
                         startY = newPoint.points[3];
-                    }
-
+                    }                    
                      
 
                     // Update the polyline's points
@@ -1344,7 +1446,7 @@ function SimpleCad() {
     }
 
     function j(e) {
-        ie(), to[vo].add(e), to[vo].draw(), Zi = e, se(), I({
+        ie(), to[vo].add(e), to[vo].draw(), Zi = e, se(), addElementToObjectsList({
             "data-element": Oo["data-element"],
             id: Zi.id()
         })
@@ -1517,38 +1619,84 @@ function SimpleCad() {
         al.find("[data-obj-id=\"" + e + "\"]").parent().addClass("active")
     }
 
-    function I(e) {
-        var t = "",
-            _ = !1;
-        switch (e["data-element"]) {
+    /**
+     * Добавляет новый элемент в список элементов на текущем слое.
+     * Создает визуальное представление элемента в панели объектов и добавляет его в DOM.
+     * 
+     * @param {Object} element - Данные об элементе для добавления
+     * @param {string} element["data-element"] - Тип элемента (rect, line, pline, text, arrow, lineblock)
+     * @param {string} elementData.id - Идентификатор элемента
+     * @param {string} [elementData.name] - Имя элемента (используется для lineblock)
+     * @returns {void}
+     */
+    function addElementToObjectsList(element) {
+        // Инициализация переменных
+        var elementText = "";
+        var shouldAddElement = false;
+        
+        // Определяем текст отображения в зависимости от типа элемента
+        switch (element["data-element"]) {
             case "rect":
+                // Для прямоугольников не предусмотрено действий
                 break;
+                
             case "line":
-                t = "\u041B\u0438\u043D\u0438\u044F " + wo[e["data-element"]], _ = !0;
+                // Для линий: "Линия N"
+                elementText = "\u041B\u0438\u043D\u0438\u044F " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "lineblock":
-                t = e.name, _ = !0;
+                // Для блоков линий используем переданное имя
+                elementText = element.name;
+                shouldAddElement = true;
                 break;
+                
             case "pline":
-                t = y_("object_add_layer_row__pline") + " " + wo[e["data-element"]], _ = !0;
+                // Для полилиний: "Полилиния N"
+                elementText = y_("object_add_layer_row__pline") + " " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "text":
-                t = "\u0422\u0435\u043A\u0441\u0442 " + wo[e["data-element"]], _ = !0;
+                // Для текста: "Текст N"
+                elementText = "\u0422\u0435\u043A\u0441\u0442 " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "arrow":
-                t = "\u0421\u0442\u0440\u0435\u043B\u043A\u0430 " + wo[e["data-element"]], _ = !0;
+                // Для стрелок: "Стрелка N"
+                elementText = "\u0421\u0442\u0440\u0435\u043B\u043A\u0430 " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             default:
+                // Для других типов элементов действий не предусмотрено
         }
-        if (_) {
-            var a = {
-                    current_layer_name: vo,
-                    data_id: e.id,
-                    data_element: e["data-element"],
-                    text: t
-                },
-                r = "<div class=\"d_object d_object___" + e["data-element"] + " active\" data-current_layer_name=\"" + a.current_layer_name + "\">\t<div class=\"d_object_visible\" >\t<i class=\"fa fa-eye\" onclick=\"SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})\"></i></div>\t<div class=\"d_object_name\" data-obj-id=\"" + a.data_id + "\" data-obj-element=\"" + a.data_element + "\" onclick=\"SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})\" >" + a.text + "</div></div>";
-            $("#add_object_layer_row").append(r)
+        
+        // Если элемент нужно добавить в панель объектов
+        if (shouldAddElement) {
+            // Создаем объект данных элемента для DOM
+            var elementData = {
+                current_layer_name: vo, // Текущий слой
+                data_id: element.id, // ID элемента
+                data_element: element["data-element"], // Тип элемента
+                text: elementText // Отображаемый текст
+            };
+            
+            // Формируем HTML для элемента списка
+            var elementHTML = 
+                "<div class=\"d_object d_object___" + elementData.data_element + " active\" data-current_layer_name=\"" + elementData.current_layer_name + "\">" +
+                    "\t<div class=\"d_object_visible\" >" +
+                        "\t<i class=\"fa fa-eye\" onclick=\"SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})\"></i>" +
+                    "</div>" +
+                    "\t<div class=\"d_object_name\" data-obj-id=\"" + elementData.data_id + "\" data-obj-element=\"" + elementData.data_element + "\" onclick=\"SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})\" >" + 
+                        elementData.text +
+                    "</div>" +
+                "</div>";
+            
+            // Добавляем элемент в панель объектов
+            $("#add_object_layer_row").append(elementHTML);
         }
     }
 
@@ -2791,6 +2939,7 @@ function SimpleCad() {
      * отображает это состояние в интерфейсе.
      */
     function setDefaultMode() {
+        removeStartAndEndIndicators()
         // Устанавливаем режим редактора в значение "default"
         Oo.mode = "default";
         
@@ -2812,7 +2961,7 @@ function SimpleCad() {
                 resetCADState(), setDefaultMode(), Zi = "undefined", zi = "";
                 break;
             case "add_element":
-                z(e);
+                handleCanvasClick(e);
                 break;
             default:
         }
@@ -3386,13 +3535,13 @@ function SimpleCad() {
      */
     function handleMouseMoveWhileAddingElement(event) {
         // Обновляем вспомогательные линии и дуги для текущего положения курсора
-        updateHelperLinesAndText(event);
+        updateHelperLinesAndText(event);        
 
         // Если активный элемент определён, обрабатываем его в зависимости от типа
         if (typeof Zi !== "undefined" && Zi !== "undefined") {
             switch (Oo["data-element"]) {
                 case "line":
-                case "pline":
+                case "pline":                    
                     // Обновляем координаты последней точки полилинии
                     updatePolylineLastPoint(event.evt.layerX, event.evt.layerY, event);
                     break;
@@ -3428,56 +3577,60 @@ function SimpleCad() {
         }
     }
 
+
+    var testupdatePolylineLastPoint = false
     /**
- * Обновляет координаты последней точки полилинии.
- *
- * Если зажата клавиша Shift, корректирует координаты так, чтобы линия рисовалась
- * только под углом, кратным 90 градусам.
- *
- * @param {number} x - Новая координата X для последней точки.
- * @param {number} y - Новая координата Y для последней точки.
- * @param {Object} event - Событие мыши, содержащее информацию о нажатых клавишах.
- */
-function updatePolylineLastPoint(x, y, event) {
-    // Получаем массив точек текущей полилинии
-    var points = Zi.points();
+     * Обновляет координаты последней точки полилинии.
+     *
+     * Если зажата клавиша Shift, корректирует координаты так, чтобы линия рисовалась
+     * только под углом, кратным 90 градусам.
+     *
+     * @param {number} x - Новая координата X для последней точки.
+     * @param {number} y - Новая координата Y для последней точки.
+     * @param {Object} event - Событие мыши, содержащее информацию о нажатых клавишах.
+     */
+    function updatePolylineLastPoint(x, y, event) {
+        
 
-    // Определяем количество точек в полилинии
-    var totalPoints = points.length;
+        // Получаем массив точек текущей полилинии
+        var points = Zi.points();
 
-    // Определяем индексы последней точки
-    var lastPointIndices = {
-        x: totalPoints - 4, // Предпоследняя точка X
-        y: totalPoints - 3, // Предпоследняя точка Y
-        lastX: totalPoints - 2, // Последняя точка X
-        lastY: totalPoints - 1  // Последняя точка Y
-    };
+        // Определяем количество точек в полилинии
+        var totalPoints = points.length;
 
-    // Получаем координаты предыдущей точки
-    var prevX = points[lastPointIndices.x];
-    var prevY = points[lastPointIndices.y];
+        // Определяем индексы последней точки
+        var lastPointIndices = {
+            x: totalPoints - 4, // Предпоследняя точка X
+            y: totalPoints - 3, // Предпоследняя точка Y
+            lastX: totalPoints - 2, // Последняя точка X
+            lastY: totalPoints - 1  // Последняя точка Y
+        };
 
-    // Вычисляем разницу координат
-    var deltaX = x - prevX;
-    var deltaY = y - prevY;
+        // Получаем координаты предыдущей точки
+        var prevX = points[lastPointIndices.x];
+        var prevY = points[lastPointIndices.y];
 
-    // Если зажата клавиша Shift, корректируем координаты
-    if (checkMagnet30(event.evt)) {
-        const angle = Math.atan2(deltaY, deltaX);
-        const step = Math.PI / 6; // 30 градусов в радианах
-        const snappedAngle = Math.round(angle / step) * step;
-        const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        deltaX = length * Math.cos(snappedAngle);
-        deltaY = length * Math.sin(snappedAngle);
+        // Вычисляем разницу координат
+        var deltaX = x - prevX;
+        var deltaY = y - prevY;
+
+        // Если зажата клавиша Shift, корректируем координаты
+        if (checkMagnet30(event.evt)) {
+            const angle = Math.atan2(deltaY, deltaX);
+            const step = Math.PI / 6; // 30 градусов в радианах
+            const snappedAngle = Math.round(angle / step) * step;
+            const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            deltaX = length * Math.cos(snappedAngle);
+            deltaY = length * Math.sin(snappedAngle);
+        }
+
+        // Обновляем координаты последней точки
+        points[lastPointIndices.lastX] = prevX + deltaX;
+        points[lastPointIndices.lastY] = prevY + deltaY;
+
+        // Устанавливаем обновлённые точки обратно в полилинию
+        Zi.setPoints(points);
     }
-
-    // Обновляем координаты последней точки
-    points[lastPointIndices.lastX] = prevX + deltaX;
-    points[lastPointIndices.lastY] = prevY + deltaY;
-
-    // Устанавливаем обновлённые точки обратно в полилинию
-    Zi.setPoints(points);
-}
 
     function Te(e, t, _, a, r) {
         var n = Math.dist(e, t, _, a);
@@ -5145,7 +5298,7 @@ function updatePolylineLastPoint(x, y, event) {
             handleElementClick(e, "lineblock")
         }), c.on("mousemove", function(e) {
             handleMouseMove(e)
-        }), to[vo].add(c), I({
+        }), to[vo].add(c), addElementToObjectsList({
             "data-element": "lineblock",
             id: c.id(),
             name: e.name
@@ -7104,7 +7257,7 @@ function updatePolylineLastPoint(x, y, event) {
         }
 
         // Добавляем обработчики событий
-        polyline.on("click", function(event) {
+        polyline.on("click", function(event) {            
             handleElementClick(event, "pline");
         });
         polyline.on("mousemove", function(event) {
@@ -7770,7 +7923,7 @@ function updatePolylineLastPoint(x, y, event) {
                     offset_origin: t.offset_origin,
                     is_offset_origin_add: !1
                 });
-                _.attrs.columns_sheets = t.columns_sheets, _.attrs.stroke = mainColors.default_element_color, vo = "layer_" + t.tab_num, yo = parseInt(t.tab_num), to[vo].add(_), I({
+                _.attrs.columns_sheets = t.columns_sheets, _.attrs.stroke = mainColors.default_element_color, vo = "layer_" + t.tab_num, yo = parseInt(t.tab_num), to[vo].add(_), addElementToObjectsList({
                     "data-element": "pline",
                     id: _.id()
                 }), _.attrs.is_object_visible = t.is_object_visible, 0 == _.attrs.is_object_visible && (_.hide(), al.find("[data-obj-id=\"" + _.id() + "\"]").parent().find(".fa").removeClass("fa-eye").addClass("fa-eye-slash")), 1 == _.attrs.is_object_visible && processElementAndAddMovePoints(_, !1)
@@ -9514,7 +9667,7 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
     function oa(e) {
-        to[vo].add(e), I({
+        to[vo].add(e), addElementToObjectsList({
             "data-element": "pline",
             id: e.id()
         }), processAndClearElement(e), vt(e, !1), processElementAndAddMovePoints(e, !1), hs(e), updateElementParametersDisplay(e), se(), ie(), oe(), ce(), da()
@@ -12588,7 +12741,7 @@ function updatePolylineLastPoint(x, y, event) {
                 id: _,
                 name: a
             });
-            to[vo].add(r), I({
+            to[vo].add(r), addElementToObjectsList({
                 "data-element": "pline",
                 id: r.id()
             }), processElementAndAddMovePoints(r, !1)
@@ -13791,6 +13944,16 @@ function updatePolylineLastPoint(x, y, event) {
             if ("Line" == t.className && "undefined" != typeof t.attrs.side_okras) return T(t.id(), {
                 is_move_show: !1
             }), !1
+        })
+    }
+
+    function setCurrentElement() {
+        $.each(to[vo].children, function (e, t) {
+            if ("Line" == t.className && "undefined" != typeof t.attrs.side_okras) {            
+                S(t.id(), {
+                    is_move_show: false
+                })                
+            }
         })
     }
 
