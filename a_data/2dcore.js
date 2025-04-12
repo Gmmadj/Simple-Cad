@@ -7,7 +7,7 @@ function SimpleCad() {
     function initializeCadBlock(config) {
         // Устанавливаем глобальную переменную с переданным объектом конфигурации
         ei = config;
-
+        isRotateClick = false;
         // Инициализируем CAD-блок по ID
         Ui = $("#" + ei.cad_block_id);
 
@@ -27,10 +27,11 @@ function SimpleCad() {
 
         // Привязываем обработчик клика к кнопкам с классом "d_elements_button"
         $(".d_elements_button").click(function (event) {            
-            k(event, $(this)); // Обработка клика по кнопке            
+            handleElementButtonClick(event, $(this)); // Обработка клика по кнопке            
         });
         
-        magnet30.on('click', handlerMagnet30);
+        $magnet30.on('click', handlerMagnet30);
+        $rotate.on('click', handlerRotate);
         
         // Привязываем обработчик события "keyup" к документу
         $(document).on("keyup", function (event) {
@@ -48,7 +49,7 @@ function SimpleCad() {
                 $("#modal_second_modal").show();
                 return false;
             } else {
-                g_(event); // Обработка других событий скрытия модального окна
+                handleModalClose(event); // Обработка других событий скрытия модального окна
             }
         });
 
@@ -289,7 +290,9 @@ function SimpleCad() {
         zl = $("#token_data");
         Ll = $("#nde_tbl_row_size_ang_list");
         Ol = $("#nde_tbl_row_other_list");
-        magnet30 = $('[data-element="magnet_30"]');
+        $magnet30 = $('[data-element="magnet_30"]');
+        isRotateClick = false;
+        $rotate = $('[data-element="rotate"]');
 
         // Создаем объект Konva.Stage для CAD-блока
         Bi = new Konva.Stage({
@@ -357,7 +360,7 @@ function SimpleCad() {
         u(vo);
 
         // Применяем настройки слоя
-        b(options);
+        initializeLayerElements(options);
 
         // Устанавливаем масштаб слоя, если он не определён
         if (typeof Go.g_scale[vo] === "undefined") {
@@ -608,43 +611,108 @@ function SimpleCad() {
 
     function g(e) {
         var t = e.attr("data-layer-num");
-        t = parseInt(t), t != yo && (u(vo), yo = t, vo = "layer_" + yo, f(vo), re(), e.addClass("active"), _e(), ae(), da(), "undefined" == typeof ui[vo] && (ui[vo] = "1", Ke("+", "", !1, !1), Ke("-", "", !0, !0)), -1 !== $.inArray(ei.type, ["roof", "sznde"]) && ca(), 1 == Mo.tabs_re_roof[vo] && q_(), kl.hide(), $o = !1, zi = "")
+        t = parseInt(t), t != yo && (u(vo), yo = t, vo = "layer_" + yo, f(vo), re(), e.addClass("active"), resetCADState(), ae(), da(), "undefined" == typeof ui[vo] && (ui[vo] = "1", Ke("+", "", !1, !1), Ke("-", "", !0, !0)), -1 !== $.inArray(ei.type, ["roof", "sznde"]) && ca(), 1 == Mo.tabs_re_roof[vo] && q_(), kl.hide(), $o = !1, zi = "")
     }
 
     function y() {}
 
-    function b(e) {
-        "undefined" != typeof e.set_current_layer_num && -1 < parseInt(e.set_current_layer_num) ? yo = parseInt(e.set_current_layer_num) : (bo++, yo = bo), vo = "layer_" + yo, to[vo] = new Konva.Layer({
+    /**
+     * Инициализирует слой CAD-редактора и добавляет все необходимые элементы взаимодействия.
+     * 
+     * @param {Object} e - Объект параметров для инициализации слоя
+     * @param {number} [e.set_current_layer_num] - Номер слоя для инициализации. Если не задан, будет использовано значение счетчика.
+     * @returns {void}
+     */
+    function initializeLayerElements(e) {
+        // Определяем номер слоя: либо из параметров, либо инкрементируем счетчик
+        if (typeof e.set_current_layer_num !== "undefined" && parseInt(e.set_current_layer_num) > -1) {
+            yo = parseInt(e.set_current_layer_num);
+        } else {
+            bo++;
+            yo = bo;
+        }
+        
+        // Формируем имя слоя и создаем слой Konva
+        vo = "layer_" + yo;
+        to[vo] = new Konva.Layer({
             id: vo
-        }), Bi.add(to[vo]), to[vo].draw(), Ws[vo] = document.createElement("canvas"), Ws[vo].width = Bi.width(), Ws[vo].height = Bi.height(), Ks[vo] = new Konva.Image({
+        });
+        
+        // Добавляем слой на сцену и отрисовываем его
+        Bi.add(to[vo]);
+        to[vo].draw();
+        
+        // Создаем холст HTML5 для каждого слоя
+        Ws[vo] = document.createElement("canvas");
+        Ws[vo].width = Bi.width();
+        Ws[vo].height = Bi.height();
+        
+        // Создаем изображение Konva для холста
+        Ks[vo] = new Konva.Image({
             image: Ws[vo],
             fill: "#fff",
             id: "layer_image__" + yo
-        }), Ks[vo].on("click", function(e) {
-            ye(e)
-        }), Ks[vo].on("mousemove", function(e) {
-            handleCanvasMouseMove(e)
-        }), Ks[vo].on("mousedown", function(e) {
-            be(e)
-        }), Ks[vo].on("mouseup", function(e) {
-            ve(e)
-        }), Ks[vo].on("wheel", function(e) {
-            we(e)
-        }), to[vo].add(Ks[vo]), no[vo] = new Konva.Line({
+        });
+        
+        // Добавляем обработчики событий для изображения
+        Ks[vo].on("click", function(e) {
+            ye(e); // Обработчик клика
+        });
+        
+        Ks[vo].on("mousemove", function(e) {
+            handleCanvasMouseMove(e); // Обработчик движения мыши
+        });
+        
+        Ks[vo].on("mousedown", function(e) {
+            be(e); // Обработчик нажатия кнопки мыши
+        });
+        
+        Ks[vo].on("mouseup", function(e) {
+            ve(e); // Обработчик отпускания кнопки мыши
+        });
+        
+        Ks[vo].on("wheel", function(e) {
+            we(e); // Обработчик колесика мыши
+        });
+        
+        // Добавляем изображение на слой
+        to[vo].add(Ks[vo]);
+        
+        // Создаем линию для подсветки сегментов
+        no[vo] = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.segment_highlighter_hover,
             strokeWidth: 6,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: ""
-        }), no[vo].on("mousemove", function(e) {
-            Rr(e)
-        }), no[vo].on("mouseleave", function() {
-            pi || (no[vo].hide(), so[vo].hide(), to[vo].draw(), mi = !1)
-        }), no[vo].on("click", function(e) {
-            Br(e)
-        }), to[vo].add(no[vo]), so[vo] = new Konva.Circle({
+        });
+
+        // Добавляем обработчики событий для линии подсветки
+        no[vo].on("mousemove", function(e) {               
+            Rr(e.evt.layerX, e.evt.layerY, e.target.attrs.points); // Обработчик движения мыши над сегментом
+        });
+        
+        no[vo].on("mouseleave", function() {
+            // Скрываем подсветку при уходе курсора, если не активен режим выбора точки
+            if (!pi) {
+                no[vo].hide();
+                so[vo].hide();
+                to[vo].draw();
+                mi = false;
+            }
+        });
+        
+        no[vo].on("click", function(e) {
+            handleSegmentSelection(e); // Обработчик выбора сегмента
+        });
+        
+        // Добавляем линию подсветки на слой
+        to[vo].add(no[vo]);
+        
+        // Создаем круг для маркера точки
+        so[vo] = new Konva.Circle({
             x: 0,
             y: 0,
             radius: 5,
@@ -652,71 +720,107 @@ function SimpleCad() {
             stroke: "black",
             strokeWidth: 1,
             parent_id: "",
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1
-        }), to[vo].add(so[vo]), oo[vo] = {}, oo[vo].x = new Konva.Line({
+        });
+        
+        // Добавляем маркер точки на слой
+        to[vo].add(so[vo]);
+        
+        // Создаем вспомогательные линии для привязок к осям
+        oo[vo] = {};
+        
+        // Горизонтальная линия привязки к оси
+        oo[vo].x = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.regard_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(oo[vo].x), oo[vo].y = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(oo[vo].x);
+        
+        // Вертикальная линия привязки к оси
+        oo[vo].y = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.regard_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(oo[vo].y), io[vo] = {}, io[vo].x = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(oo[vo].y);
+        
+        // Создаем линии для ортогональной привязки
+        io[vo] = {};
+        
+        // Горизонтальная линия ортогональной привязки
+        io[vo].x = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.orto_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(io[vo].x), io[vo].y = new Konva.Line({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(io[vo].x);
+        
+        // Вертикальная линия ортогональной привязки
+        io[vo].y = new Konva.Line({
             points: [0, 0, 0, 0],
             stroke: mainColors.orto_axis_highlighter,
             strokeWidth: 1,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             object_visible: 1,
             parent_id: "",
-            dash: [15, 3]
-        }), to[vo].add(io[vo].y), fo[vo] = new Konva.Rect({
+            dash: [15, 3] // Пунктирная линия
+        });
+        to[vo].add(io[vo].y);
+        
+        // Создаем прямоугольник для выделения области мышью
+        fo[vo] = new Konva.Rect({
             x: 0,
             y: 0,
             width: 0,
             height: 0,
             stroke: mainColors.mouse_select_rect_color,
             strokeWidth: 1,
-            visible: !1,
-            draggable: !1,
-            fillEnabled: !1,
-            listening: !1,
+            visible: false,
+            draggable: false,
+            fillEnabled: false,
+            listening: false,
             object_visible: 1,
             parent_id: ""
-        }), to[vo].add(fo[vo]), co.arrow[vo] = new Konva.Arrow({
+        });
+        to[vo].add(fo[vo]);
+        
+        // Создаем стрелку для обозначения стороны покраски
+        co.arrow[vo] = new Konva.Arrow({
             points: [0, 0, 0, 0],
             pointerLength: 15,
             pointerWidth: 5,
             fill: "#333",
             stroke: "#333",
             strokeWidth: 2,
-            draggable: !1,
-            visible: !1,
+            draggable: false,
+            visible: false,
             name: "side_okras_arrow"
-        })
+        });
+        
+        // Устанавливаем ID для HTML-элемента canvas
         var t = $("#cad_block").find("canvas").length;
-        0 < t && ($("#cad_block").find("canvas")[t - 1].id = "canvas_" + yo)
+        if (t > 0) {
+            $("#cad_block").find("canvas")[t - 1].id = "canvas_" + yo;
+        }
     }
 
     function v() {
@@ -861,52 +965,238 @@ function SimpleCad() {
         })
     }
 
-    function k(e, t) {
-        if (-1 !== $.inArray(ei.type, ["sznde"]) && -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 0 < b_()) return void Yn({
-            text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
-            type: "error"
-        });
-        switch (_e(), Zi = "undefined", t.addClass("active"), t.attr("data-element")) {
+    function updateUI() {
+        setCurrentElement()
+        var polylineId, polyline;
+
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            polylineId = Zi.id();
+            polyline = Bi.findOne("#" + polylineId);
+        }
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            ms();
+            updatePolylineSegmentLengths(polylineId, { mode: "create" });
+            processPolylineParameters(polyline);
+            updateElementParametersDisplay(polyline);
+            refreshCurrentLayer();
+        }
+    }
+
+    /**
+     * Обрабатывает клик по кнопке элемента в панели инструментов CAD.
+     * Переключает режим работы редактора в зависимости от выбранного инструмента.
+     * 
+     * @param {Event} e - Объект события клика.
+     * @param {jQuery} t - jQuery-объект кнопки, на которую кликнули.
+     */
+    function handleElementButtonClick(e, t) {        
+        setCurrentElement()
+        var polylineId, polyline;
+
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            polylineId = Zi.id();
+            polyline = Bi.findOne("#" + polylineId);
+        }
+        
+        if (Oo.mode == 'add_element' && Oo["data-element"] == "pline") {
+            let points = Zi.points();
+            points = points.slice(0, points.length - 2);
+    
+            Zi.setPoints(points);
+            processAndClearElement(Zi);
+            yt(Zi.id(), false);
+            processElementAndAddMovePoints(Zi, false);
+            En();
+        }
+        
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            ms();
+            updatePolylineSegmentLengths(polylineId, { mode: "create" });
+            processPolylineParameters(polyline);
+            updateElementParametersDisplay(polyline);
+            refreshCurrentLayer();
+        }
+
+        setCurrentElement()
+
+        // Очищаем текущее состояние редактора
+        resetCADState();
+        
+        // Сбрасываем активный элемент
+        // Zi = "undefined";
+        
+        // Отмечаем кнопку как активную в интерфейсе
+        t.addClass("active");
+        
+        // Обработка в зависимости от типа выбранного инструмента
+        switch (t.attr("data-element")) {
             case "select":
-                fe();
+                // Включаем режим выбора элементов
+                setDefaultMode();
                 break;
+                
             case "moveall":
+                // Включаем режим перемещения всего содержимого
                 ge();
                 break;
-            case "line":
-            case "pline":
+                
             case "text":
-            case "arrow":
+                removeStartAndEndIndicators();
+                // Включаем режим добавления элементов (линия, полилиния, текст, стрелка)
                 var _ = {
                     mode: "add_element",
                     "data-element": t.attr("data-element")
                 };
                 ue(_);
                 break;
+            case "line":
+            case "pline":                
+            case "arrow":
+
+                setCurrentElement()
+                if ("undefined" != typeof Zi && "undefined" !== Zi) {
+                    var points = Zi.points();
+
+                    const startPoint = { x: points[0], y: points[1] };
+                    const endPoint = { x: points[points.length - 2], y: points[points.length - 1] };
+
+                    // Создаем визуальные индикаторы для выбора точек
+                    const startIndicator = createPointIndicator(startPoint.x, startPoint.y, "start");
+                    const endIndicator = createPointIndicator(endPoint.x, endPoint.y, "end");
+                    
+                    // Добавляем индикаторы на слой
+                    to[vo].add(startIndicator);
+                    to[vo].add(endIndicator);
+                    startIndicator.moveToTop();
+                    endIndicator.moveToTop();
+
+                    to[vo].draw();
+
+                    // Обработчик клика на индикатор
+                    function handlePointClick(event) {
+                        const isStart = event.target.attrs.pointType === "start";
+                        const selectedPoint = isStart ? startPoint : endPoint;
+
+                        removeStartAndEndIndicators();
+
+                        var points = Zi.points()
+
+                        if (isStart) {
+                            // Разбиваем массив точек на пары [x, y], инвертируем порядок и собираем обратно
+                            var reversedPoints = [];
+                            for (let i = points.length - 2; i >= 0; i -= 2) {
+                                reversedPoints.push(points[i], points[i + 1]);
+                            }
+
+                            // Устанавливаем инвертированный массив точек
+                            Zi.setPoints(reversedPoints);
+                            to[vo].draw();
+                        }
+
+                        points = Zi.points()
+                        
+                        // Удаляем индикаторы после выбора
+                        points.push(selectedPoint.x + 1, selectedPoint.y + 1); // Добавляем новую точку
+                        Zi.setPoints(points);
+                        to[vo].draw();
+                        
+                        var _ = {
+                            mode: "add_element",
+                            "data-element": t.attr("data-element")
+                        };
+                        ue(_);
+                    }
+
+                    // Привязываем обработчик клика к индикаторам
+                    startIndicator.on("click", handlePointClick);
+                    endIndicator.on("click", handlePointClick);
+                    break;
+                }
+
+                // Включаем режим добавления элементов (линия, полилиния, текст, стрелка)
+                var _ = {
+                    mode: "add_element",
+                    "data-element": t.attr("data-element")
+                };
+                ue(_);
+                break;
+                
             case "lineblock":
-                fe(), SimpleCad.Action({
+                // Для блока линий открываем модальное окно
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "lineblock"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             case "figure":
-                fe(), SimpleCad.Action({
+                // Для фигур открываем модальное окно выбора фигуры
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "figure"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             case "figure_nde":
-                fe(), SimpleCad.Action({
+                // Для доборных элементов открываем специальное модальное окно
+                setDefaultMode();
+                SimpleCad.Action({
                     type: "ModalShow",
                     target: "figure_nde"
-                }), t.removeClass("active");
+                });
+                // Снимаем выделение с кнопки, так как будет использоваться модальное окно
+                t.removeClass("active");
                 break;
+                
             default:
+                // Для неизвестных типов элементов действия не определены
         }
     }
 
-    function z(e) {
+    function createPointIndicator(x, y, pointType) {
+        return new Konva.Circle({
+            x: x,
+            y: y,
+            radius: 25,
+            stroke: "black",
+            strokeWidth: 2,
+            pointType: pointType, // Указываем тип точки (start или end)
+            draggable: false,            
+        });
+    }
+
+    function removeStartAndEndIndicators() {
+        var children = []
+        to[vo].children.each(function(child) {           
+            if(child.attrs.pointType) {
+                children.push(child);
+            }           
+        });
+        children.forEach(function(child) {
+            child.destroy();  
+        })
+        to[vo].draw();
+    } 
+
+    /**
+     * Обрабатывает клики мыши на холсте в зависимости от текущего режима рисования и создает или обновляет элементы.
+     * Эта функция обрабатывает создание различных типов элементов, таких как линии, полилинии, текст и стрелки.
+     * 
+     * @param {Object} e - Объект события, содержащий информацию о клике мышью
+     * @param {Object} e.evt - Нативный объект события со свойствами, такими как координаты
+     * @param {number} e.evt.layerX - Координата X клика мыши относительно холста
+     * @param {number} e.evt.layerY - Координата Y клика мыши относительно холста
+     * @returns {void}
+     */
+    function handleCanvasClick(e) {
         var t;
+        
         // Determine the action based on the current data-element mode
         switch (Oo["data-element"]) {
             case "default":
@@ -968,7 +1258,7 @@ function SimpleCad() {
                 l_("btn_finish_cad_draw");
                 break;
 
-            case "pline":
+            case "pline":                
                 // Handle the creation of a polyline
                 if ("undefined" == typeof Zi || "undefined" == Zi) {
                     var startX = 0, startY = 0;
@@ -994,6 +1284,7 @@ function SimpleCad() {
                     // Extend the existing polyline
                     var isSnapped = false;
                     var points = Zi.points();
+
                     var length = points.length;
                     var indices = {
                         0: length - 4,
@@ -1012,8 +1303,9 @@ function SimpleCad() {
                         isSnapped = true;
                     }
 
+                    // TODO: При зажатом shift неправильно устанавливаются координаты
                     // Если Shift зажат, корректируем координаты для угла 30 градусов
-                    if (checkMagnet30(event.evt)) {
+                    if (checkMagnet30(e.evt)) {
                         var deltaX = startX - points[indices[0]];
                         var deltaY = startY - points[indices[1]];
                         var angle = Math.atan2(deltaY, deltaX); // Вычисляем угол в радианах
@@ -1049,8 +1341,7 @@ function SimpleCad() {
                         var newPoint = Ie(points[indices[0]], points[indices[1]], distance, true, angle);
                         startX = newPoint.points[2];
                         startY = newPoint.points[3];
-                    }
-
+                    }                    
                      
 
                     // Update the polyline's points
@@ -1171,7 +1462,7 @@ function SimpleCad() {
     }
 
     function j(e) {
-        ie(), to[vo].add(e), to[vo].draw(), Zi = e, se(), I({
+        ie(), to[vo].add(e), to[vo].draw(), Zi = e, se(), addElementToObjectsList({
             "data-element": Oo["data-element"],
             id: Zi.id()
         })
@@ -1315,7 +1606,7 @@ function SimpleCad() {
     }
 
     function T(e, t) {
-        "undefined" == typeof t.is_move_show && (t.is_move_show = !0), _e(), fe(), S(e, {
+        "undefined" == typeof t.is_move_show && (t.is_move_show = !0), resetCADState(), setDefaultMode(), S(e, {
             is_move_show: t.is_move_show
         }), P(e), D(), j_()
     }
@@ -1344,38 +1635,84 @@ function SimpleCad() {
         al.find("[data-obj-id=\"" + e + "\"]").parent().addClass("active")
     }
 
-    function I(e) {
-        var t = "",
-            _ = !1;
-        switch (e["data-element"]) {
+    /**
+     * Добавляет новый элемент в список элементов на текущем слое.
+     * Создает визуальное представление элемента в панели объектов и добавляет его в DOM.
+     * 
+     * @param {Object} element - Данные об элементе для добавления
+     * @param {string} element["data-element"] - Тип элемента (rect, line, pline, text, arrow, lineblock)
+     * @param {string} elementData.id - Идентификатор элемента
+     * @param {string} [elementData.name] - Имя элемента (используется для lineblock)
+     * @returns {void}
+     */
+    function addElementToObjectsList(element) {
+        // Инициализация переменных
+        var elementText = "";
+        var shouldAddElement = false;
+        
+        // Определяем текст отображения в зависимости от типа элемента
+        switch (element["data-element"]) {
             case "rect":
+                // Для прямоугольников не предусмотрено действий
                 break;
+                
             case "line":
-                t = "\u041B\u0438\u043D\u0438\u044F " + wo[e["data-element"]], _ = !0;
+                // Для линий: "Линия N"
+                elementText = "\u041B\u0438\u043D\u0438\u044F " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "lineblock":
-                t = e.name, _ = !0;
+                // Для блоков линий используем переданное имя
+                elementText = element.name;
+                shouldAddElement = true;
                 break;
+                
             case "pline":
-                t = y_("object_add_layer_row__pline") + " " + wo[e["data-element"]], _ = !0;
+                // Для полилиний: "Полилиния N"
+                elementText = y_("object_add_layer_row__pline") + " " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "text":
-                t = "\u0422\u0435\u043A\u0441\u0442 " + wo[e["data-element"]], _ = !0;
+                // Для текста: "Текст N"
+                elementText = "\u0422\u0435\u043A\u0441\u0442 " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             case "arrow":
-                t = "\u0421\u0442\u0440\u0435\u043B\u043A\u0430 " + wo[e["data-element"]], _ = !0;
+                // Для стрелок: "Стрелка N"
+                elementText = "\u0421\u0442\u0440\u0435\u043B\u043A\u0430 " + wo[element["data-element"]];
+                shouldAddElement = true;
                 break;
+                
             default:
+                // Для других типов элементов действий не предусмотрено
         }
-        if (_) {
-            var a = {
-                    current_layer_name: vo,
-                    data_id: e.id,
-                    data_element: e["data-element"],
-                    text: t
-                },
-                r = "<div class=\"d_object d_object___" + e["data-element"] + " active\" data-current_layer_name=\"" + a.current_layer_name + "\">\t<div class=\"d_object_visible\" >\t<i class=\"fa fa-eye\" onclick=\"SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})\"></i></div>\t<div class=\"d_object_name\" data-obj-id=\"" + a.data_id + "\" data-obj-element=\"" + a.data_element + "\" onclick=\"SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})\" >" + a.text + "</div></div>";
-            $("#add_object_layer_row").append(r)
+        
+        // Если элемент нужно добавить в панель объектов
+        if (shouldAddElement) {
+            // Создаем объект данных элемента для DOM
+            var elementData = {
+                current_layer_name: vo, // Текущий слой
+                data_id: element.id, // ID элемента
+                data_element: element["data-element"], // Тип элемента
+                text: elementText // Отображаемый текст
+            };
+            
+            // Формируем HTML для элемента списка
+            var elementHTML = 
+                "<div class=\"d_object d_object___" + elementData.data_element + " active\" data-current_layer_name=\"" + elementData.current_layer_name + "\">" +
+                    "\t<div class=\"d_object_visible\" >" +
+                        "\t<i class=\"fa fa-eye\" onclick=\"SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})\"></i>" +
+                    "</div>" +
+                    "\t<div class=\"d_object_name\" data-obj-id=\"" + elementData.data_id + "\" data-obj-element=\"" + elementData.data_element + "\" onclick=\"SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})\" >" + 
+                        elementData.text +
+                    "</div>" +
+                "</div>";
+            
+            // Добавляем элемент в панель объектов
+            $("#add_object_layer_row").append(elementHTML);
         }
     }
 
@@ -1672,32 +2009,81 @@ function SimpleCad() {
         })
     }
 
-    function W(e, t) {
-        switch (Bo = e, $(".modals").hide(), Bo) {
+    /**
+     * Отображает модальное окно в зависимости от указанного типа.
+     * Настраивает содержимое, заголовок и кнопки для различных типов модальных окон.
+     * 
+     * @param {string} e - Тип модального окна для отображения
+     * @param {Object} t - Параметры модального окна, зависящие от типа
+     * @returns {void}
+     */
+    function showModalWindow(e, t) {
+        // Устанавливаем текущий тип модального окна и скрываем все существующие модальные окна
+        Bo = e;
+        $(".modals").hide();
+        
+        switch (Bo) {
             case "roof_crossing_remove_error_no_element":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u0441 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u043E\u0439.</li></ul>"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043B\u0438\u0448\u043D\u0435\u0433\u043E \u043F\u0435\u0440\u0435\u043A\u0440\u044B\u0442\u0438\u044F \u043B\u0438\u0441\u0442\u043E\u0432"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка удаления лишнего перекрытия листов
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u0441 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u043E\u0439.</li></ul>");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043B\u0438\u0448\u043D\u0435\u0433\u043E \u043F\u0435\u0440\u0435\u043A\u0440\u044B\u0442\u0438\u044F \u043B\u0438\u0441\u0442\u043E\u0432");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "calc_trigonom":
-                G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0422\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0430\u043B\u044C\u043A\u0443\u043B\u044F\u0442\u043E\u0440"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Тригонометрический калькулятор
+                G(["modal-lg"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0422\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0430\u043B\u044C\u043A\u0443\u043B\u044F\u0442\u043E\u0440");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_accessories_mch_pn":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u043C\u0435\u0442\u0430\u043B\u043B\u043E\u0447\u0435\u0440\u0435\u043F\u0438\u0446\u0430, \u043F\u0440\u043E\u0444\u043D\u0430\u0441\u0442\u0438\u043B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Комплектующие - металлочерепица, профнастил
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u043C\u0435\u0442\u0430\u043B\u043B\u043E\u0447\u0435\u0440\u0435\u043F\u0438\u0446\u0430, \u043F\u0440\u043E\u0444\u043D\u0430\u0441\u0442\u0438\u043B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_accessories_falc":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u0444\u0430\u043B\u044C\u0446"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Комплектующие - фальц
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u0444\u0430\u043B\u044C\u0446");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roofstat_error_cuts_exist_points_out_polygon":
-                G(["modal-lg"]), $("#modal_info_h").html("\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0438");
+                // Ошибка: вырезы не полностью внутри фигуры ската
+                G(["modal-lg"]);
+                $("#modal_info_h").html("\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0438");
                 var _ = "<p>\u041E\u0448\u0438\u0431\u043A\u0430: \u0435\u0441\u0442\u044C \u0432\u044B\u0440\u0435\u0437\u044B, \u0443 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u043D\u0435 \u0432\u0441\u0435 \u0442\u043E\u0447\u043A\u0438 \u043D\u0430\u0445\u043E\u0434\u044F\u0442\u0441\u044F \u0432\u043D\u0443\u0442\u0440\u0438 \u0444\u0438\u0433\u0443\u0440\u044B \u0441\u043A\u0430\u0442\u0430. \u041F\u0440\u0438 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0435 \u043B\u0438\u0441\u0442\u043E\u0432 \u0442\u0430\u043A\u0438\u0435 \u0432\u044B\u0440\u0435\u0437\u044B \u0443\u0447\u0442\u0435\u043D\u044B, \u043D\u043E \u043F\u0440\u0438 \u0440\u0430\u0441\u0447\u0451\u0442\u0435 \u043F\u043B\u043E\u0449\u0430\u0434\u0438 \u0441\u043A\u0430\u0442\u0430 \u043E\u043D\u0438 \u043D\u0435 \u0443\u0447\u0438\u0442\u044B\u0432\u0430\u044E\u0442\u0441\u044F (\u0438\u0445 \u043F\u043B\u043E\u0449\u0430\u0434\u044C \u043D\u0435 \u0432\u044B\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u0438\u0437 \u043F\u043B\u043E\u0449\u0430\u0434\u0438 \u0441\u043A\u0430\u0442\u0430).</p><p><img src=\"" + Ys + "info/roofstat_scale_without_cuts.png\" class=\"img-responsive center-block\"></p>";
-                $("#modal_info_contents").html(_), vl.show();
+                $("#modal_info_contents").html(_);
+                vl.show();
                 break;
+                
             case "modal_img":
-                G(["modal-full-width"]), $("#modal_info_h").html("&nbsp;");
+                // Модальное окно с изображением
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("&nbsp;");
                 var _ = "<img src=\"" + t.target + "\" class=\"img-responsive center-block\">";
-                $("#modal_info_contents").html(_), vl.show();
+                $("#modal_info_contents").html(_);
+                vl.show();
                 break;
+                
             case "pline_segment_highlight_set_length":
-                G(["modal-yes-no", "modals_right_top"]), $("#modal_info_h").html("\u0421\u043C\u0435\u043D\u0430 \u0434\u043B\u0438\u043D\u044B \u0441\u0442\u043E\u0440\u043E\u043D\u044B");
+                // Смена длины стороны полилинии
+                G(["modal-yes-no", "modals_right_top"]);
+                $("#modal_info_h").html("\u0421\u043C\u0435\u043D\u0430 \u0434\u043B\u0438\u043D\u044B \u0441\u0442\u043E\u0440\u043E\u043D\u044B");
                 var a = {
                     form_id: "pline_segment_highlight_set_length_form",
                     pline_segment_highlight_set_length_length_val: hi.segment_length
@@ -1706,11 +2092,15 @@ function SimpleCad() {
                 var r = {
                     footer_id: "pline_segment_highlight_set_length_footer"
                 };
-                $("#modal_info_footer").html(Dr(r)), vl.show();
+                $("#modal_info_footer").html(Dr(r));
+                vl.show();
                 break;
+                
             case "roof_menu_edit_sheet_rename":
+                // Переименование вкладки, если кнопка не деактивирована
                 if (!$("#nav_li_edit_tab_rename").hasClass("disabled")) {
-                    G(["modal-yes-no"]), $("#modal_info_h").html("\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
+                    G(["modal-yes-no"]);
+                    $("#modal_info_h").html("\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
                     var a = {
                         form_id: "roof_menu_edit_sheet_rename_form",
                         roof_menu_edit_sheet_rename_name_val: rl.find("[data-layer-num=\"" + yo + "\"]").html()
@@ -1719,91 +2109,242 @@ function SimpleCad() {
                     var r = {
                         footer_id: "roof_menu_edit_sheet_rename_footer"
                     };
-                    $("#modal_info_footer").html(Dr(r)), vl.show()
-                } else return;
+                    $("#modal_info_footer").html(Dr(r));
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_specification_full_project":
-                G(["modal-full-width"]), $("#modal_info_h").html("\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Спецификация проекта
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "pline_start":
-                G([""]), $("#modal_linestartend_h").html("\u041D\u0430\u0447\u0430\u043B\u043E \u043B\u0438\u043D\u0438\u0438"), $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", !1);
+                // Настройка начала линии
+                G([""]);
+                $("#modal_linestartend_h").html("\u041D\u0430\u0447\u0430\u043B\u043E \u043B\u0438\u043D\u0438\u0438");
+                $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", false);
                 var n = Zi.attrs.pline_start;
-                $("#linestartend__" + n).prop("checked", !0), $("#linestartend__" + n + "_val").val(Zi.attrs.pline_start_val), $("#modal_linestartend").show();
+                $("#linestartend__" + n).prop("checked", true);
+                $("#linestartend__" + n + "_val").val(Zi.attrs.pline_start_val);
+                $("#modal_linestartend").show();
                 break;
+                
             case "pline_end":
-                G([""]), $("#modal_linestartend_h").html("\u041A\u043E\u043D\u0435\u0446 \u043B\u0438\u043D\u0438\u0438"), $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", !1);
+                // Настройка конца линии
+                G([""]);
+                $("#modal_linestartend_h").html("\u041A\u043E\u043D\u0435\u0446 \u043B\u0438\u043D\u0438\u0438");
+                $("#modal_linestartend").find("input[type=\"radio\"]").prop("checked", false);
                 var n = Zi.attrs.pline_end;
-                $("#linestartend__" + n).prop("checked", !0), $("#linestartend__" + n + "_val").val(Zi.attrs.pline_end_val), $("#modal_linestartend").show();
+                $("#linestartend__" + n).prop("checked", true);
+                $("#linestartend__" + n + "_val").val(Zi.attrs.pline_end_val);
+                $("#modal_linestartend").show();
                 break;
+                
             case "save":
+                // Модальное окно сохранения
                 $("#modal_save").show();
                 break;
+                
             case "lineblock":
-                G([""]), $("#modal_lineblock_form").html(Jo), K(Bo, {}), $("#modal_lineblock").show();
+                // Модальное окно блока линий
+                G([""]);
+                $("#modal_lineblock_form").html(Jo);
+                K(Bo, {});
+                $("#modal_lineblock").show();
                 break;
+                
             case "lineblock_type":
-                G([""]), $("#modal_lineblock_type").find("select").val(Zi.attrs.type), $("#modal_lineblock_type").show();
+                // Тип блока линий
+                G([""]);
+                $("#modal_lineblock_type").find("select").val(Zi.attrs.type);
+                $("#modal_lineblock_type").show();
                 break;
+                
             case "roof_has_errors":
-                G([""]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0420\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибки при расчёте кровли
+                G([""]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0420\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "figure":
-                G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0412\u0441\u0442\u0430\u0432\u043A\u0430 \u0444\u0438\u0433\u0443\u0440\u044B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {
+                // Вставка фигуры
+                G(["modal-lg"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0412\u0441\u0442\u0430\u0432\u043A\u0430 \u0444\u0438\u0433\u0443\u0440\u044B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {
                     relative_from_mode: Eo
-                }), vl.show();
+                });
+                vl.show();
                 break;
+                
             case "figure_nde":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u0445 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Шаблоны доборных элементов
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u0445 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "trash_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка удаления объекта
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "mirror_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка отражения элемента
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "mirror_tab_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0434\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F.</li></ul>"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043A\u043B\u0430\u0434\u043A\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка отражения вкладки
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0434\u043B\u044F \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F.</li></ul>");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043A\u043B\u0430\u0434\u043A\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "rotate_btn_click_error":
-                G(["modal-lg"]), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">"), $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Ошибка вращения элемента
+                G(["modal-lg"]);
+                $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0414\u043B\u044F \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0431\u044A\u0435\u043A\u0442 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u0447\u0435\u0440\u0442\u0435\u0436\u0430.</li></ul><img src=\"" + Is + "data/interface/trash_error_info.png\" class=\"center-block\">");
+                $("#modal_info_h").html("\u041E\u0448\u0438\u0431\u043A\u0430 \u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "roof_new":
-                G(["modal-lg"]), Ho = {}, $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041D\u043E\u0432\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Новый расчёт кровли
+                G(["modal-lg"]);
+                Ho = {};
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041D\u043E\u0432\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_save_as_modal":
-                if (!$("#nav_li_file_save_as").hasClass("disabled")) G(["modal-lg"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u0430\u043A"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
-                else return;
+                // Сохранить проект как, если кнопка не деактивирована
+                if (!$("#nav_li_file_save_as").hasClass("disabled")) {
+                    G(["modal-lg"]);
+                    $("#modal_info_contents").html(Jo);
+                    $("#modal_info_h").html("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u0430\u043A");
+                    $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                    K(Bo, {});
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_settings":
-                if (!$("#nav_li_file_settings").hasClass("disabled")) G(["modal-lg"]), Ho = {}, $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0440\u0430\u0441\u0447\u0451\u0442\u0430 \u043A\u0440\u043E\u0432\u043B\u0438"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {
-                    roof_data_params: Mo
-                }), vl.show();
-                else return;
+                // Настройки параметров расчёта кровли, если кнопка не деактивирована
+                if (!$("#nav_li_file_settings").hasClass("disabled")) {
+                    G(["modal-lg"]);
+                    Ho = {};
+                    $("#modal_info_contents").html(Jo);
+                    $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0440\u0430\u0441\u0447\u0451\u0442\u0430 \u043A\u0440\u043E\u0432\u043B\u0438");
+                    $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                    K(Bo, {
+                        roof_data_params: Mo
+                    });
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "roof_settings_programm":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Настройки программы
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "roof_open_modal":
-                G(["modal-full-width"]), $("#modal_info_contents").html(Jo), $("#modal_info_h").html("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0440\u0430\u0441\u0447\u0451\u0442"), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Открыть расчёт
+                G(["modal-full-width"]);
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_h").html("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0440\u0430\u0441\u0447\u0451\u0442");
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "yes_no_roof_menu_edit_sheet_remove":
+                // Подтверждение удаления вкладки, если кнопка не деактивирована
                 if (!$("#nav_li_edit_tab_remove").hasClass("disabled")) {
                     var s = rl.find(".active").html();
-                    G(["modal-full-width", "modal-yes-no"]), $("#modal_info_h").html("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443"), $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443 \"" + s + "\" ?</li></ul>"), $("#modal_info_footer").html("<div class=\"row\"><div class=\"col-xs-12 text-center\" ><button type=\"button\" class=\"btn btn-danger mr10\" onclick=\"SimpleCad.Action({'type':'roof_menu_edit_sheet_remove'});\">\u0423\u0434\u0430\u043B\u0438\u0442\u044C</button><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default ml10\">\u041E\u0442\u043C\u0435\u043D\u0430</button></div></div>"), vl.show()
-                } else return;
+                    G(["modal-full-width", "modal-yes-no"]);
+                    $("#modal_info_h").html("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443");
+                    $("#modal_info_contents").html("<ul class=\"gl_form_err_ul\"><li><i class=\"fa fa-exclamation-triangle\"></i> \u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u043A\u043B\u0430\u0434\u043A\u0443 \"" + s + "\" ?</li></ul>");
+                    $("#modal_info_footer").html("<div class=\"row\"><div class=\"col-xs-12 text-center\" ><button type=\"button\" class=\"btn btn-danger mr10\" onclick=\"SimpleCad.Action({'type':'roof_menu_edit_sheet_remove'});\">\u0423\u0434\u0430\u043B\u0438\u0442\u044C</button><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default ml10\">\u041E\u0442\u043C\u0435\u043D\u0430</button></div></div>");
+                    vl.show();
+                } else {
+                    return;
+                }
                 break;
+                
             case "admin_nomenclature_group":
-                G(["modal-full-width"]), $("#modal_info_h").html("\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u043D\u044B\u0445 \u0433\u0440\u0443\u043F\u043F"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Настройка номенклатурных групп
+                G(["modal-full-width"]);
+                $("#modal_info_h").html("\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u043D\u044B\u0445 \u0433\u0440\u0443\u043F\u043F");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             case "nde_validate_errors":
-                G([""]), $("#modal_info_h").html("\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0434\u043E\u0431\u043E\u0440\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430"), $("#modal_info_contents").html(t.errors_html), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), vl.show();
+                // Проверка доборного элемента - ошибки
+                G([""]);
+                $("#modal_info_h").html("\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0434\u043E\u0431\u043E\u0440\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430");
+                $("#modal_info_contents").html(t.errors_html);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                vl.show();
                 break;
+                
             case "nde_validate_description":
-                G(["modal-lg"]), $("#modal_info_h").html("\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F \u043A \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u043C \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C"), $("#modal_info_contents").html(Jo), $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>"), K(Bo, {}), vl.show();
+                // Требования к доборным элементам
+                G(["modal-lg"]);
+                $("#modal_info_h").html("\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F \u043A \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u043C \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C");
+                $("#modal_info_contents").html(Jo);
+                $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
+                K(Bo, {});
+                vl.show();
                 break;
+                
             default:
+                // Если тип модального окна не определён, ничего не делаем
         }
-        $("#modal_html").modal("show")
+        
+        // Отображаем модальное окно
+        $("#modal_html").modal("show");
     }
 
     function K(e, t) {
@@ -1920,7 +2461,7 @@ function SimpleCad() {
         //                 Dt(r);
         //                 break;
         //             case "roof_calc":
-        //                 0 < _.errors.length ? W("roof_has_errors", {}) : Y_(_);
+        //                 0 < _.errors.length ? showModalWindow("roof_has_errors", {}) : Y_(_);
         //                 break;
         //             case "roof_save":
         //                 "undefined" != typeof _.data.g_project_file_set_id && (ti.id = _.data.g_project_file_set_id), la();
@@ -2136,7 +2677,7 @@ function SimpleCad() {
             var a = e[0].attributes["data-validate-type"].value;
             switch (a) {
                 case "numeric":
-                    _ = U(_), isNaN(_) && (t.is_success = !1);
+                    _ = parseNumericValue(_), isNaN(_) && (t.is_success = !1);
                     break;
                 default:
             }
@@ -2144,8 +2685,24 @@ function SimpleCad() {
         return t.is_success || e.addClass("f-has-error"), t
     }
 
-    function U(e) {
-        return e += "", e = e.replace(",", "."), e = parseFloat(e), isNaN(e) && (e = 0), e
+    /**
+     * Преобразует входное значение в число.
+     * Заменяет запятые на точки, обрабатывает ошибки преобразования.
+     * 
+     * @param {*} e - Значение для преобразования в число
+     * @returns {number} - Преобразованное число, или 0 если преобразование не удалось
+     */
+    function parseNumericValue(e) {        
+        // Преобразуем значение в строку
+        e += "";
+        // Заменяем запятую на точку (для поддержки разных форматов записи чисел)
+        e = e.replace(",", ".");
+        // Преобразуем строку в число
+        e = parseFloat(e);
+        // Если результат не является числом, устанавливаем значение в 0
+        isNaN(e) && (e = 0);
+        
+        return e;
     }
 
     function ee(e) {
@@ -2166,7 +2723,7 @@ function SimpleCad() {
                     Zi.text(s), t = !0, _ = !1, a = !1, r = !1;
                     break;
                 case "points":
-                    i = parseInt(i), s = U(s), s = s * Go.g_scale[vo] / 100, i % 2 ? (s *= -1, s += Ao[vo]) : s += Fo[vo];
+                    i = parseInt(i), s = parseNumericValue(s), s = s * Go.g_scale[vo] / 100, i % 2 ? (s *= -1, s += Ao[vo]) : s += Fo[vo];
                     var l = Zi.points();
                     l[i] = s, Zi.setPoints(l), t = !0, _ = !0, a = !0;
                     break;
@@ -2176,7 +2733,7 @@ function SimpleCad() {
                     break;
                 case "lb_length":
                 case "lb_offset":
-                    s = U(s), Zi.attrs[n] = s, St(Zi.id()), processElementById(Zi.attrs.parent_id);
+                    s = parseNumericValue(s), Zi.attrs[n] = s, St(Zi.id()), processElementById(Zi.attrs.parent_id);
                     var c = Bi.findOne("#" + Zi.attrs.parent_id);
                     He(c), t = !0, _ = !1, a = !1;
                     break;
@@ -2221,8 +2778,29 @@ function SimpleCad() {
         $("#add_object_table").append(h)
     }
 
-    function _e() {
-        c_("btn_finish_cad_draw"), c_("btn_finish_cad_draw_close"), ne(), se(), oe(), ie(), je(), Ra(), Ha(), Ja()
+    /**
+     * Сбрасывает состояние CAD редактора и очищает выделенные элементы.
+     * Функция отключает активные кнопки рисования, снимает выделение
+     * с элементов панели и очищает временные объекты.
+     */
+    function resetCADState() {
+        // Отключаем кнопки завершения рисования
+        c_("btn_finish_cad_draw"); 
+        c_("btn_finish_cad_draw_close"); 
+        
+        // Снимаем выделение с элементов управления
+        ne(); // Снимает выделение с элементов аккордеона
+        se(); // Снимает выделение с объектов в списке объектов
+        oe(); // Очищает таблицу объектов
+        
+        // Очищаем рабочую область
+        ie(); // Сбрасывает стили элементов к значениям по умолчанию
+        je(); // Скрывает вспомогательные линии
+        
+        // Обновляем состояние и интерфейс
+        Ra(); // Обновляет координаты указателя
+        Ha(); // Обновляет информацию активного слоя
+        Ja(); // Обновляет доступность кнопок и контролов
     }
 
     function ae() {
@@ -2383,8 +2961,25 @@ function SimpleCad() {
         }
     }
 
-    function fe() {
-        Oo.mode = "default", Oo["data-element"] = "default", nl.addClass("active")
+    /**
+     * Переключает редактор CAD в стандартный режим работы.
+     * Сбрасывает режим и тип элемента на значения по умолчанию, 
+     * активирует кнопку выбора в панели инструментов.
+     * 
+     * Эта функция используется для переключения в режим выбора элементов
+     * из любого другого режима (например, рисования фигур) и визуально
+     * отображает это состояние в интерфейсе.
+     */
+    function setDefaultMode() {
+        removeStartAndEndIndicators()
+        // Устанавливаем режим редактора в значение "default"
+        Oo.mode = "default";
+        
+        // Устанавливаем тип активного элемента на "default"
+        Oo["data-element"] = "default";
+        
+        // Делаем кнопку инструмента выбора активной в интерфейсе
+        nl.addClass("active");
     }
 
     function ge() {
@@ -2392,13 +2987,16 @@ function SimpleCad() {
     }
 
     function ye(e) {
+        if (1 == e.evt.button) return e.evt.preventDefault(), $('[data-element="select"]').trigger('click'), !1;
         if (2 == e.evt.button) return e.evt.preventDefault(), ya(e), !1;
         switch ($o && (kl.hide(), $o = !1), Oo.mode) {
             case "default":
-                _e(), fe(), Zi = "undefined", zi = "";
+                updateUI()
+                resetCADState(), setDefaultMode(), Zi = "undefined", zi = "";
                 break;
             case "add_element":
-                z(e);
+                updateUI()
+                handleCanvasClick(e);
                 break;
             default:
         }
@@ -2457,6 +3055,77 @@ function SimpleCad() {
      * @param {number} event.evt.layerY - Координата Y курсора относительно холста
      */
     function handleCanvasMouseMove(event) {
+
+        if (isRotateClick) {
+            // Если активирован режим вращения, определим направление движения мыши
+            
+            // Сохраняем текущую позицию мыши
+            var currentMouseX = event.evt.layerX;
+            var currentMouseY = event.evt.layerY;
+            
+            // Инициализируем переменные для отслеживания вращения, если они еще не определены
+            if (!window.rotationTracking) {
+                window.rotationTracking = {
+                    lastMousePosition: {
+                        x: currentMouseX,
+                        y: currentMouseY
+                    },
+                    accumulatedAngle: 0,
+                    lastAppliedAngle: 0
+                };
+                return; // Пропускаем первый кадр для сбора начальных данных
+            }
+            
+            // Если выбран элемент и мы можем определить его центр
+            if (typeof Zi !== "undefined" && Zi !== "undefined") {
+                // Определяем центр элемента для расчета угла
+                var elementCenter = getElementCenter(Zi);
+                
+                // Вычисляем углы для предыдущей и текущей позиции мыши относительно центра элемента
+                var previousAngle = Math.atan2(
+                    window.rotationTracking.lastMousePosition.y - elementCenter.y, 
+                    window.rotationTracking.lastMousePosition.x - elementCenter.x
+                );
+                var currentAngle = Math.atan2(
+                    currentMouseY - elementCenter.y, 
+                    currentMouseX - elementCenter.x
+                );
+                
+                // Вычисляем разницу между углами (в радианах)
+                var deltaAngle = currentAngle - previousAngle;
+                
+                // Нормализация deltaAngle, чтобы избежать скачков при переходе через ±π
+                if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
+                if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
+                
+                // Накапливаем угол поворота
+                window.rotationTracking.accumulatedAngle += deltaAngle;
+                
+                // Проверяем режим магнита
+                var rotationStep = checkMagnet30(event.evt) ? Math.PI / 6 : Math.PI / 180; // 30 или 1 градус в радианах
+                
+                // Проверяем, достигнут ли пороговый угол для применения поворота
+                if (Math.abs(window.rotationTracking.accumulatedAngle - window.rotationTracking.lastAppliedAngle) >= rotationStep) {
+                    // Определяем количество шагов поворота и направление
+                    var steps = Math.floor(Math.abs(window.rotationTracking.accumulatedAngle - window.rotationTracking.lastAppliedAngle) / rotationStep);
+                    var rotationDirection = window.rotationTracking.accumulatedAngle > window.rotationTracking.lastAppliedAngle ? 1 : -1;
+                    
+                    // Применяем вращение к элементу
+                    var rotationAmount = (checkMagnet30(event.evt) ? 30 : 1) * steps * rotationDirection;
+                    rotateElement(Zi, rotationAmount, true);
+                    
+                    // Запоминаем последний примененный угол
+                    window.rotationTracking.lastAppliedAngle += rotationStep * steps * rotationDirection;
+                }
+                
+                // Обновляем позицию для следующего кадра
+                window.rotationTracking.lastMousePosition = {
+                    x: currentMouseX,
+                    y: currentMouseY
+                };
+            }
+        }
+
         // Обработка в зависимости от текущего режима
         switch (Oo.mode) {
             case "default":
@@ -2505,6 +3174,53 @@ function SimpleCad() {
                 to[vo].draw();
                 mi = false;
             }
+        }
+    }
+
+
+    /**
+     * Вычисляет центр элемента.
+     * @param {Object} element - Элемент Konva
+     * @returns {Object} - Координаты центра элемента {x, y}
+     */
+    function getElementCenter(element) {     
+        // Определяем центр элемента в зависимости от его типа
+        switch (element.className) {
+            case 'Line':
+            case 'Arrow':
+                // Для линий и стрелок вычисляем центр как центр ограничивающего прямоугольника
+                var points = element.points();
+                var minX = Infinity, minY = Infinity;
+                var maxX = -Infinity, maxY = -Infinity;
+                
+                // Находим минимальные и максимальные координаты
+                for (var i = 0; i < points.length; i += 2) {
+                    var x = points[i];
+                    var y = points[i + 1];
+                    
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                }
+                
+                // Вычисляем центр ограничивающего прямоугольника
+                return {
+                    x: minX + (maxX - minX) / 2,
+                    y: minY + (maxY - minY) / 2
+                };
+            case 'Text':
+                // Для текста центр - это его координаты плюс половина размеров
+                return {
+                    x: element.x() + element.width() / 2,
+                    y: element.y() + element.height() / 2
+                };
+            default:
+                // Для других типов - просто координаты
+                return {
+                    x: element.x(),
+                    y: element.y()
+                };
         }
     }
 
@@ -2759,26 +3475,67 @@ function SimpleCad() {
             return;
         }
 
-        if (magnet30.hasClass('active')) {
-            magnet30.removeClass('active')
+        if ($magnet30.hasClass('active')) {
+            $magnet30.removeClass('active')
             isMagnet30click = false;
         }
         else {
             isMagnet30click = true;
-            magnet30.addClass('active');
+            $magnet30.addClass('active');
         } 
     }
 
+    function handlerRotate(event) {
+        $(".d_elements_button").removeClass('active');
+
+        if (Oo.mode == 'add_element') {
+            gs();
+            polylineId = Zi.id();
+            let points = Zi.points();
+            
+            points = points.slice(0, points.length - 2);        
+    
+            Zi.setPoints(points);
+            processAndClearElement(Zi);
+            yt(Zi.id(), false);
+            processElementAndAddMovePoints(Zi, false);
+
+            En();
+        }
+
+        gs();
+
+
+        if ($rotate.hasClass('active')) {
+            $rotate.removeClass('active')
+            isRotateClick = false;
+        }
+        else {
+            $rotate.addClass('active');
+            isRotateClick = true;
+        }
+
+        setTimeout(function() {
+            $(document).on('click', function(event) {
+                if (isRotateClick) {
+                    $rotate.removeClass('active');
+                    isRotateClick = false;
+                    $(document).off('click');
+                }
+            });
+        }, 200)
+    }
+
     function checkMagnet30(event) {
-        if (isMagnet30click && magnet30.hasClass('active')) {
+        if (isMagnet30click && $magnet30.hasClass('active')) {
             return true;
         }
         else if (event && event.shiftKey) {
-            magnet30.addClass('active');
+            $magnet30.addClass('active');
             return true;
         }
         else if (event && ! isMagnet30click && !event.shiftKey) {
-            magnet30.removeClass('active')    
+            $magnet30.removeClass('active')    
         }        
     }
 
@@ -2838,13 +3595,13 @@ function SimpleCad() {
      */
     function handleMouseMoveWhileAddingElement(event) {
         // Обновляем вспомогательные линии и дуги для текущего положения курсора
-        updateHelperLinesAndText(event);
+        updateHelperLinesAndText(event);        
 
         // Если активный элемент определён, обрабатываем его в зависимости от типа
         if (typeof Zi !== "undefined" && Zi !== "undefined") {
             switch (Oo["data-element"]) {
                 case "line":
-                case "pline":
+                case "pline":                    
                     // Обновляем координаты последней точки полилинии
                     updatePolylineLastPoint(event.evt.layerX, event.evt.layerY, event);
                     break;
@@ -2880,56 +3637,60 @@ function SimpleCad() {
         }
     }
 
+
+    var testupdatePolylineLastPoint = false
     /**
- * Обновляет координаты последней точки полилинии.
- *
- * Если зажата клавиша Shift, корректирует координаты так, чтобы линия рисовалась
- * только под углом, кратным 90 градусам.
- *
- * @param {number} x - Новая координата X для последней точки.
- * @param {number} y - Новая координата Y для последней точки.
- * @param {Object} event - Событие мыши, содержащее информацию о нажатых клавишах.
- */
-function updatePolylineLastPoint(x, y, event) {
-    // Получаем массив точек текущей полилинии
-    var points = Zi.points();
+     * Обновляет координаты последней точки полилинии.
+     *
+     * Если зажата клавиша Shift, корректирует координаты так, чтобы линия рисовалась
+     * только под углом, кратным 90 градусам.
+     *
+     * @param {number} x - Новая координата X для последней точки.
+     * @param {number} y - Новая координата Y для последней точки.
+     * @param {Object} event - Событие мыши, содержащее информацию о нажатых клавишах.
+     */
+    function updatePolylineLastPoint(x, y, event) {
+        
 
-    // Определяем количество точек в полилинии
-    var totalPoints = points.length;
+        // Получаем массив точек текущей полилинии
+        var points = Zi.points();
 
-    // Определяем индексы последней точки
-    var lastPointIndices = {
-        x: totalPoints - 4, // Предпоследняя точка X
-        y: totalPoints - 3, // Предпоследняя точка Y
-        lastX: totalPoints - 2, // Последняя точка X
-        lastY: totalPoints - 1  // Последняя точка Y
-    };
+        // Определяем количество точек в полилинии
+        var totalPoints = points.length;
 
-    // Получаем координаты предыдущей точки
-    var prevX = points[lastPointIndices.x];
-    var prevY = points[lastPointIndices.y];
+        // Определяем индексы последней точки
+        var lastPointIndices = {
+            x: totalPoints - 4, // Предпоследняя точка X
+            y: totalPoints - 3, // Предпоследняя точка Y
+            lastX: totalPoints - 2, // Последняя точка X
+            lastY: totalPoints - 1  // Последняя точка Y
+        };
 
-    // Вычисляем разницу координат
-    var deltaX = x - prevX;
-    var deltaY = y - prevY;
+        // Получаем координаты предыдущей точки
+        var prevX = points[lastPointIndices.x];
+        var prevY = points[lastPointIndices.y];
 
-    // Если зажата клавиша Shift, корректируем координаты
-    if (checkMagnet30(event.evt)) {
-        const angle = Math.atan2(deltaY, deltaX);
-        const step = Math.PI / 6; // 30 градусов в радианах
-        const snappedAngle = Math.round(angle / step) * step;
-        const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        deltaX = length * Math.cos(snappedAngle);
-        deltaY = length * Math.sin(snappedAngle);
+        // Вычисляем разницу координат
+        var deltaX = x - prevX;
+        var deltaY = y - prevY;
+
+        // Если зажата клавиша Shift, корректируем координаты
+        if (checkMagnet30(event.evt)) {
+            const angle = Math.atan2(deltaY, deltaX);
+            const step = Math.PI / 6; // 30 градусов в радианах
+            const snappedAngle = Math.round(angle / step) * step;
+            const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            deltaX = length * Math.cos(snappedAngle);
+            deltaY = length * Math.sin(snappedAngle);
+        }
+
+        // Обновляем координаты последней точки
+        points[lastPointIndices.lastX] = prevX + deltaX;
+        points[lastPointIndices.lastY] = prevY + deltaY;
+
+        // Устанавливаем обновлённые точки обратно в полилинию
+        Zi.setPoints(points);
     }
-
-    // Обновляем координаты последней точки
-    points[lastPointIndices.lastX] = prevX + deltaX;
-    points[lastPointIndices.lastY] = prevY + deltaY;
-
-    // Устанавливаем обновлённые точки обратно в полилинию
-    Zi.setPoints(points);
-}
 
     function Te(e, t, _, a, r) {
         var n = Math.dist(e, t, _, a);
@@ -3360,7 +4121,7 @@ function updatePolylineLastPoint(x, y, event) {
             default:
         }
         var u = Pe(c.points[0], c.points[1], c.points[2], c.points[3], 4, !1, d);
-        dt(u.points[0], u.points[1], u.points[2], u.points[3], e + 500 * (-1 * p), t + 500 * (-1 * m), o, "", "", "", [], "", i, "", !1);
+        displayDimensionLine(u.points[0], u.points[1], u.points[2], u.points[3], e + 500 * (-1 * p), t + 500 * (-1 * m), o, "", "", "", [], "", i, "", !1);
         var f = mainColors.default_element_color;
         "undefined" != typeof Zi && "undefined" !== Zi && Zi.id() == o && (f = mainColors.selected_element_color);
         var g = new Konva.Line({
@@ -3619,7 +4380,7 @@ function updatePolylineLastPoint(x, y, event) {
             }
 
             // Добавляем сегмент с размерами и декорациями
-            dt(
+            displayDimensionLine(
                 points[2 * i + 0],
                 points[2 * i + 1],
                 points[2 * i + 2],
@@ -3657,7 +4418,7 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
-     /**
+    /**
      * Рисует дугу угла между двумя линиями и отображает значение угла.
      *
      * @param {number} e - Координата X первой точки первой линии.
@@ -3687,6 +4448,10 @@ function updatePolylineLastPoint(x, y, event) {
             parent_id: s,
             clockwise: !1
         });
+        // d.on("click", function(e) {
+        //     console.log('test'); // Обработчик выбора сегмента
+        // });
+
         $s[vo].add(d);
         var p = Math.abs(i),
             m = 45;
@@ -3703,7 +4468,7 @@ function updatePolylineLastPoint(x, y, event) {
             var w = new Konva.Text({
                 x: y + (v - y) / 2,
                 y: b + (x - b) / 2,
-                text: p.toFixed(2) / 1 + "\xB0",
+                text: p.toFixed(0) / 1 + "\xB0",
                 fontSize: 14,
                 fontFamily: "Arial",
                 fontStyle: "bold",
@@ -3715,103 +4480,550 @@ function updatePolylineLastPoint(x, y, event) {
                 listening: y_("listening_konva_text_angle"),
                 angle_num_counter: o
             });
+
+            w.on("click", function(e) {
+                // Prevent event propagation
+                e.evt.preventDefault();
+                e.evt.stopPropagation();
+                
+                // Store reference to the text object
+                const textObj = this;
+                
+                // Get current angle value (removing the degree symbol)
+                const currentAngle = parseInt(textObj.text().replace('°', ''));
+
+                var signAngle = (mathSignAngle = () => {
+                    var parentElement = Bi.findOne("#" +  textObj.attrs.parent_id);
+                    var points = JSON.copy(parentElement.points());
+                    var pointIndex = textObj.attrs.angle_num_counter;
+    
+                    var currentAngle = calculateAngle(
+                        points[2 * (pointIndex - 1) + 0], points[2 * (pointIndex - 1) + 1],
+                        points[2 * (pointIndex - 1) + 2], points[2 * (pointIndex - 1) + 3],
+                        points[2 * (pointIndex - 1) + 4], points[2 * (pointIndex - 1) + 5],
+                        true, true, false
+                    );
+                    
+                    return currentAngle > 0 ? 1 : -1;
+                })();
+                
+
+
+                // Create input element for editing
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentAngle;
+                input.style.position = 'absolute';
+                input.style.zIndex = '10000';
+                
+                // Position input at the same location as the text
+                const absPos = textObj.getAbsolutePosition();
+                const stage = textObj.getStage();
+                const containerRect = stage.container().getBoundingClientRect();
+                
+                input.style.left = `${containerRect.left + absPos.x}px`;
+                input.style.top = `${containerRect.top + absPos.y}px`;
+                input.style.width = '60px';
+                input.style.fontSize = '14px';
+                input.style.fontFamily = 'Arial';
+                input.style.textAlign = 'center';
+                
+                // Hide original text while editing
+                textObj.visible(false);
+                to[vo].draw();
+                
+                // Add input to document
+                document.body.appendChild(input);
+                input.focus();
+                input.select();
+                
+                // Function to update angle value with validation
+                const updateAngle = () => {
+                    // Get and validate input                    
+                    let newAngle = parseInt(input.value);
+                    
+                    // Basic validation for NaN
+                    if (isNaN(newAngle)) {
+                        newAngle = currentAngle;
+                    } else {
+                        // Apply additional validation logic
+                        newAngle = Math.round_precision_nearest ? 
+                            Math.round_precision_nearest(newAngle, 5) : 
+                            parseFloat(newAngle.toFixed(5));
+                        
+                        // Fix negative zero
+                        if (newAngle == -0) {
+                            newAngle = 0;
+                        }
+                        
+                        // Apply minimum angle constraints if not zero
+                        if (newAngle != 0) {
+                            if (newAngle > 0 && newAngle < 35) {
+                                newAngle = 35;
+                            } else if (newAngle < 0 && newAngle > -35) {
+                                newAngle = -35;
+                            }
+                        }
+                    }
+                    
+                    // Update text with new angle
+                    textObj.text(newAngle.toFixed(0) / 1 + '°');
+                    
+                    // Make text visible again
+                    textObj.visible(true);
+                    to[vo].draw();
+                    
+                    // Clean up
+                    document.body.removeChild(input);
+                    
+                    // Update any angle-related data/geometry if needed
+                    if (typeof recalculatePathAnglesByPoint === 'function') {
+                        // If parent element and angle counter are available                        
+                        if (textObj.attrs.parent_id && textObj.attrs.angle_num_counter !== undefined) {                                                        
+                            recalculatePathAnglesByPoint(
+                                textObj.attrs.parent_id,
+                                textObj.attrs.angle_num_counter - 1,
+                                newAngle * signAngle
+                            );
+
+                            $inputAngle = $('.nde_tbl_row_size_ang_ang_inp > [data-focus="'+ 2 * textObj.attrs.angle_num_counter +'"]')
+                            
+                            if ($inputAngle.length > 0) {
+                                console.log($inputAngle)
+                                $inputAngle.val(newAngle * signAngle);
+                            }
+                            
+                            processLayerElements({});
+                             // Очищаем временные элементы
+                            Re(); // Удаление временных объектов
+                            gt({}); // Обновление видимости объектов
+                            qa({}); // Дополнительная обработка объектов
+                            W_({}); // Очистка вспомогательных данных
+
+                            // Если активный элемент существует, отображаем его, иначе скрываем
+                            if (typeof Zi !== "undefined" && Zi !== "undefined") {
+                                le(); // Отображение активного элемента
+                            } else {
+                                ce(); // Скрытие активного элемента
+                            }
+                            ds(textObj.attrs.parent_id);
+                        }
+                    }
+                };
+                
+                // Handle keyboard events
+                input.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        updateAngle();
+                    } else if (event.key === 'Escape') {
+                        // Cancel editing
+                        textObj.visible(true);
+                        to[vo].draw();
+                        document.body.removeChild(input);
+                    }
+                });
+                
+                // Update on blur
+                input.addEventListener('blur', updateAngle);
+            });
             $s[vo].add(w)
         }
     }
 
    
-    function dt(e, t, _, a, r, n, s, o, i, c, d, p, m, h, u) {
-        var f = 25,
-            g = !1,
-            y = 0;
-        "undefined" != typeof d && 0 < d.length && (y = d.length, g = !0, f += f * d.length);
-        var b = Se(e, t, _, a),
-            v = b.line_center_x,
-            x = b.line_center_y,
-            w = 0,
-            k = 0,
-            z = Ge(e, t, _, a),
-            j = calculateAngle(e, -1e4, e, t, _, a, !0, !0, !1),
-            C = "";
-        "" == h ? (C = Te(e, t, _, a, !1), C = ut((100 * C / Go.g_scale[vo]).toFixed(yi.length.prec))) : C = h;
-        var L = 1,
-            O = 1,
-            F = j,
-            A = 0,
-            q = 0;
-        switch (n = +n.toFixed(3), x = +x.toFixed(3), r = +r.toFixed(3), v = +v.toFixed(3), z) {
+    /**
+     * Создаёт и отображает размерные линии и размеры для CAD элементов.
+     * 
+     * @param {number} startX - Начальная координата X линии элемента
+     * @param {number} startY - Начальная координата Y линии элемента
+     * @param {number} endX - Конечная координата X линии элемента
+     * @param {number} endY - Конечная координата Y линии элемента
+     * @param {number} massX - Координата X центра масс для определения направления размера
+     * @param {number} massY - Координата Y центра масс для определения направления размера
+     * @param {string} parentId - Идентификатор родительского элемента
+     * @param {string} segmentType - Тип сегмента (например, "first_line_pline", "one_line_pline")
+     * @param {string} startDecoration - Тип оформления начала линии (например, "zavalc_in", "zavalc_out")
+     * @param {string} endDecoration - Тип оформления конца линии (например, "zavalc_in", "zavalc_out")
+     * @param {Array} lineblocks - Массив блоков линий, связанных с сегментом
+     * @param {number} segmentCounter - Счетчик сегмента для нумерации
+     * @param {string} zavalcStartEnd - Параметр для обозначения типа завальцовки
+     * @param {string} segmentLength - Длина сегмента (может быть передана как строка)
+     * @param {boolean} hasBreak - Флаг наличия разрыва в линии
+     */
+    function displayDimensionLine(startX, startY, endX, endY, massX, massY, parentId, segmentType, startDecoration, endDecoration, lineblocks, segmentCounter, zavalcStartEnd, segmentLength, hasBreak) {
+        // Базовое расстояние для размещения размерной линии от элемента
+        var baseOffsetDistance = 25;
+        // Флаг наличия связанных блоков линий
+        var hasLineBlocks = false;
+        // Количество связанных блоков линий
+        var lineBlocksCount = 0;
+
+        // Проверка наличия блоков линий и увеличение расстояния при необходимости
+        if (typeof lineblocks !== "undefined" && lineblocks.length > 0) {
+            lineBlocksCount = lineblocks.length;
+            hasLineBlocks = true;
+            // Увеличиваем расстояние для размерной линии с учетом количества блоков
+            baseOffsetDistance += baseOffsetDistance * lineBlocksCount;
+        }
+
+        // Получаем координаты центра линии
+        var centerPoint = Se(startX, startY, endX, endY);
+        var centerX = centerPoint.line_center_x;
+        var centerY = centerPoint.line_center_y;
+
+        // Инициализация переменных для положения текста размера
+        var textX = 0;
+        var textY = 0;
+        
+        // Определяем квадрант расположения линии
+        var quadrant = Ge(startX, startY, endX, endY);
+        
+        // Вычисляем угол линии
+        var lineAngle = calculateAngle(startX, -10000, startX, startY, endX, endY, true, true, false);
+        
+        // Текст размера (длина сегмента)
+        var dimensionText = "";
+        
+        // Если длина не передана, вычисляем её
+        if (segmentLength === "") {
+            // Вычисляем длину линии
+            var lineLength = Te(startX, startY, endX, endY, false);
+            // Форматируем длину в нужном формате
+            dimensionText = ut((100 * lineLength / Go.g_scale[vo]).toFixed(yi.length.prec));
+        } else {
+            dimensionText = segmentLength;
+        }
+
+        // Коэффициенты направления для размерной линии
+        var directionX = 1;
+        var directionY = 1;
+        var textRotation = lineAngle;
+        var textOffsetX = 0;
+        var textOffsetY = 0;
+
+        // Округляем координаты для точности сравнения
+        massY = +massY.toFixed(3);
+        centerY = +centerY.toFixed(3);
+        massX = +massX.toFixed(3);
+        centerX = +centerX.toFixed(3);
+
+        // Определяем положение размерной линии в зависимости от квадранта
+        switch (quadrant) {
             case "1":
             case "3":
-                var T = "",
-                    S = (n - t) / (a - t) - (r - e) / (_ - e);
-                S = +S.toFixed(3), T = 0 > S && "1" == z || 0 < S && "3" == z ? "up-left" : 0 < S && "1" == z || 0 > S && "3" == z ? "down-right" : 0 == Math.abs(S) ? "up-left" : "up-left", "up-left" == T ? (L = -1, O = -1, !g && ("1" == z && ("zavalc_in" == i || "zavalc_out" == c) || "3" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2)) : "down-right" == T && (L = 1, O = 1, !g && ("1" == z && ("zavalc_out" == i || "zavalc_in" == c) || "3" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2)), w = v + L * Math.abs(f * Math.sin((90 - j) * l["pi/180"])), k = x + L * Math.abs(f * Math.cos((90 - j) * l["pi/180"])), 0 < j ? F -= 90 : F += 90, A = -1, q = -1;
+                // Определяем направление относительно центра масс для 1 и 3 квадрантов
+                var directionIndicator = "";
+                var slopeRatio = (massY - startY) / (endY - startY) - (massX - startX) / (endX - startX);
+                
+                slopeRatio = +slopeRatio.toFixed(3);
+                
+                if ((slopeRatio < 0 && quadrant === "1") || (slopeRatio > 0 && quadrant === "3")) {
+                    directionIndicator = "up-left";
+                } else if ((slopeRatio > 0 && quadrant === "1") || (slopeRatio < 0 && quadrant === "3")) {
+                    directionIndicator = "down-right";
+                } else if (Math.abs(slopeRatio) === 0) {
+                    directionIndicator = "up-left";
+                } else {
+                    directionIndicator = "up-left";
+                }
+                
+                // Настраиваем коэффициенты направления
+                if (directionIndicator === "up-left") {
+                    directionX = -1;
+                    directionY = -1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "1" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "3" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                } else if (directionIndicator === "down-right") {
+                    directionX = 1;
+                    directionY = 1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "1" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) ||
+                        (quadrant === "3" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                }
+                
+                // Вычисляем позицию текста
+                textX = centerX + directionX * Math.abs(baseOffsetDistance * Math.sin((90 - lineAngle) * l["pi/180"]));
+                textY = centerY + directionX * Math.abs(baseOffsetDistance * Math.cos((90 - lineAngle) * l["pi/180"]));
+                
+                // Настраиваем поворот текста
+                if (lineAngle > 0) {
+                    textRotation -= 90;
+                } else {
+                    textRotation += 90;
+                }
+                
+                textOffsetX = -1;
+                textOffsetY = -1;
                 break;
+                
             case "2":
             case "4":
-                var T = "",
-                    S = (n - t) / (a - t) - (r - e) / (_ - e);
-                S = +S.toFixed(3), T = 0 > S && "2" == z || 0 < S && "4" == z ? "down-left" : 0 < S && "2" == z || 0 > S && "4" == z ? "up-right" : 0 == Math.abs(S) ? "up-right" : "up-right", "up-right" == T ? (L = 1, O = -1, !g && ("2" == z && ("zavalc_in" == i || "zavalc_out" == c) || "4" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2)) : "down-left" == T && (L = -1, O = 1, !g && ("2" == z && ("zavalc_out" == i || "zavalc_in" == c) || "4" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2)), w = v + L * Math.abs(f * Math.cos((180 - j) * l["pi/180"])), k = x + O * Math.abs(f * Math.sin((180 - j) * l["pi/180"])), 0 < j ? F -= 90 : F += 90, A = 1, q = -1;
+                // Определяем направление относительно центра масс для 2 и 4 квадрантов
+                var directionIndicator = "";
+                var slopeRatio = (massY - startY) / (endY - startY) - (massX - startX) / (endX - startX);
+                
+                slopeRatio = +slopeRatio.toFixed(3);
+                
+                if ((slopeRatio < 0 && quadrant === "2") || (slopeRatio > 0 && quadrant === "4")) {
+                    directionIndicator = "down-left";
+                } else if ((slopeRatio > 0 && quadrant === "2") || (slopeRatio < 0 && quadrant === "4")) {
+                    directionIndicator = "up-right";
+                } else if (Math.abs(slopeRatio) === 0) {
+                    directionIndicator = "up-right";
+                } else {
+                    directionIndicator = "up-right";
+                }
+                
+                // Настраиваем коэффициенты направления
+                if (directionIndicator === "up-right") {
+                    directionX = 1;
+                    directionY = -1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "2" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "4" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                } else if (directionIndicator === "down-left") {
+                    directionX = -1;
+                    directionY = 1;
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "2" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "4" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                }
+                
+                // Вычисляем позицию текста
+                textX = centerX + directionX * Math.abs(baseOffsetDistance * Math.cos((180 - lineAngle) * l["pi/180"]));
+                textY = centerY + directionY * Math.abs(baseOffsetDistance * Math.sin((180 - lineAngle) * l["pi/180"]));
+                
+                // Настраиваем поворот текста
+                if (lineAngle > 0) {
+                    textRotation -= 90;
+                } else {
+                    textRotation += 90;
+                }
+                
+                textOffsetX = 1;
+                textOffsetY = -1;
                 break;
+                
             case "up":
             case "down":
-                k = x, r < v ? (!g && ("down" == z && ("zavalc_in" == i || "zavalc_out" == c) || "up" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2), w = v + f) : (!g && ("down" == z && ("zavalc_out" == i || "zavalc_in" == c) || "up" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2), w = v - f), F = -90, A = -1, q = 0;
+                // Вертикальные линии - вверх или вниз
+                textY = centerY;
+                
+                if (massX < centerX) {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "down" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "up" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textX = centerX + baseOffsetDistance;
+                } else {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "down" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "up" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textX = centerX - baseOffsetDistance;
+                }
+                
+                textRotation = -90;
+                textOffsetX = -1;
+                textOffsetY = 0;
                 break;
+                
             case "left":
             case "right":
-                w = v, n < x ? (!g && ("left" == z && ("zavalc_in" == i || "zavalc_out" == c) || "right" == z && ("zavalc_out" == i || "zavalc_in" == c)) && !y_("size_is_push_to_line") && (f *= 2), k = x + f) : (!g && ("left" == z && ("zavalc_out" == i || "zavalc_in" == c) || "right" == z && ("zavalc_in" == i || "zavalc_out" == c)) && !y_("size_is_push_to_line") && (f *= 2), k = x - f), F = 0, A = 0, q = -1;
+                // Горизонтальные линии - влево или вправо
+                textX = centerX;
+                
+                if (massY < centerY) {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "left" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out")) || 
+                        (quadrant === "right" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textY = centerY + baseOffsetDistance;
+                } else {
+                    // Увеличиваем расстояние для размерной линии при наличии оформления краев
+                    if (!hasLineBlocks && 
+                    ((quadrant === "left" && (startDecoration === "zavalc_out" || endDecoration === "zavalc_in")) || 
+                        (quadrant === "right" && (startDecoration === "zavalc_in" || endDecoration === "zavalc_out"))) && 
+                        !y_("size_is_push_to_line")) {
+                        baseOffsetDistance *= 2;
+                    }
+                    textY = centerY - baseOffsetDistance;
+                }
+                
+                textRotation = 0;
+                textOffsetX = 0;
+                textOffsetY = -1;
                 break;
+                
             default:
+                // В непредвиденных случаях используем значения по умолчанию
         }
-        var P = w - v,
-            I = k - x,
-            Y = .15 * P / (y + 1),
-            D = .15 * I / (y + 1);
-        if (y_("size_is_vynos") && (mt(e, t, e + P + Y, t + I + D, s), mt(_, a, _ + P + Y, a + I + D, s), mt(e + P, t + I, _ + P, a + I, s)), y_("size_is_push_to_line")) {
-            var X = 0,
-                G = 0,
-                W = 0,
-                K = 0,
-                N = u ? 3 : 8,
-                V = u ? 1.2 : 1.7,
-                E = u ? 8 : 3,
-                M = u ? 1.2 : 1.7;
-            switch (z) {
+
+        // Расчет линий смещения для размерных линий с блоками
+        var offsetX = textX - centerX;
+        var offsetY = textY - centerY;
+        // Коэффициенты для плавного распределения линий блоков
+        var gradientOffsetX = 0.15 * offsetX / (lineBlocksCount + 1);
+        var gradientOffsetY = 0.15 * offsetY / (lineBlocksCount + 1);
+
+        // Если размеры привязаны к линии, создаём вспомогательные линии
+        if (y_("size_is_vynos")) {
+            // Создаем выносные линии
+            mt(startX, startY, startX + offsetX + gradientOffsetX, startY + offsetY + gradientOffsetY, parentId);
+            mt(endX, endY, endX + offsetX + gradientOffsetX, endY + offsetY + gradientOffsetY, parentId);
+            mt(startX + offsetX, startY + offsetY, endX + offsetX, endY + offsetY, parentId);
+        }
+        
+        // Если размеры привязаны к линии, отображаем размерный текст особым образом
+        if (y_("size_is_push_to_line")) {
+            // Параметры для отображения текста в привязке к линии
+            var textPosX = 0;
+            var textPosY = 0;
+            var textOriginX = 0;
+            var textOriginY = 0;
+            // Масштаб смещения для обычных линий
+            var normalScale = hasBreak ? 3 : 8;
+            var breakScale = hasBreak ? 1.2 : 1.7;
+            // Масштаб смещения для линий с разрывами
+            var normalBreakScale = hasBreak ? 8 : 3;
+            var breakBreakScale = hasBreak ? 1.2 : 1.7;
+
+            // Определяем положение текста в зависимости от квадранта
+            switch (quadrant) {
                 case "1":
                 case "3":
-                    0 < P ? (X = v + (w - v) / N, G = x + (k - x) / N, W = v - (w - v) / 4 - 1, K = x - (k - x) / 4 - 1) : (X = v - (v - w) / V, G = x - (x - k) / V, W = v - (v - w) / 4 - 1, K = x - (x - k) / 4 - 1);
+                    if (offsetX > 0) {
+                        textPosX = centerX + (textX - centerX) / normalScale;
+                        textPosY = centerY + (textY - centerY) / normalScale;
+                        textOriginX = centerX - (textX - centerX) / 4 - 1;
+                        textOriginY = centerY - (textY - centerY) / 4 - 1;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / breakScale;
+                        textPosY = centerY - (centerY - textY) / breakScale;
+                        textOriginX = centerX - (centerX - textX) / 4 - 1;
+                        textOriginY = centerY - (centerY - textY) / 4 - 1;
+                    }
                     break;
+                    
                 case "2":
                 case "4":
-                    0 < P ? (X = v + (w - v) / V, G = x - (x - k) / V, W = v + (w - v) / 4 + 1, K = x - (x - k) / 4 - 1) : (X = v - (v - w) / N, G = x + (k - x) / N, W = v + (v - w) / 4 + 1, K = x - (k - x) / 4 - 1);
+                    if (offsetX > 0) {
+                        textPosX = centerX + (textX - centerX) / breakScale;
+                        textPosY = centerY - (centerY - textY) / breakScale;
+                        textOriginX = centerX + (textX - centerX) / 4 + 1;
+                        textOriginY = centerY - (centerY - textY) / 4 - 1;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / normalScale;
+                        textPosY = centerY + (textY - centerY) / normalScale;
+                        textOriginX = centerX + (centerX - textX) / 4 + 1;
+                        textOriginY = centerY - (textY - centerY) / 4 - 1;
+                    }
                     break;
+                    
                 case "up":
                 case "down":
-                    G = x, K = x, 0 < P ? (X = v + E, W = v - 8) : (X = v - (v - w) / M, W = v - 8);
+                    textPosY = centerY;
+                    textOriginY = centerY;
+                    
+                    if (offsetX > 0) {
+                        textPosX = centerX + normalBreakScale;
+                        textOriginX = centerX - 8;
+                    } else {
+                        textPosX = centerX - (centerX - textX) / breakBreakScale;
+                        textOriginX = centerX - 8;
+                    }
                     break;
+                    
                 case "left":
                 case "right":
-                    X = v, W = v, 0 < I ? (G = x + E, K = x - 8) : (G = x - (x - k) / M, K = x - 8);
+                    textPosX = centerX;
+                    textOriginX = centerX;
+                    
+                    if (offsetY > 0) {
+                        textPosY = centerY + normalBreakScale;
+                        textOriginY = centerY - 8;
+                    } else {
+                        textPosY = centerY - (centerY - textY) / breakBreakScale;
+                        textOriginY = centerY - 8;
+                    }
                     break;
+                    
                 default:
+                    // В непредвиденных случаях используем значения по умолчанию
             }
-            0 < parseFloat(C) && ht(X, 0, G, 0, C, F, s, p, m, u, W, K)
-        } else 0 < parseFloat(C) && ht(w, A, k, q, C, F, s, p, m, !1, 0, 0);
-        if (g) {
-            d = pt(d);
-            var R = 1;
-            $.each(d, function(_, a) {
-                var r = R / (y + 1),
-                    n = P * r,
-                    s = I * r;
-                if (0 < parseFloat(a.offset)) {
-                    mt(a.points[0], a.points[1], a.points[0] + n + Y, a.points[1] + s + D, a.id), mt(e + n, t + s, a.points[0] + n, a.points[1] + s, a.id);
-                    var o = Se(e + n, t + s, a.points[0] + n, a.points[1] + s);
-                    ht(o.line_center_x, A, o.line_center_y, q, a.offset, F, a.id, "", m, !1, 0, 0)
+
+            // Добавляем размерный текст, если длина больше нуля
+            if (parseFloat(dimensionText) > 0) {
+                displayDimensionText(textPosX, textOffsetX, textPosY, textOffsetY, dimensionText, textRotation, parentId, segmentCounter, zavalcStartEnd, hasBreak, textOriginX, textOriginY);
+            }
+        } else {
+            // Стандартное отображение размерного текста
+            if (parseFloat(dimensionText) > 0) {
+                displayDimensionText(textX, textOffsetX, textY, textOffsetY, dimensionText, textRotation, parentId, segmentCounter, zavalcStartEnd, false, 0, 0);
+            }
+        }
+
+        // Обработка блоков линий
+        if (hasLineBlocks) {
+            // Сортируем блоки линий по смещению
+            lineblocks = pt(lineblocks);
+            
+            var blockCounter = 1;
+            
+            // Добавляем размеры для каждого блока линий
+            $.each(lineblocks, function(index, block) {
+                // Коэффициент распределения для текущего блока
+                var ratio = blockCounter / (lineBlocksCount + 1);
+                var blockOffsetX = offsetX * ratio;
+                var blockOffsetY = offsetY * ratio;
+                
+                // Добавляем выносные линии и размеры для блока линии
+                if (parseFloat(block.offset) > 0) {
+                    // Создаём выносные линии для смещения блока
+                    mt(block.points[0], block.points[1], block.points[0] + blockOffsetX + gradientOffsetX, block.points[1] + blockOffsetY + gradientOffsetY, block.id);
+                    mt(startX + blockOffsetX, startY + blockOffsetY, block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.id);
+                    
+                    // Добавляем размер для смещения блока
+                    var offsetCenter = Se(startX + blockOffsetX, startY + blockOffsetY, block.points[0] + blockOffsetX, block.points[1] + blockOffsetY);
+                    displayDimensionText(offsetCenter.line_center_x, textOffsetX, offsetCenter.line_center_y, textOffsetY, block.offset, textRotation, block.id, "", zavalcStartEnd, false, 0, 0);
                 }
-                mt(a.points[2], a.points[3], a.points[2] + n + Y, a.points[3] + s + D, a.id), mt(a.points[0] + n, a.points[1] + s, a.points[2] + n, a.points[3] + s, a.id);
-                var o = Se(a.points[0] + n, a.points[1] + s, a.points[2] + n, a.points[3] + s);
-                ht(o.line_center_x, A, o.line_center_y, q, a.length, F, a.id, "", m, !1, 0, 0), R++
-            })
+                
+                // Создаём выносные линии для длины блока
+                mt(block.points[2], block.points[3], block.points[2] + blockOffsetX + gradientOffsetX, block.points[3] + blockOffsetY + gradientOffsetY, block.id);
+                mt(block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.points[2] + blockOffsetX, block.points[3] + blockOffsetY, block.id);
+                
+                // Добавляем размер для длины блока
+                var blockCenter = Se(block.points[0] + blockOffsetX, block.points[1] + blockOffsetY, block.points[2] + blockOffsetX, block.points[3] + blockOffsetY);
+                displayDimensionText(blockCenter.line_center_x, textOffsetX, blockCenter.line_center_y, textOffsetY, block.length, textRotation, block.id, "", zavalcStartEnd, false, 0, 0);
+                
+                blockCounter++;
+            });
         }
     }
 
@@ -3834,53 +5046,111 @@ function updatePolylineLastPoint(x, y, event) {
         $s[vo].add(n)
     }
 
-    function ht(e, t, _, a, r, n, s, o, i, l, c, d) {
-        "" != o && y_("size_text_is_line_counter") && (r += " (" + o + ")");
-        var p = new Konva.Text({
-            x: e + 12 * t,
-            y: _ + 12 * a,
-            text: r,
+    /**
+     * Создаёт и отображает текст с размерами элемента на CAD-чертеже.
+     * 
+     * @param {number} x - Координата X для размещения текста
+     * @param {number} xOffset - Смещение по X относительно координаты
+     * @param {number} y - Координата Y для размещения текста
+     * @param {number} yOffset - Смещение по Y относительно координаты
+     * @param {string} text - Текстовое содержимое (обычно размер элемента)
+     * @param {number} rotation - Угол поворота текста в градусах
+     * @param {string} parentId - ID родительского элемента
+     * @param {string|number} lineCounter - Порядковый номер или идентификатор линии
+     * @param {string} zavalcStartEnd - Параметр для обозначения типа завальцовки
+     * @param {boolean} hasBreak - Флаг наличия разрыва в линии
+     * @param {number} breakX - Координата X для разрыва линии 
+     * @param {number} breakY - Координата Y для разрыва линии
+     */
+    function displayDimensionText(x, xOffset, y, yOffset, text, rotation, parentId, lineCounter, zavalcStartEnd, hasBreak, breakX, breakY) {
+        // Если указан номер линии и включено отображение номера линии в настройках, добавляем его к тексту
+        if (lineCounter !== "" && y_("size_text_is_line_counter")) {
+            text += " (" + lineCounter + ")";
+        }
+        
+        // Создаем текстовый объект размера
+        var dimensionText = new Konva.Text({
+            x: x + 12 * xOffset,
+            y: y + 12 * yOffset,
+            text: text,
             fontSize: 14,
             fontFamily: "Arial",
             fontStyle: "bold",
-            rotation: n,
+            rotation: rotation,
             fill: "#333",
-            draggable: y_("draggable_konva_text_line_length"),
-            parent_id: s,
-            visible: !0,
-            line_num_counter: o,
-            listening: y_("listening_konva_text_line_length"),
-            zavalc_start_end: i
+            draggable: y_("draggable_konva_text_line_length"), // Возможность перетаскивания из настроек
+            parent_id: parentId,
+            visible: true,
+            line_num_counter: lineCounter,
+            listening: y_("listening_konva_text_line_length"), // Реагирование на события мыши из настроек
+            zavalc_start_end: zavalcStartEnd,
+        });     
+
+        // Добавляем обработчики событий для линии подсветки
+        dimensionText.on("mouseenter", function(e) {
+            if ("undefined" === Zi) {
+                gs()
+            }
+            
+            highlightPolylineSegment(
+                e.evt.layerX,
+                e.evt.layerY,
+                Zi.attrs.points,
+                Zi.attrs.id
+            );
+        });        
+
+        dimensionText.on("click", function(e) {
+            handleSegmentSelection(e); // Обработчик выбора сегмента
         });
-        if ($s[vo].add(p), l) {
-            var m = new Konva.Label({
-                    x: c,
-                    y: d,
-                    opacity: 1,
-                    draggable: !1,
-                    rotation: n,
-                    visible: !0,
-                    listening: !1,
-                    parent_id: s
-                }),
-                h = new Konva.Tag({
-                    fill: "#fff",
-                    parent_id: s
-                }),
-                u = new Konva.Text({
-                    text: "\u2240\u2240",
-                    fontSize: 17,
-                    fontFamily: "Arial",
-                    fontStyle: "bold",
-                    rotation: 0,
-                    fill: "#000",
-                    draggable: !1,
-                    parent_id: s,
-                    visible: !0,
-                    padding: -1,
-                    listening: !1
-                });
-            u.letterSpacing(-2), m.add(h), m.add(u), Es[vo].add(m)
+
+        // Добавляем текстовый объект в текущий слой размеров
+        $s[vo].add(dimensionText);
+
+        // Если указан разрыв линии, добавляем соответствующий индикатор
+        if (hasBreak) {
+            // Создаем метку для обозначения разрыва
+            var breakLabel = new Konva.Label({
+                x: breakX,
+                y: breakY,
+                opacity: 1,
+                draggable: false,
+                rotation: rotation,
+                visible: true,
+                listening: false,
+                parent_id: parentId
+            });
+
+            // Добавляем фон для метки
+            var breakLabelTag = new Konva.Tag({
+                fill: "#fff",
+                parent_id: parentId
+            });
+
+            // Создаем текст для обозначения разрыва
+            var breakText = new Konva.Text({
+                text: "⁠⁠", // Специальный символ для обозначения разрыва
+                fontSize: 17,
+                fontFamily: "Arial",
+                fontStyle: "bold",
+                rotation: 0,
+                fill: "#000",
+                draggable: false,
+                parent_id: parentId,
+                visible: true,
+                padding: -1,
+                listening: false
+            });
+
+            // Устанавливаем межбуквенный интервал
+            breakText.letterSpacing(-2);
+
+            // Добавляем компоненты к метке разрыва
+            breakLabel.add(breakLabelTag);
+            breakLabel.add(breakText);
+
+            // Добавляем метку разрыва на слой разрывов
+            Es[vo].add(breakLabel);
         }
     }
 
@@ -3898,7 +5168,7 @@ function updatePolylineLastPoint(x, y, event) {
         ie();
         to[vo].toImage({
             callback: function(e) {
-                $("#modal_save_appendblock").html(e), W("save", {})
+                $("#modal_save_appendblock").html(e), showModalWindow("save", {})
             }
         });
         "undefined" != typeof yaCounter43809814 && yaCounter43809814.reachGoal("action_save_click"), !1
@@ -4156,8 +5426,8 @@ function updatePolylineLastPoint(x, y, event) {
     function qt(e, t) {
         var _ = {
             name: e.lineblock_name,
-            length: U(e.lineblock_length),
-            offset: U(e.lineblock_offset),
+            length: parseNumericValue(e.lineblock_length),
+            offset: parseNumericValue(e.lineblock_offset),
             type: e.lineblock_type,
             parent_id: t.lineblock_params.pi,
             parent_segment_num: t.lineblock_params.sn
@@ -4238,7 +5508,7 @@ function updatePolylineLastPoint(x, y, event) {
             handleElementClick(e, "lineblock")
         }), c.on("mousemove", function(e) {
             handleMouseMove(e)
-        }), to[vo].add(c), I({
+        }), to[vo].add(c), addElementToObjectsList({
             "data-element": "lineblock",
             id: c.id(),
             name: e.name
@@ -4314,7 +5584,7 @@ function updatePolylineLastPoint(x, y, event) {
         if ("undefined" != typeof Hi[e]) {
             var a = !1;
             "undefined" != typeof Hi[e].is_more_zero_all && Hi[e].is_more_zero_all && (a = !0), $.each(Hi[e].inputs, function(e, r) {
-                ("undefined" == typeof t[e] || "" == t[e].toString()) && ai.errors.push("\u0423\u043A\u0430\u0436\u0438\u0442\u0435 <b>" + r.label + "</b>."), "undefined" != typeof r.is_check_as_int && r.is_check_as_int && (t[e] = parseInt(U(t[e]))), (a || "undefined" != typeof r.is_more_zero && r.is_more_zero) && ("undefined" == typeof r.is_more_zero_if_id_visible || "undefined" != typeof r.is_more_zero_if_id_visible && "block" == $("#" + r.is_more_zero_if_id_visible).css("display")) && 0 >= t[e] && ("undefined" == typeof r.is_more_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push(r.is_more_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.is_more_equal_zero && r.is_more_equal_zero && 0 > t[e] && ("undefined" == typeof r.is_more_equal_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push(r.is_more_equal_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.value_must_be && t[e] != r.value_must_be && ai.errors.push(r.value_must_be_message), "undefined" != typeof r.value_must_be_more_equal && t[e] < r.value_must_be_more_equal && ai.errors.push(r.value_must_be_more_equal_message)
+                ("undefined" == typeof t[e] || "" == t[e].toString()) && ai.errors.push("\u0423\u043A\u0430\u0436\u0438\u0442\u0435 <b>" + r.label + "</b>."), "undefined" != typeof r.is_check_as_int && r.is_check_as_int && (t[e] = parseInt(parseNumericValue(t[e]))), (a || "undefined" != typeof r.is_more_zero && r.is_more_zero) && ("undefined" == typeof r.is_more_zero_if_id_visible || "undefined" != typeof r.is_more_zero_if_id_visible && "block" == $("#" + r.is_more_zero_if_id_visible).css("display")) && 0 >= t[e] && ("undefined" == typeof r.is_more_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push(r.is_more_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.is_more_equal_zero && r.is_more_equal_zero && 0 > t[e] && ("undefined" == typeof r.is_more_equal_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push(r.is_more_equal_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.value_must_be && t[e] != r.value_must_be && ai.errors.push(r.value_must_be_message), "undefined" != typeof r.value_must_be_more_equal && t[e] < r.value_must_be_more_equal && ai.errors.push(r.value_must_be_more_equal_message)
             })
         } else ai.errors.push("\u041D\u0435 \u0437\u0430\u0434\u0430\u043D\u0430 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u0444\u043E\u0440\u043C\u044B (#1)");
         switch (e) {
@@ -4353,7 +5623,7 @@ function updatePolylineLastPoint(x, y, event) {
         return form_inputs = {}, $.each($("#" + e + " input"), function(e, _) {
             var a = $(_)[0].attributes.id.value,
                 r = a.replace(t, "");
-            form_inputs[r] = $(_).hasClass("js_cad_chb_elem") ? $(_).prop("checked") ? 1 : 0 : $(_).hasClass("js_cad_inp_mb_minus") ? U($(_)[0].value) : Math.abs(U($(_)[0].value))
+            form_inputs[r] = $(_).hasClass("js_cad_chb_elem") ? $(_).prop("checked") ? 1 : 0 : $(_).hasClass("js_cad_inp_mb_minus") ? parseNumericValue($(_)[0].value) : Math.abs(parseNumericValue($(_)[0].value))
         }), form_inputs
     }
 
@@ -6197,7 +7467,7 @@ function updatePolylineLastPoint(x, y, event) {
         }
 
         // Добавляем обработчики событий
-        polyline.on("click", function(event) {
+        polyline.on("click", function(event) {            
             handleElementClick(event, "pline");
         });
         polyline.on("mousemove", function(event) {
@@ -6410,8 +7680,8 @@ function updatePolylineLastPoint(x, y, event) {
                     if (polylineId !== "" && $.inArray(ei.type, ["sznde"]) !== -1) {
                         const polyline = Bi.findOne("#" + polylineId);
                         ms();
-                        _n(polylineId, { mode: "create" });
-                        rs(polyline);
+                        updatePolylineSegmentLengths(polylineId, { mode: "create" });
+                        processPolylineParameters(polyline);
                         updateElementParametersDisplay(polyline);
                         refreshCurrentLayer();
                         $("#d_elements_button_select").trigger("click");
@@ -6461,7 +7731,7 @@ function updatePolylineLastPoint(x, y, event) {
         switch (t) {
             case "line_length":
                 var _ = Tl;
-                f_(_);
+                updateElementsColorById(_);
                 break;
             default:
         }
@@ -6487,50 +7757,120 @@ function updatePolylineLastPoint(x, y, event) {
         }), $s[vo].draw(), to[vo].draw()
     }
 
-    function u_(e, t) {
-        $.each($s[vo].children, function(_, a) {
-            "undefined" != typeof a.attrs.angle_num_counter && (a.attrs.parent_id == e && a.attrs.angle_num_counter.toString() == t.toString() ? a.setAttrs({
-                fill: "red"
-            }) : a.setAttrs({
-                fill: "#333"
-            }))
-        }), $s[vo].draw(), to[vo].draw()
+    /**
+     * Функция для подсветки элемента с определенным родительским ID и номером угла
+     * 
+     * @param {number|string} parentId - Идентификатор родительского элемента
+     * @param {number|string} angleCounter - Номер угла для подсветки
+     */
+    function highlightAngleElement(parentId, angleCounter) {
+        // Перебираем все дочерние элементы
+        $.each($s[vo].children, function(_, element) {
+            // Проверяем, имеет ли элемент атрибут счетчика угла
+            if (typeof element.attrs.angle_num_counter !== "undefined") {
+                // Если родительский ID совпадает и номер угла совпадает
+                if (element.attrs.parent_id == parentId && 
+                    element.attrs.angle_num_counter.toString() == angleCounter.toString()) {
+                    // Устанавливаем красный цвет для выбранного элемента
+                    element.setAttrs({
+                        fill: "red"
+                    });
+                } else {
+                    // Устанавливаем темно-серый цвет для остальных элементов
+                    element.setAttrs({
+                        fill: "#333"
+                    });
+                }
+            }
+        });
+        
+        // Перерисовываем холсты для отображения изменений
+        $s[vo].draw();
+        to[vo].draw();
     }
 
-    function f_(e) {
-        $.each($s[vo].children, function(t, _) {
-            (_.attrs.parent_id == e || "" == e) && ("undefined" != typeof _.attrs.line_num_counter || "undefined" != typeof _.attrs.angle_num_counter) && _.setAttrs({
-                fill: "#333"
-            })
-        }), $s[vo].draw(), to[vo].draw()
+    /**
+     * Обновляет цвет элементов по указанному родительскому ID
+     * 
+     * @param {string} parentId - ID родительского элемента, для дочерних элементов которого будет изменен цвет.
+     *                           Если передана пустая строка, обновляются все элементы.
+     */
+    function updateElementsColorById(parentId) {
+        // Перебираем все дочерние элементы в коллекции
+        $.each($s[vo].children, function(index, element) {
+            // Проверяем условия для обновления цвета:
+            // 1. Элемент имеет указанный родительский ID или parentId пустой
+            // 2. Элемент имеет line_num_counter или angle_num_counter
+            if ((element.attrs.parent_id == parentId || parentId == "") && 
+                ("undefined" != typeof element.attrs.line_num_counter || 
+                "undefined" != typeof element.attrs.angle_num_counter)) {
+                
+                // Устанавливаем цвет заполнения элемента
+                element.setAttrs({
+                    fill: "#333" // Темно-серый цвет
+                });
+            }
+        });
+        
+        // Перерисовываем необходимые элементы для отображения изменений
+        $s[vo].draw();
+        to[vo].draw();
     }
 
-    function g_() {
+    /**
+     * Обрабатывает действия после закрытия модального окна в зависимости от текущего состояния (Bo).
+     * Очищает содержимое модального окна и удаляет фоновый элемент модального окна.
+     * 
+     * @returns {void}
+     */
+    function handleModalClose() {
         switch (Bo) {
             case "figure":
+                // Переключение на режим оси
                 Eo = "to_axis";
                 break;
+                
             case "pline_segment_highlight_set_length":
-                pi = !1, no[vo].hide(), so[vo].hide(), to[vo].draw(), mi = !1;
+                // Скрытие элементов выделения сегмента и отображение других элементов
+                pi = false;
+                no[vo].hide();
+                so[vo].hide();
+                to[vo].draw();
+                mi = false;
                 break;
+                
             case "lineblock":
-                f_(""), A_();
+                // Очистка и вызов соответствующих функций
+                updateElementsColorById(""); 
+                A_();
                 break;
+                
             case "roof_specification_full_project":
+                // Удаление PDF спецификации крыши для всего проекта
                 SimpleCad.Action({
                     type: "roof_specification_full_project_pdf_remove"
                 });
                 break;
+                
             case "roof_settings_programm":
+                // Вызов функции настроек программы для крыши
                 Oa();
                 break;
+                
             case "roof_new":
             case "roof_settings":
+                // Отображение нижней части информационного модального окна
                 $("#modal_info_footer").show();
                 break;
+                
             default:
+                // Ничего не делаем для других значений Bo
+                break;
         }
-        $("#modal_info_contents").html(""), $(".modal-backdrop").remove()
+        
+        // Очистка содержимого модального окна и удаление фона
+        $("#modal_info_contents").html("");
+        $(".modal-backdrop").remove();
     }
 
     function y_(e) {
@@ -6835,7 +8175,7 @@ function updatePolylineLastPoint(x, y, event) {
                     offset_origin: t.offset_origin,
                     is_offset_origin_add: !1
                 });
-                _.attrs.columns_sheets = t.columns_sheets, _.attrs.stroke = mainColors.default_element_color, vo = "layer_" + t.tab_num, yo = parseInt(t.tab_num), to[vo].add(_), I({
+                _.attrs.columns_sheets = t.columns_sheets, _.attrs.stroke = mainColors.default_element_color, vo = "layer_" + t.tab_num, yo = parseInt(t.tab_num), to[vo].add(_), addElementToObjectsList({
                     "data-element": "pline",
                     id: _.id()
                 }), _.attrs.is_object_visible = t.is_object_visible, 0 == _.attrs.is_object_visible && (_.hide(), al.find("[data-obj-id=\"" + _.id() + "\"]").parent().find(".fa").removeClass("fa-eye").addClass("fa-eye-slash")), 1 == _.attrs.is_object_visible && processElementAndAddMovePoints(_, !1)
@@ -6990,6 +8330,7 @@ function updatePolylineLastPoint(x, y, event) {
                 var t = e.target;
                 document.body.style.cursor = "default", "undefined" == typeof oi[n] && (t.stroke(mainColors.default_element_color), t.strokeWidth(1), to[vo].batchDraw())
             }), l.on("click", function(e) {
+                
                 switch (ye(e), Oo.mode) {
                     case "":
                     case "default":
@@ -7138,7 +8479,7 @@ function updatePolylineLastPoint(x, y, event) {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = U_(1e3 * U($("#roof_param_sheet_max_length_" + Mo.type + "_input").val()));
+                            var r = U_(1e3 * parseNumericValue($("#roof_param_sheet_max_length_" + Mo.type + "_input").val()));
                             r > Mo.sheet_max_length_tech ? r = Mo.sheet_max_length_tech : r < Mo.sheet_min_length_tech && (r = Mo.sheet_min_length_tech), Oi = {
                                 param: "sheet_max_length",
                                 before: Mo.sheet_max_length[vo],
@@ -7215,7 +8556,7 @@ function updatePolylineLastPoint(x, y, event) {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = 1e3 * U($("#roof_param_offset_x_input").val());
+                            var r = 1e3 * parseNumericValue($("#roof_param_offset_x_input").val());
                             r > s ? r = s : r < -1 * s && (r = -1 * s), Oi = {
                                 param: "offset_x",
                                 before: Mo.offset_x[vo],
@@ -7289,7 +8630,7 @@ function updatePolylineLastPoint(x, y, event) {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = 1e3 * U($("#roof_param_offset_y_input").val());
+                            var r = 1e3 * parseNumericValue($("#roof_param_offset_y_input").val());
                             r > o ? r = o : r < -1 * o && (r = -1 * o), Oi = {
                                 param: "offset_y",
                                 before: Mo.offset_y[vo],
@@ -7323,7 +8664,7 @@ function updatePolylineLastPoint(x, y, event) {
                     case "submit":
                         if (Us) {
                             var i = Mo.cornice[vo];
-                            Mo.cornice[vo] = 1e3 * U($("#roof_param_cornice_input").val()), 1e3 < Mo.cornice[vo] ? Mo.cornice[vo] = 1e3 : 0 > Mo.cornice[vo] && (Mo.cornice[vo] = 0), Oi = {
+                            Mo.cornice[vo] = 1e3 * parseNumericValue($("#roof_param_cornice_input").val()), 1e3 < Mo.cornice[vo] ? Mo.cornice[vo] = 1e3 : 0 > Mo.cornice[vo] && (Mo.cornice[vo] = 0), Oi = {
                                 param: "cornice",
                                 before: i,
                                 after: Mo.cornice[vo]
@@ -7790,7 +9131,7 @@ function updatePolylineLastPoint(x, y, event) {
         var _ = e[0].attributes.id.value,
             a = 0,
             r = e[0].value + "";
-        a = e.hasClass("js_cad_inp_mb_minus") ? U(r) : Math.abs(U(r));
+        a = e.hasClass("js_cad_inp_mb_minus") ? parseNumericValue(r) : Math.abs(parseNumericValue(r));
         var n = a.toFixed(yi.length.prec);
         if (0 == Wo.settings_programm_figures_razmer.is_use_razmer_template || n != yi.length.str ? $("#" + _).val(n) : $("#" + _).val(Wo.settings_programm_figures_razmer.razmer_template), "offset" != t && "delta" != t) {
             var s = e[0].form.id,
@@ -8579,7 +9920,7 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
     function oa(e) {
-        to[vo].add(e), I({
+        to[vo].add(e), addElementToObjectsList({
             "data-element": "pline",
             id: e.id()
         }), processAndClearElement(e), vt(e, !1), processElementAndAddMovePoints(e, !1), hs(e), updateElementParametersDisplay(e), se(), ie(), oe(), ce(), da()
@@ -9061,7 +10402,7 @@ function updatePolylineLastPoint(x, y, event) {
             Ya(event);
         });
         movePoint.on("mouseout", function (event) {
-            Da(event);
+            // Da(event);
         });
         movePoint.on("dragstart", function (event) {
             Xa(event);
@@ -9150,9 +10491,9 @@ function updatePolylineLastPoint(x, y, event) {
         var t = e.target,
             _ = Bi.findOne("#" + t.attrs.parent_id),
             a = JSON.copy(_.points());
-        li[ci].pline_data.points.after = a, -1 !== $.inArray(ei.type, ["sznde"]) && (ms(), _n(_.id(), {
+        li[ci].pline_data.points.after = a, -1 !== $.inArray(ei.type, ["sznde"]) && (ms(), updatePolylineSegmentLengths(_.id(), {
             mode: "update_considering_pline_breaks"
-        }), rs(_), updateElementParametersDisplay(_), refreshCurrentLayer())
+        }), processPolylineParameters(_), updateElementParametersDisplay(_), refreshCurrentLayer())
     }
 
     function Wa(e, t, _) {
@@ -9193,7 +10534,7 @@ function updatePolylineLastPoint(x, y, event) {
         }), t && (di.pline_data.points.after = JSON.copy(n), An({
             mode: "add",
             element: di
-        })), vt(r, !1), _n(r.id(), {
+        })), vt(r, !1), updatePolylineSegmentLengths(r.id(), {
             mode: "update_considering_pline_breaks"
         }), processAndClearElement(r), Ma(e), r.draw()
     }
@@ -9338,13 +10679,13 @@ function updatePolylineLastPoint(x, y, event) {
                 break;
             case "blur":
                 var a = e.thisObject.val() + "",
-                    r = U(a);
+                    r = parseNumericValue(a);
                 e.thisObject.val(r);
                 break;
             case "submit_point":
                 if ("" != zi && 0 <= ki) {
-                    var n = U(jl.val() + ""),
-                        s = U(Cl.val() + "");
+                    var n = parseNumericValue(jl.val() + ""),
+                        s = parseNumericValue(Cl.val() + "");
                     jl.val(n), Cl.val(s);
                     var o = parseInt(Math.round(1e3 * n)),
                         l = parseInt(Math.round(1e3 * s));
@@ -9387,8 +10728,8 @@ function updatePolylineLastPoint(x, y, event) {
                 break;
             case "submit_delta":
                 if ("" != zi) {
-                    var f = U($("#figure_move_controller_delta_x").val() + ""),
-                        g = U($("#figure_move_controller_delta_y").val() + "");
+                    var f = parseNumericValue($("#figure_move_controller_delta_x").val() + ""),
+                        g = parseNumericValue($("#figure_move_controller_delta_y").val() + "");
                     $("#figure_move_controller_delta_x").val(f), $("#figure_move_controller_delta_y").val(g);
                     var m = parseInt(Math.round(1e3 * f)),
                         h = parseInt(Math.round(1e3 * g)),
@@ -9709,7 +11050,7 @@ function updatePolylineLastPoint(x, y, event) {
                 break;
             case "submit":
                 var _ = Ea(),
-                    l = 1e3 * U($("#move_point_controller_" + e.param).val()),
+                    l = 1e3 * parseNumericValue($("#move_point_controller_" + e.param).val()),
                     c = l * Go.g_scale[vo] / 100000;
                 switch (e.param) {
                     case "x":
@@ -10407,7 +11748,7 @@ function updatePolylineLastPoint(x, y, event) {
                     default:
                 }
             }
-        }), "siding" == Mo.type && q_(), _e(), Wr(), refreshCurrentLayer(), e.history && (di = {
+        }), "siding" == Mo.type && q_(), resetCADState(), Wr(), refreshCurrentLayer(), e.history && (di = {
             type: "h_mirror_hor_tab",
             need_layer_num: yo,
             need_axis: {
@@ -10454,35 +11795,71 @@ function updatePolylineLastPoint(x, y, event) {
         })
     }
 
-    function Kr(e, t, _) {
-        if ("undefined" != typeof e.attrs.id) {
-            var a = e.attrs.id,
-                r = a.substr(0, a.indexOf("__"));
-            switch (e.className) {
+    /**
+     * Поворачивает элемент на заданный угол относительно центра его габаритного прямоугольника.
+     * 
+     * @param {Object} element - Элемент для поворота (Konva.Line).
+     * @param {number} angle - Угол поворота в градусах.
+     * @param {boolean} addToHistory - Флаг, добавлять ли операцию в историю изменений.
+     */
+    function rotateElement(element, angle, addToHistory) {        
+        // Проверяем, имеет ли элемент идентификатор
+        if (typeof element.attrs.id !== "undefined") {
+            // Получаем идентификатор и тип элемента
+            var elementId = element.attrs.id;
+            var elementType = elementId.substr(0, elementId.indexOf("__"));
+            
+            switch (element.className) {
                 case "Line":
-                    switch (r) {
+                    switch (elementType) {
                         case "pline":
-                            var n = G_(e.attrs.points);
-                            e.attrs.points = Vr(e.attrs.points, t, n.x_mid, n.y_mid), oe(), D(), refreshCurrentLayer(), _ && (di = {
-                                type: "h_rotate_element_pline",
-                                need_layer_num: yo,
-                                need_tab_scale: Go.g_scale[vo],
-                                need_axis: {
-                                    g_x: Fo[vo],
-                                    g_y: Ao[vo],
-                                    current_layer_name: vo
-                                },
-                                element_id: e.attrs.id,
-                                angle: t
-                            }, An({
-                                mode: "add",
-                                element: di
-                            }));
+                            // Получаем размеры габаритного прямоугольника для определения центра вращения
+                            var elementBounds = G_(element.attrs.points);
+                            
+                            // Поворачиваем точки полилинии вокруг центра
+                            element.attrs.points = Vr(
+                                element.attrs.points, 
+                                angle, 
+                                elementBounds.x_mid, 
+                                elementBounds.y_mid
+                            );
+                            
+                            // Обновляем отображение
+                            oe();
+                            D();
+                            refreshCurrentLayer();
+                            
+                            // Добавляем действие в историю, если требуется
+                            if (addToHistory) {
+                                di = {
+                                    type: "h_rotate_element_pline",
+                                    need_layer_num: yo,
+                                    need_tab_scale: Go.g_scale[vo],
+                                    need_axis: {
+                                        g_x: Fo[vo],
+                                        g_y: Ao[vo],
+                                        current_layer_name: vo
+                                    },
+                                    element_id: element.attrs.id,
+                                    angle: angle
+                                };
+                                
+                                An({
+                                    mode: "add",
+                                    element: di
+                                });
+                            }
                             break;
+                        
                         default:
+                            // Обработка других типов линий
+                            break;
                     }
                     break;
+                
                 default:
+                    // Обработка других классов элементов
+                    break;
             }
         }
     }
@@ -10584,8 +11961,9 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
 
-    function Rr(e) {
-        updateNearestPoint(e.evt.layerX, e.evt.layerY, e.target.attrs.points), to[vo].draw()
+    function Rr(layerX, layerY, points) {
+        updateNearestPoint(layerX, layerY, points)
+        to[vo].draw()
     }
 
     /**
@@ -10610,17 +11988,89 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
-    function Br(e) {
-        if (-1 !== $.inArray(ei.type, ["sznde"]) && 2 == e.evt.button) return !1;
-        if (pi = !0, hi = {}, hi.pline_id = e.target.attrs.parent_id, hi.parent = Bi.find("#" + hi.pline_id), hi.layerX = e.evt.layerX, hi.layerY = e.evt.layerY, 2 == e.evt.button) return pi = !1, ga(hi.parent[0], hi.layerX, hi.layerY), hi = {}, !1;
-        if (hi.pline_points = hi.parent[0].attrs.points, hi.segment_num = xa(hi.layerX, hi.layerY, hi.pline_points), hi.segment_points = Mt(hi.segment_num, hi.pline_points), -1 !== $.inArray(ei.type, ["sznde"])) {
-            var t = hi.parent[0].attrs.pline_lengths_ish,
-                _ = t[hi.segment_num];
-            hi.segment_length = _
-        } else hi.segment_length = Te(hi.segment_points[0], hi.segment_points[1], hi.segment_points[2], hi.segment_points[3], !1), hi.segment_length = U((100 * hi.segment_length / Go.g_scale[vo]).toFixed(yi.length.prec));
-        var a = Math.dist(hi.layerX, hi.layerY, hi.segment_points[0], hi.segment_points[1]),
-            r = Math.dist(hi.layerX, hi.layerY, hi.segment_points[2], hi.segment_points[3]);
-        a > r ? (hi.nearest_point_num_in_pline = hi.segment_num + 1, hi.farthest_point_num_in_pline = hi.segment_num) : (hi.nearest_point_num_in_pline = hi.segment_num, hi.farthest_point_num_in_pline = hi.segment_num + 1), W("pline_segment_highlight_set_length", {})
+    /**
+     * Обрабатывает выбор сегмента ломаной линии
+     * @param {Object} e - Событие выбора
+     * @returns {boolean} - False если событие не должно обрабатываться дальше
+     */
+    function handleSegmentSelection(e) {
+        // Проверяем, является ли это правым кликом в режиме "sznde"
+        if (-1 !== $.inArray(ei.type, ["sznde"]) && 2 == e.evt.button) {
+            return false;
+        }
+        
+        // Устанавливаем флаг активности и инициализируем объект для хранения данных сегмента
+        pi = true;
+        hi = {};
+        
+        // Сохраняем идентификатор родительской линии и сам элемент
+        hi.pline_id = e.target.attrs.parent_id;
+        hi.parent = Bi.find("#" + hi.pline_id);
+        
+        // Сохраняем координаты клика
+        hi.layerX = e.evt.layerX;
+        hi.layerY = e.evt.layerY;
+        
+        // Обрабатываем правый клик (кнопка 2)
+        if (2 == e.evt.button) {
+            pi = false;
+            ga(hi.parent[0], hi.layerX, hi.layerY);
+            hi = {};
+            return false;
+        }
+        
+        // Получаем точки ломаной линии и определяем номер сегмента
+        hi.pline_points = hi.parent[0].attrs.points;
+        hi.segment_num = xa(hi.layerX, hi.layerY, hi.pline_points);
+        hi.segment_points = Mt(hi.segment_num, hi.pline_points);
+        
+        // Вычисляем длину сегмента в зависимости от режима
+        if (Oo.mode != 'default' && -1 !== $.inArray(ei.type, ["sznde"])) {
+            // Для режима "sznde" используем предварительно вычисленные длины
+            var t = hi.parent[0].attrs.pline_lengths_ish;
+            var _ = t[hi.segment_num];
+            hi.segment_length = _;
+        } else {
+            // Для других режимов вычисляем длину динамически
+            hi.segment_length = Te(
+                hi.segment_points[0],
+                hi.segment_points[1],
+                hi.segment_points[2],
+                hi.segment_points[3],
+                false
+            );
+            // Масштабируем и округляем длину сегмента с нужной точностью
+            hi.segment_length = parseNumericValue(
+                (100 * hi.segment_length / Go.g_scale[vo]).toFixed(yi.length.prec)
+            );
+        }
+        
+        // Определяем ближайшую и дальнюю точки сегмента относительно места клика
+        var distanceToStart = Math.dist(
+            hi.layerX, 
+            hi.layerY, 
+            hi.segment_points[0], 
+            hi.segment_points[1]
+        );
+        
+        var distanceToEnd = Math.dist(
+            hi.layerX, 
+            hi.layerY, 
+            hi.segment_points[2], 
+            hi.segment_points[3]
+        );
+        
+        // Сохраняем номера точек в зависимости от расстояния
+        if (distanceToStart > distanceToEnd) {
+            hi.nearest_point_num_in_pline = hi.segment_num + 1;
+            hi.farthest_point_num_in_pline = hi.segment_num;
+        } else {
+            hi.nearest_point_num_in_pline = hi.segment_num;
+            hi.farthest_point_num_in_pline = hi.segment_num + 1;
+        }
+        
+        // Показываем модальное окно для редактирования длины выбранного сегмента
+        showModalWindow("pline_segment_highlight_set_length", {});
     }
 
     function Zr(e, t, _, a) {
@@ -10680,70 +12130,295 @@ function updatePolylineLastPoint(x, y, event) {
         a.attrs.pline_breaks["l" + t] = _, 0 == _ && (a.attrs.pline_breaks["l" + t] = null, delete a.attrs.pline_breaks["l" + t])
     }
 
-    function _n(e, t) {
+    /**
+     * Обрабатывает длины сегментов полилинии в зависимости от указанного режима.
+     * 
+     * @param {string} elementId - ID элемента полилинии
+     * @param {Object} options - Параметры обработки
+     * @param {string} options.mode - Режим обработки ("lengths_all", "length_one", "create", "update_considering_pline_breaks")
+     * @param {Array} [options.lengths] - Массив длин для режима "lengths_all"
+     * @param {number} [options.num] - Индекс сегмента для изменения (для режима "length_one")
+     * @param {number} [options.val] - Новое значение длины (для режима "length_one")
+     */
+    function updatePolylineSegmentLengths(elementId, options) {
+        // Проверяем, соответствует ли тип элемента требуемому
         if ("sznde" == ei.type) {
-            var _ = Bi.findOne("#" + e),
-                a = [],
-                r = 0,
-                n = 0,
-                s = 0,
-                o = 0;
-            if ("undefined" != typeof t.mode) switch (t.mode) {
-                case "lengths_all":
-                    _.attrs.pline_lengths_ish = t.lengths;
-                    break;
-                case "length_one":
-                    _.attrs.pline_lengths_ish[t.num] = t.val;
-                    break;
-                case "create":
-                    a = _.points(), r = a.length, _.attrs.pline_lengths_ish = [];
-                    for (var l = 0; l < (r - 2) / 2; l++) n = Te(a[2 * s + 0], a[2 * s + 1], a[2 * s + 2], a[2 * s + 3], !1), n = parseFloat((100 * n / Go.g_scale[vo]).toFixed(3)), _.attrs.pline_lengths_ish.push(n), s++;
-                    break;
-                case "update_considering_pline_breaks":
-                    a = _.points(), r = a.length, _.attrs.pline_lengths_ish = [];
-                    for (var l = 0; l < (r - 2) / 2; l++) n = Te(a[2 * s + 0], a[2 * s + 1], a[2 * s + 2], a[2 * s + 3], !1), o = 0, "undefined" != typeof _.attrs.pline_breaks["l" + l] && -1 !== $.inArray(parseInt(_.attrs.pline_breaks["l" + l]), Ei) && (o = parseInt(_.attrs.pline_breaks["l" + l])), 0 < o && (n = 100 * (n / o)), n = parseFloat((100 * n / Go.g_scale[vo]).toFixed(3)), _.attrs.pline_lengths_ish.push(n), s++;
-                    break;
-                default:
+            // Находим элемент по ID
+            var element = Bi.findOne("#" + elementId);
+            var points = [];
+            var pointsCount = 0;
+            var segmentLength = 0;
+            var segmentIndex = 0;
+            var breakFactor = 0;
+
+            if ("undefined" != typeof options.mode) {
+                switch (options.mode) {
+                    case "lengths_all":
+                        // Устанавливаем все длины сегментов одним массивом
+                        element.attrs.pline_lengths_ish = options.lengths;
+                        break;
+
+                    case "length_one":
+                        // Устанавливаем длину для конкретного сегмента
+                        element.attrs.pline_lengths_ish[options.num] = options.val;
+                        break;
+
+                    case "create":
+                        // Создаем массив длин на основе координат точек полилинии
+                        points = element.points();
+                        pointsCount = points.length;
+                        element.attrs.pline_lengths_ish = [];
+
+                        // Вычисляем длину для каждого сегмента полилинии
+                        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+                            // Вычисляем длину между двумя точками (x1,y1) и (x2,y2)
+                            segmentLength = Te(
+                                points[2 * segmentIndex + 0], // x1
+                                points[2 * segmentIndex + 1], // y1
+                                points[2 * segmentIndex + 2], // x2
+                                points[2 * segmentIndex + 3], // y2
+                                false
+                            );
+                            // Масштабирование и форматирование длины
+                            segmentLength = parseFloat((100 * segmentLength / Go.g_scale[vo]).toFixed(0));
+                            element.attrs.pline_lengths_ish.push(segmentLength);
+                            segmentIndex++;
+                        }
+                        break;
+
+                    case "update_considering_pline_breaks":
+                        // Обновляем длины с учетом разрывов в полилинии
+                        points = element.points();
+                        pointsCount = points.length;
+                        element.attrs.pline_lengths_ish = [];
+
+                        // Вычисляем длину для каждого сегмента с учетом разрывов
+                        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+                            // Вычисляем базовую длину сегмента
+                            segmentLength = Te(
+                                points[2 * segmentIndex + 0], // x1
+                                points[2 * segmentIndex + 1], // y1
+                                points[2 * segmentIndex + 2], // x2
+                                points[2 * segmentIndex + 3], // y2
+                                false
+                            );
+                            
+                            breakFactor = 0;
+                            // Проверяем наличие разрыва для текущего сегмента
+                            if ("undefined" != typeof element.attrs.pline_breaks["l" + i] && 
+                                -1 !== $.inArray(parseInt(element.attrs.pline_breaks["l" + i]), Ei)) {
+                                breakFactor = parseInt(element.attrs.pline_breaks["l" + i]);
+                            }
+                            
+                            // Корректируем длину с учетом фактора разрыва
+                            if (0 < breakFactor) {
+                                segmentLength = 100 * (segmentLength / breakFactor);
+                            }
+                            
+                            // Масштабирование и форматирование длины
+                            segmentLength = parseFloat((100 * segmentLength / Go.g_scale[vo]).toFixed(0));
+                            element.attrs.pline_lengths_ish.push(segmentLength);
+                            segmentIndex++;
+                        }
+                        break;
+
+                    default:
+                        // Для неизвестного режима ничего не делаем
+                }
             }
         }
     }
 
-    function an(e, t, _, a) {
-        var r = Bi.findOne("#" + e),
-            n = 0,
-            s = [],
-            o = 0,
-            l = 0,
-            c = 0,
-            d = 0;
-        if ("undefined" !== r && (s = r.points(), o = s.length, n = Te(s[2 * t + 0], s[2 * t + 1], s[2 * t + 2], s[2 * t + 3], !1), _.toFixed(3) != n.toFixed(3))) {
-            if (l = calculateAngle(s[2 * t + 0], -1e4, s[2 * t + 0], s[2 * t + 1], s[2 * t + 2], s[2 * t + 3], !0, !1, !1), d = _ * Go.g_scale[vo] / 100, c = De(s, d, t, l), a)
-                for (var p = t; p < o / 2 - 1; p++) s[2 * p + 2] += c.delta_x, s[2 * p + 3] += c.delta_y;
-            else
-                for (var p = t; 0 <= p; p--) s[2 * p + 0] -= c.delta_x, s[2 * p + 1] -= c.delta_y;
-            r.setPoints(s)
+    /**
+     * Корректирует угол между точками элемента и передвигает соответствующие точки
+     * 
+     * @param {string} elementId - ID элемента, для которого выполняется корректировка
+     * @param {number} pointIndex - Индекс точки, относительно которой производится корректировка
+     * @param {number} targetAngle - Целевой угол, который необходимо установить
+     * @param {boolean} adjustFollowingPoints - Если true, корректировать последующие точки, иначе - предыдущие
+     */
+    function adjustElementAngle(elementId, pointIndex, targetAngle, adjustFollowingPoints) {        
+        // Находим элемент по ID
+        var element = Bi.findOne("#" + elementId);
+        var currentAngle = 0;
+        var points = [];
+        var pointsCount = 0;
+        var baseAngle = 0;
+        var scaledTargetAngle = 0;
+        var deltaCoordinates = 0;
+        
+        // Проверяем существование элемента и продолжаем работу
+        if ("undefined" !== element) {
+            // Получаем массив точек элемента
+            points = element.points();
+            pointsCount = points.length;
+            
+            // Вычисляем текущий угол между точками
+            currentAngle = Te(
+                points[2 * pointIndex + 0], 
+                points[2 * pointIndex + 1], 
+                points[2 * pointIndex + 2], 
+                points[2 * pointIndex + 3], 
+                false
+            );
+            
+            // Проверяем, отличается ли текущий угол от целевого
+            if (targetAngle.toFixed(3) != currentAngle.toFixed(3)) {
+                // Вычисляем базовый угол для точки
+                baseAngle = calculateAngle(
+                    points[2 * pointIndex + 0], -10000, 
+                    points[2 * pointIndex + 0], points[2 * pointIndex + 1], 
+                    points[2 * pointIndex + 2], points[2 * pointIndex + 3], 
+                    true, false, false
+                );
+                
+                // Масштабируем целевой угол согласно глобальному масштабу
+                scaledTargetAngle = targetAngle * Go.g_scale[vo] / 100;
+                
+                // Вычисляем изменение координат для достижения целевого угла
+                deltaCoordinates = De(points, scaledTargetAngle, pointIndex, baseAngle);
+                
+                if (adjustFollowingPoints) {
+                    // Корректируем все последующие точки
+                    for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                        points[2 * i + 2] += deltaCoordinates.delta_x;
+                        points[2 * i + 3] += deltaCoordinates.delta_y;
+                    }
+                } else {
+                    // Корректируем все предыдущие точки
+                    for (var i = pointIndex; i >= 0; i--) {
+                        points[2 * i + 0] -= deltaCoordinates.delta_x;
+                        points[2 * i + 1] -= deltaCoordinates.delta_y;
+                    }
+                }
+                
+                // Обновляем точки элемента
+                element.setPoints(points);
+            }
         }
     }
 
-    function rn(e, t, _) {
-        var a = Bi.findOne("#" + e),
-            r = 0,
-            n = [],
-            s = 0,
-            o = {},
-            c = {},
-            d = 0,
-            p = {},
-            m = 0,
-            h = 0,
-            u = {},
-            f = 0;
-        if ("undefined" !== a && (-0 == _ && (_ = 0), r = t, t++, n = JSON.copy(a.points()), s = n.length, f = calculateAngle(n[2 * (t - 1) + 0], n[2 * (t - 1) + 1], n[2 * (t - 1) + 2], n[2 * (t - 1) + 3], n[2 * (t - 1) + 4], n[2 * (t - 1) + 5], !0, !0, !1), isNaN(f) && (f = 0), _.toFixed(3) != f.toFixed(3))) {
-            o["ha_" + t] = _;
-            for (var g = t + 1; g < s / 2 - 1; g++) o["ha_" + g] = calculateAngle(n[2 * (g - 1) + 0], n[2 * (g - 1) + 1], n[2 * (g - 1) + 2], n[2 * (g - 1) + 3], n[2 * (g - 1) + 4], n[2 * (g - 1) + 5], !0, !0, !1), isNaN(o["ha_" + g]) && (o["ha_" + g] = 0);
-            for (var g = t; g < s / 2 - 1; g++) c["hl_" + g] = Te(n[2 * g + 0], n[2 * g + 1], n[2 * g + 2], n[2 * g + 3], !1);
-            for (var g = t; g < s / 2 - 1; g++) d = o["ha_" + g] * l["pi/180"], p = {}, p = We(n[2 * (g - 1) + 0], n[2 * (g - 1) + 1], n[2 * (g - 1) + 2], n[2 * (g - 1) + 3], d), n[2 * g + 2] = parseFloat(p.endPoint_x), n[2 * g + 3] = parseFloat(p.endPoint_y), m = parseFloat(c["hl_" + g]), h = calculateAngle(n[2 * g + 0], -1e4, n[2 * g + 0], n[2 * g + 1], n[2 * g + 2], n[2 * g + 3], !0, !1, !1), isNaN(h) && (h = 0), u = De(n, m, g, h), n[2 * g + 2] += u.delta_x, n[2 * g + 3] += u.delta_y;
-            a.setPoints(n)
+    /**
+     * Функция пересчитывает углы между точками пути, начиная с заданной точки,
+     * если заданный угол отличается от текущего
+     * 
+     * @param {string} elementId - ID элемента, содержащего точки пути
+     * @param {number} pointIndex - Индекс точки, с которой начинается пересчет
+     * @param {number} targetAngle - Целевой угол для указанной точки (в градусах)
+     */
+    function recalculatePathAnglesByPoint(elementId, pointIndex, targetAngle) {
+        // Находим элемент по ID
+        var element = Bi.findOne("#" + elementId);
+        var originalPointIndex = 0;
+        var points = [];
+        var pointsCount = 0;
+        var angles = {};        // Углы между точками
+        var segmentLengths = {}; // Длины сегментов
+        var angleInRadians = 0;
+        var newEndPoint = {};
+        var segmentLength = 0;
+        var verticalAngle = 0;
+        var adjustments = {};
+        var currentAngle = 0;
+        
+        // Проверяем существование элемента и необходимость изменения угла
+        if ("undefined" !== element) {
+            // Обрабатываем особый случай с отрицательным нулем
+            if (-0 == targetAngle) {
+                targetAngle = 0;
+            }
+            
+            originalPointIndex = pointIndex;
+            pointIndex++; // Увеличиваем индекс для работы со следующей точкой
+            
+            // Копируем массив точек элемента
+            points = JSON.copy(element.points());
+            pointsCount = points.length;
+            
+            // Вычисляем текущий угол между точками
+            currentAngle = calculateAngle(
+                points[2 * (pointIndex - 1) + 0], points[2 * (pointIndex - 1) + 1],
+                points[2 * (pointIndex - 1) + 2], points[2 * (pointIndex - 1) + 3],
+                points[2 * (pointIndex - 1) + 4], points[2 * (pointIndex - 1) + 5],
+                true, true, false
+            );
+            
+            // Если угол NaN, устанавливаем его в 0
+            if (isNaN(currentAngle)) {
+                currentAngle = 0;
+            }
+            
+            // Если целевой угол отличается от текущего (с точностью до 3 знаков)
+            if (targetAngle.toFixed(3) != currentAngle.toFixed(3)) {
+                // Сохраняем новый угол для заданной точки
+                angles["ha_" + pointIndex] = targetAngle;
+                
+                // Вычисляем углы для всех последующих точек
+                for (var i = pointIndex + 1; i < pointsCount / 2 - 1; i++) {
+                    angles["ha_" + i] = calculateAngle(
+                        points[2 * (i - 1) + 0], points[2 * (i - 1) + 1],
+                        points[2 * (i - 1) + 2], points[2 * (i - 1) + 3],
+                        points[2 * (i - 1) + 4], points[2 * (i - 1) + 5],
+                        true, true, false
+                    );
+                    
+                    if (isNaN(angles["ha_" + i])) {
+                        angles["ha_" + i] = 0;
+                    }
+                }
+                
+                // Вычисляем длины сегментов для всех затронутых точек
+                for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                    segmentLengths["hl_" + i] = Te(
+                        points[2 * i + 0], points[2 * i + 1],
+                        points[2 * i + 2], points[2 * i + 3],
+                        false
+                    );
+                }
+                
+                // Пересчитываем координаты точек с учетом новых углов
+                for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                    // Преобразуем угол из градусов в радианы
+                    angleInRadians = angles["ha_" + i] * l["pi/180"];
+                    
+                    // Вычисляем новую конечную точку сегмента на основе угла
+                    newEndPoint = {};
+                    newEndPoint = We(
+                        points[2 * (i - 1) + 0], points[2 * (i - 1) + 1],
+                        points[2 * (i - 1) + 2], points[2 * (i - 1) + 3],
+                        angleInRadians
+                    );
+                    
+                    // Обновляем координаты конечной точки текущего сегмента
+                    points[2 * i + 2] = parseFloat(newEndPoint.endPoint_x);
+                    points[2 * i + 3] = parseFloat(newEndPoint.endPoint_y);
+                    
+                    // Получаем длину текущего сегмента
+                    segmentLength = parseFloat(segmentLengths["hl_" + i]);
+                    
+                    // Вычисляем угол относительно вертикали для корректировки
+                    verticalAngle = calculateAngle(
+                        points[2 * i + 0], -10000,
+                        points[2 * i + 0], points[2 * i + 1],
+                        points[2 * i + 2], points[2 * i + 3],
+                        true, false, false
+                    );
+                    
+                    if (isNaN(verticalAngle)) {
+                        verticalAngle = 0;
+                    }
+                    
+                    // Получаем корректировки для сохранения длины сегмента
+                    adjustments = De(points, segmentLength, i, verticalAngle);
+                    
+                    // Применяем корректировки к конечной точке
+                    points[2 * i + 2] += adjustments.delta_x;
+                    points[2 * i + 3] += adjustments.delta_y;
+                }
+                                
+                // Устанавливаем обновленные точки в элемент
+                element.setPoints(points);
+            }
         }
     }
 
@@ -10799,10 +12474,10 @@ function updatePolylineLastPoint(x, y, event) {
                     }
                     switch (d.type) {
                         case "float":
-                            t = Math.abs(U(l)), _ = t * Math.pow(10, d.precision), a = Math.round(_), r = a / Math.pow(10, d.precision), n = r.toFixed(d.precision), s = parseFloat(n), Ri[c][e].value = s;
+                            t = Math.abs(parseNumericValue(l)), _ = t * Math.pow(10, d.precision), a = Math.round(_), r = a / Math.pow(10, d.precision), n = r.toFixed(d.precision), s = parseFloat(n), Ri[c][e].value = s;
                             break;
                         case "int":
-                            t = Math.abs(U(l)), o = Math.round(t), i = parseInt(o), Ri[c][e].value = i;
+                            t = Math.abs(parseNumericValue(l)), o = Math.round(t), i = parseInt(o), Ri[c][e].value = i;
                             break;
                         case "string":
                             Ri[c][e].value = l;
@@ -11069,7 +12744,7 @@ function updatePolylineLastPoint(x, y, event) {
             _ = e[0].value + "",
             a = 0,
             r = "";
-        if (a = Math.abs(U(_)), "undefined" != typeof e[0].attributes["data-max-val-int"]) {
+        if (a = Math.abs(parseNumericValue(_)), "undefined" != typeof e[0].attributes["data-max-val-int"]) {
             var n = parseInt(e[0].attributes["data-max-val-int"].value);
             a > n && (a = n)
         }
@@ -11474,7 +13149,7 @@ function updatePolylineLastPoint(x, y, event) {
             a = ["proc", "otn", "ukl", "kukl"],
             r = "";
         $.each(["al", "be", "ga"], function(n, s) {
-            e = $("#trigonom_triangle_" + s).val(), t = Math.abs(U(e)), 90 < t && (t = 180 - t), _ = !!$("#trigonom_triangle_" + s).prop("disabled"), $.each(a, function(e, a) {
+            e = $("#trigonom_triangle_" + s).val(), t = Math.abs(parseNumericValue(e)), 90 < t && (t = 180 - t), _ = !!$("#trigonom_triangle_" + s).prop("disabled"), $.each(a, function(e, a) {
                 if (90 == t) r = "-";
                 else if (0 < t) switch (a) {
                     case "proc":
@@ -11543,7 +13218,7 @@ function updatePolylineLastPoint(x, y, event) {
                 id: _,
                 name: a
             });
-            to[vo].add(r), I({
+            to[vo].add(r), addElementToObjectsList({
                 "data-element": "pline",
                 id: r.id()
             }), processElementAndAddMovePoints(r, !1)
@@ -11708,10 +13383,10 @@ function updatePolylineLastPoint(x, y, event) {
                                 is_move_show: !1
                             }), _) {
                             case "before":
-                                Kr(Zi, -1 * t.angle, !1);
+                                rotateElement(Zi, -1 * t.angle, !1);
                                 break;
                             case "after":
-                                Kr(Zi, t.angle, !1);
+                                rotateElement(Zi, t.angle, !1);
                                 break;
                             default:
                         }
@@ -11889,7 +13564,7 @@ function updatePolylineLastPoint(x, y, event) {
             });
         if (0 < t.length ? (t = t[0], e = JSON.copy(t.columns_sheets), $.each(e, function(t, _) {
                 e[t] = Nn(_, [], 0)
-            })) : W("roof_crossing_remove_error_no_element", {}), Js) {
+            })) : showModalWindow("roof_crossing_remove_error_no_element", {}), Js) {
             var _ = Bi.findOne("#" + t.id);
             di = {
                 type: "h_roof_columns_sheet_crossing_remove",
@@ -12193,25 +13868,73 @@ function updatePolylineLastPoint(x, y, event) {
         })), t
     }
 
-    function rs(e) {
-        var t = e.points(),
-            _ = t.length,
-            a = 0,
-            r = 0,
-            n = 0,
-            s = {},
-            o = e.attrs.pline_lengths_ish,
-            l = JSON.copy(e.attrs.pline_breaks),
+    /**
+     * Обрабатывает элемент полилинии, вычисляя и отправляя его параметры
+     * для дальнейшей обработки в системе.
+     * 
+     * @param {Object} e - Объект элемента полилинии
+     */
+    function processPolylineParameters(e) {
+        // Получение основных характеристик из элемента
+        var t = e.points(),                     // Точки полилинии
+            _ = t.length,                       // Количество точек
+            a = 0,                              // Длина сегмента
+            r = 0,                              // Счетчик рядов/сегментов
+            n = 0,                              // Угол между сегментами
+            s = {},                             // Объект для хранения параметров
+            o = e.attrs.pline_lengths_ish,      // Длины сегментов полилинии
+            l = JSON.copy(e.attrs.pline_breaks), // Копируем точки разрыва полилинии
+            c = 0;                              // Тип разрыва полилинии
+        
+        // Очистка глобальных коллекций
+        Ll.empty();
+        Ol.empty();
+        
+        // Обработка каждого сегмента полилинии
+        for (var d = 0; d < (_ - 2) / 2; d++) {
+            // Получаем длину сегмента или устанавливаем 0, если не определена
+            a = typeof o[d] === "undefined" ? 0 : o[d];
+            
+            // Вычисляем угол между сегментами для всех кроме первого
+            if (r > 0) {
+                n = calculateAngle(
+                    t[2 * r - 2], t[2 * r - 1],
+                    t[2 * r], t[2 * r + 1],
+                    t[2 * r + 2], t[2 * r + 3],
+                    true, true, false
+                );
+                
+                // Проверка на корректность угла
+                if (isNaN(n)) {
+                    n = 0;
+                }
+                
+                n = parseFloat(n.toFixed(2));
+            } else {
+                n = 0;
+            }
+            
+            // Определение типа разрыва для текущего сегмента
             c = 0;
-        Ll.empty(), Ol.empty();
-        for (var d = 0; d < (_ - 2) / 2; d++) a = "undefined" == typeof o[d] ? 0 : o[d], 0 < r ? (n = calculateAngle(t[2 * r + 0 - 2], t[2 * r + 1 - 2], t[2 * r + 2 - 2], t[2 * r + 3 - 2], t[2 * r + 4 - 2], t[2 * r + 5 - 2], !0, !0, !1), isNaN(n) && (n = 0), n = parseFloat(n.toFixed(2))) : n = 0, c = 0, "undefined" != typeof l["l" + d] && -1 !== $.inArray(parseInt(l["l" + d]), Ei) && (c = parseInt(l["l" + d])), s = {
-            type: "size_angle",
-            row_counter: r,
-            length: a,
-            angle: n,
-            element_id: e.id(),
-            pline_break: c
-        }, ns(s), r++;
+            if (typeof l["l" + d] !== "undefined" && $.inArray(parseInt(l["l" + d]), Ei) !== -1) {
+                c = parseInt(l["l" + d]);
+            }
+            
+            // Формирование и отправка данных о размере и угле сегмента
+            s = {
+                type: "size_angle",
+                row_counter: r,
+                length: a,
+                angle: n,
+                element_id: e.id(),
+                pline_break: c
+            };
+            ns(s);
+            
+            r++;
+        }
+        
+        // Отправка информации о начале полилинии
         s = {
             type: "zavalc",
             param: "pline_start",
@@ -12220,7 +13943,11 @@ function updatePolylineLastPoint(x, y, event) {
             num: 1,
             focus: 2 * r - 1,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о конце полилинии
+        s = {
             type: "zavalc",
             param: "pline_end",
             pline_end: e.attrs.pline_end,
@@ -12228,51 +13955,83 @@ function updatePolylineLastPoint(x, y, event) {
             num: 2,
             focus: 2 * r,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о боковой окраске
+        s = {
             type: "side_okras",
             side_okras: e.attrs.side_okras,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о цвете продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_color",
             param2: "color",
-            text: "\u0426\u0432\u0435\u0442",
+            text: "Цвет",
             param_val: e.attrs.prod_color,
             element_id: e.id(),
             focus: 2 * r + 1
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о покрытии продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_cover",
             param2: "cover",
-            text: "\u041F\u043E\u043A\u0440\u044B\u0442\u0438\u0435",
+            text: "Покрытие",
             param_val: e.attrs.prod_cover,
             element_id: e.id(),
             focus: 2 * r + 2
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о толщине продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_thickness",
             param2: "thickness",
-            text: "\u0422\u043E\u043B\u0449\u0438\u043D\u0430",
+            text: "Толщина",
             param_val: e.attrs.prod_thickness,
             element_id: e.id(),
             focus: 2 * r + 3
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о размере (длине) продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_size",
             param2: "size",
-            text: "\u0414\u043B\u0438\u043D\u0430",
+            text: "Длина",
             param_val: e.attrs.prod_size,
             element_id: e.id(),
             focus: 2 * r + 4
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о количестве продукта
+        s = {
             type: "amount",
             amount: e.attrs.prod_amount,
             element_id: e.id(),
             focus: 2 * r + 5
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка суммарной информации о размере
+        s = {
             type: "size_summ",
             summ: 0
-        }, ns(s), ds(e.id())
+        };
+        ns(s);
+        
+        // Завершающая обработка элемента
+        ds(e.id());
     }
 
     function ns(e) {
@@ -12323,7 +14082,7 @@ function updatePolylineLastPoint(x, y, event) {
 								</div>
 								<div class="nde_tbl_row_size_ang_ang">&ang;` + e.row_counter + `</div>
 								<div class="nde_tbl_row_size_ang_ang_inp">
-									<input type="text" class="form-control" value="` + e.angle + `" data-focus="` + 2 * e.row_counter + `" 
+									<input type="text" class="form-control" value="` + e.angle.toFixed(0) + `" data-focus="` + 2 * e.row_counter + `" 
 									onfocus="SimpleCad.Action({ 'type':'nde_inp_focus', 'thisObject':$(this), 'param':'angle', 'num':` + (e.row_counter - 1) + `, 'element_id':'` + e.element_id + `' })" 
 									onblur="SimpleCad.Action({  'type':'nde_inp_blur',  'thisObject':$(this), 'param':'angle', 'num':` + (e.row_counter - 1) + `, 'element_id':'` + e.element_id + `' })" 
 									onkeyup="SimpleCad.Action({ 'type':'nde_inp_keyup', 'thisObject':$(this), 'param':'angle', 'eventObject':event })" >
@@ -12470,69 +14229,218 @@ function updatePolylineLastPoint(x, y, event) {
         }
     }
 
-    function ss(e) {
+    /**
+     * Обрабатывает элементы в зависимости от переданного параметра
+     * 
+     * @param {Object} e - Объект с параметрами обработки
+     * @param {string} e.param - Тип параметра ("size", "angle", "zavalc_val", "amount")
+     * @param {Object} e.thisObject - Объект, содержащий метод select()
+     * @param {string} e.element_id - Идентификатор элемента
+     * @param {number} e.num - Числовой параметр для обработки (используется для size и angle)
+     * @param {*} e.zavalc_param - Параметр для обработки zavalc_val
+     * @param {*} e.zavalc_param_direct - Направление для параметра zavalc_val
+     */
+    function handleElementParameter(e) {
+        // Выбор действия в зависимости от типа параметра
         switch (e.param) {
             case "size":
-                e.thisObject.select(), m_(e.element_id, e.num + 1);
+                // Выбираем объект и обрабатываем его размер
+                e.thisObject.select();
+                m_(e.element_id, e.num + 1);
                 break;
+                
             case "angle":
-                e.thisObject.select(), u_(e.element_id, e.num + 1);
+                // Выбираем объект и обрабатываем его угол
+                e.thisObject.select();
+                highlightAngleElement(e.element_id, e.num + 1);
                 break;
+                
             case "zavalc_val":
-                e.thisObject.select(), h_(e.element_id, e.zavalc_param, e.zavalc_param_direct);
+                // Выбираем объект и применяем специальные значения
+                e.thisObject.select();
+                h_(e.element_id, e.zavalc_param, e.zavalc_param_direct);
                 break;
+                
             case "amount":
+                // Только выбираем объект без дополнительных действий
                 e.thisObject.select();
                 break;
+                
             default:
+                // Для остальных параметров ничего не делаем
         }
     }
 
-    function os(e) {
+    /**
+     * Обрабатывает нажатие клавиши Enter в полях формы и переключает фокус на следующее поле.
+     * 
+     * @param {Object} e - Объект с данными события
+     * @param {string} e.param - Тип поля ("size", "angle", "zavalc_val", "amount")
+     * @param {Object} e.eventObject - Объект события клавиатуры
+     * @param {number} e.eventObject.keyCode - Код нажатой клавиши
+     * @param {jQuery} e.thisObject - jQuery объект текущего элемента формы
+     */
+    function handleFieldNavigation(e) {
         switch (e.param) {
+            // Обрабатываем указанные типы полей
             case "size":
             case "angle":
             case "zavalc_val":
             case "amount":
-                var t = e.eventObject.keyCode;
-                if (13 == t) {
-                    var _ = e.thisObject[0].attributes["data-focus"].value;
-                    _ = parseInt(_) + 1, $("#nderight_accordion_body").find("[data-focus=\"" + _ + "\"]").focus(), "amount" == e.param && e.thisObject.trigger("blur")
+                // Получаем код нажатой клавиши
+                var keyCode = e.eventObject.keyCode;
+                
+                // Проверяем, была ли нажата клавиша Enter (код 13)
+                if (13 === keyCode) {
+                    // Получаем текущий индекс фокуса из атрибута data-focus
+                    var currentFocusIndex = e.thisObject[0].attributes["data-focus"].value;
+                    
+                    // Увеличиваем индекс фокуса для перехода к следующему полю
+                    currentFocusIndex = parseInt(currentFocusIndex) + 1;
+                    
+                    // Находим элемент со следующим индексом фокуса и устанавливаем на него фокус
+                    $("#nderight_accordion_body").find("[data-focus=\"" + currentFocusIndex + "\"]").focus();
+                    
+                    // Если поле типа "amount", дополнительно снимаем фокус с текущего элемента
+                    if ("amount" === e.param) {
+                        e.thisObject.trigger("blur");
+                    }
                 }
                 break;
+                
             default:
+                // Для остальных типов полей ничего не делаем
+                break;
         }
     }
 
-    function is(e) {
-        var t = 0;
-        switch (f_(e.element_id), e.param) {
-            case "size":
-                var _ = As(e.num, e.element_id),
-                    a = _ ? 10 : 17;
-                t = Math.abs(U(e.thisObject.val())), t = Math.round_precision(t, 1), t < a && (t = a), e.thisObject.val(t), an(e.element_id, e.num, t, !0);
+    /**
+     * Обрабатывает изменение параметров элемента и обновляет связанные значения.
+     * Функция работает с различными типами параметров: размер (size), угол (angle),
+     * значение завальцовки (zavalc_val) и количество (amount).
+     * 
+     * @param {Object} e - Объект с данными параметра
+     * @param {string} e.element_id - ID элемента
+     * @param {string} e.param - Тип параметра (size, angle, zavalc_val, amount)
+     * @param {Object} e.thisObject - jQuery объект текущего элемента
+     * @param {number} e.num - Номер элемента (для параметров размера и угла)
+     * @param {string} [e.zavalc_param] - Параметр завальцовки
+     * @returns {void}
+     */
+    function handleParameterUpdate(e) {
+        var t = 0; // Итоговое значение параметра
+        
+        // Вызов функции предварительной обработки для элемента
+        updateElementsColorById(e.element_id);
+        
+        // Обработка различных типов параметров
+        switch (e.param) {
+            case "size": // Обработка параметра размера
+                var _ = isStartOrBeforeEndIndex(e.num, e.element_id);
+                var a = _ ? 10 : 15; // Минимальный размер в зависимости от элемента
+                
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = Math.round_precision(t, 1);
+                
+                // Проверка минимального значения
+                if (t < a) {
+                    t = a;
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                adjustElementAngle(e.element_id, e.num, t, true);
                 break;
-            case "angle":
-                t = U(e.thisObject.val()), t = Math.round_precision_nearest(t, 5), -0 == t && (t = 0), 0 == t || (0 < t ? 35 > t && (t = 35) : 0 > t && -35 < t && (t = -35)), e.thisObject.val(t), rn(e.element_id, e.num, t);
+                
+            case "angle": // Обработка параметра угла
+                // Получение и форматирование значения
+                t = parseNumericValue(e.thisObject.val());
+                t = Math.round_precision_nearest(t, 5);
+                
+                // Исправление отрицательного нуля
+                if (t == -0) {
+                    t = 0;
+                }
+                
+                // Проверка ограничений угла: минимум ±35 градусов (если не 0)
+                if (t != 0) {
+                    if (t > 0 && t < 35) {
+                        t = 35;
+                    } else if (t < 0 && t > -35) {
+                        t = -35;
+                    }
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                recalculatePathAnglesByPoint(e.element_id, e.num, t);
                 break;
-            case "zavalc_val":
-                t = Math.abs(U(e.thisObject.val())), t = parseInt(t.toFixed(0)), 0 < t && 5 > t && (t = 5), e.thisObject.val(t), Jr(e.element_id, e.zavalc_param, t), 0 == t && e.thisObject.parent().parent().find(".js_empty").trigger("click");
+                
+            case "zavalc_val": // Обработка параметра завальцовки
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = parseInt(t.toFixed(0));
+                
+                // Проверка минимального значения (5 для положительных чисел)
+                if (t > 0 && t < 5) {
+                    t = 5;
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                Jr(e.element_id, e.zavalc_param, t);
+                
+                // При нулевом значении вызвать клик на элементе .js_empty
+                if (t == 0) {
+                    e.thisObject.parent().parent().find(".js_empty").trigger("click");
+                }
                 break;
-            case "amount":
-                t = Math.abs(U(e.thisObject.val())), t = parseInt(t.toFixed(0)), 0 >= t && (t = ""), e.thisObject.val(t), en(e.element_id, "prod_amount", t);
+                
+            case "amount": // Обработка параметра количества
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = parseInt(t.toFixed(0));
+                
+                // Проверка минимального значения
+                if (t <= 0) {
+                    t = "";
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                en(e.element_id, "prod_amount", t);
                 break;
+                
             default:
+                // Для неизвестных параметров ничего не делаем
         }
-        switch (refreshCurrentLayer(), ds(e.element_id), e.param) {
-            case "size":
+        
+        // Обновление текущего слоя и элемента
+        refreshCurrentLayer();
+        ds(e.element_id);
+        
+        // Дополнительная обработка для определенных параметров
+        switch (e.param) {
+            case "size": // Дополнительное обновление для параметра размера
                 var r = Bi.findOne("#" + e.element_id);
-                _n(e.element_id, {
+                
+                // Обновление размера элемента
+                updatePolylineSegmentLengths(e.element_id, {
                     mode: "length_one",
                     num: e.num,
                     val: t
-                }), fs(r), ds(e.element_id), updateElementParametersDisplay(r), refreshCurrentLayer();
+                });
+                
+                // Обновление отображения элемента
+                fs(r);
+                ds(e.element_id);
+                updateElementParametersDisplay(r);
+                refreshCurrentLayer();
                 break;
+                
             default:
+                // Для других параметров дополнительной обработки не требуется
         }
     }
 
@@ -12567,7 +14475,7 @@ function updatePolylineLastPoint(x, y, event) {
                 var t = Bi.findOne("#" + e.element_id),
                     _ = t.attrs.pline_lengths_ish,
                     a = _[e.num];
-                0 == e.thisObject.val() ? (an(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (fs(t), refreshCurrentLayer());
+                0 == e.thisObject.val() ? (adjustElementAngle(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (fs(t), refreshCurrentLayer());
                 break;
             default:
         }
@@ -12628,7 +14536,7 @@ function updatePolylineLastPoint(x, y, event) {
      * @param {Object} e - Элемент, для которого нужно обновить отображение информации.
      */
     function updateElementParametersDisplay(e) {
-        if ("sznde" == ei.type) {
+        if ("sznde" == ei.type && ! isRotateClick) {
             var t = e.attrs.prod_color,
                 _ = e.attrs.prod_cover,
                 a = e.attrs.prod_thickness,
@@ -12735,7 +14643,7 @@ function updatePolylineLastPoint(x, y, event) {
 
     function fs(e) {
         if (0 < Object.keys(e.attrs.pline_breaks).length) {
-            for (var t = e.points(), _ = t.length, a = JSON.copy(e.attrs.pline_breaks), r = 0, n = e.attrs.pline_lengths_ish, s = 0, o = 0, l = 0; l < (_ - 2) / 2; l++) "undefined" != typeof a["l" + l] && -1 !== $.inArray(parseInt(a["l" + l]), Ei) && (r = parseInt(a["l" + l]), s = n[l], o = parseFloat((s / 100 * r).toFixed(3)), an(e.id(), l, o, !0), is_changed = !0);
+            for (var t = e.points(), _ = t.length, a = JSON.copy(e.attrs.pline_breaks), r = 0, n = e.attrs.pline_lengths_ish, s = 0, o = 0, l = 0; l < (_ - 2) / 2; l++) "undefined" != typeof a["l" + l] && -1 !== $.inArray(parseInt(a["l" + l]), Ei) && (r = parseInt(a["l" + l]), s = n[l], o = parseFloat((s / 100 * r).toFixed(3)), adjustElementAngle(e.id(), l, o, !0), is_changed = !0);
             is_changed && refreshCurrentLayer()
         }
     }
@@ -12745,6 +14653,16 @@ function updatePolylineLastPoint(x, y, event) {
             if ("Line" == t.className && "undefined" != typeof t.attrs.side_okras) return T(t.id(), {
                 is_move_show: !1
             }), !1
+        })
+    }
+
+    function setCurrentElement() {
+        $.each(to[vo].children, function (e, t) {
+            if ("Line" == t.className && "undefined" != typeof t.attrs.side_okras) {            
+                S(t.id(), {
+                    is_move_show: false
+                })                
+            }
         })
     }
 
@@ -12766,7 +14684,7 @@ function updatePolylineLastPoint(x, y, event) {
         }), 1 == t ? (_ = validateElementConfiguration(e), 0 == _.errors.length ? (Yn({
             text: "\u041E\u0448\u0438\u0431\u043E\u043A \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
             type: "success"
-        }), ho = !0) : (a = vs(_.errors, "modal_nde_validate_errors"), W("nde_validate_errors", {
+        }), ho = !0) : (a = vs(_.errors, "modal_nde_validate_errors"), showModalWindow("nde_validate_errors", {
             errors_html: a
         }))) : 0 == t ? Yn({
             text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
@@ -13101,7 +15019,7 @@ function updatePolylineLastPoint(x, y, event) {
     function js() {
         if (0 == b_()) var e = to[vo].toImage({
             callback: function(e) {
-                $("#modal_save_appendblock").html(e), W("save", {})
+                $("#modal_save_appendblock").html(e), showModalWindow("save", {})
             }
         });
         else {
@@ -13117,7 +15035,7 @@ function updatePolylineLastPoint(x, y, event) {
     }
 
     function Cs(e) {
-        $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), W("save", {})
+        $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), showModalWindow("save", {})
     }
 
     function Ls() {
@@ -13194,24 +15112,51 @@ function updatePolylineLastPoint(x, y, event) {
         }), t && $("#d_elements_button_select").trigger("click")
     }
 
-    function As(e, t) {
-        var _ = !1;
-        if (e = parseInt(e), 0 == e) _ = !0;
-        else {
-            var a = Bi.findOne("#" + t);
-            if ("undefined" !== a) {
-                var r = a.points(),
-                    n = r.length / 2 - 1;
-                e == n - 1 && (_ = !0)
+    /**
+     * Проверяет, является ли индекс особым (равным 0 или предпоследним в списке точек элемента).
+     * 
+     * @param {number} e - Индекс для проверки.
+     * @param {string} t - Идентификатор элемента, для которого нужно проверить точки.
+     * @returns {boolean} - true, если индекс является особым, иначе false.
+     */
+    function isStartOrBeforeEndIndex(e, t) {
+        var result = false;
+        
+        // Преобразуем входной параметр в целое число
+        e = parseInt(e);
+        
+        // Если индекс равен 0, это особый случай
+        if (e == 0) {
+            result = true;
+        } else {
+            // Ищем элемент по идентификатору
+            var element = Bi.findOne("#" + t);
+            
+            // Если элемент найден
+            if ("undefined" !== element) {
+                // Получаем точки элемента
+                var points = element.points();
+                
+                // Вычисляем количество сегментов
+                var segmentsCount = points.length / 2 - 1;
+                
+                // Проверяем, является ли индекс предпоследним
+                if (e == segmentsCount - 1) {
+                    result = true;
+                }
             }
         }
-        return _
+        
+        return result;
     }
 
     function qs(e, t) {
         var _ = !1;
         return (0 == e || e == t / 2 - 1 - 1) && (_ = !0), _
     }
+
+    // Создание объекта
+
     var Ts = "https://cad2.simplecad.ru/",
         Ss = "https://client.simplecad.ru/",
         Ps = "http://glm-test.metallist.g310/"; - 1 < window.location.href.indexOf(".g310") && (Ts = "https://testcad2.simplecad.ru/", Ss = Ps), -1 < window.location.href.indexOf(".loc") && (Ts = "https://cad.simplecad.loc/", Ss = Ps);
@@ -13235,7 +15180,7 @@ function updatePolylineLastPoint(x, y, event) {
         Qs = !0,
         Us = !0,
         mainColors = {
-            selected_element_color: "#ff0000",
+            selected_element_color: "#000",
             default_element_color: "#000",
             sight_color: "#db4629",
             sight_orto_highlighted_color: "#4caf50",
@@ -14771,7 +16716,7 @@ function updatePolylineLastPoint(x, y, event) {
                 }
             }
         },
-        Bi, Zi, Ji, Qi, Ui, el, tl, _l, al, rl, nl, sl, ol, il, ll, cl, dl, pl, ml, hl, ul, fl, gl, yl, bl, vl, xl, wl, kl, zl, jl, Cl, Ll, Ol, magnet30;
+        Bi, Zi, Ji, Qi, Ui, el, tl, _l, al, rl, nl, sl, ol, il, ll, cl, dl, pl, ml, hl, ul, fl, gl, yl, bl, vl, xl, wl, kl, zl, jl, Cl, Ll, Ol, isRotateClick, $magnet30, $rotate;
     this.Start = function(t) {
         initializeCadBlock(t)
     }, SimpleCad.Action = function(_) {
@@ -14833,7 +16778,7 @@ function updatePolylineLastPoint(x, y, event) {
                     default:
                         s = _.thisObject[0].attributes["data-remote"].value;
                 }
-                W(_.type, {
+                showModalWindow(_.type, {
                     target: s
                 });
                 break;
@@ -14888,15 +16833,50 @@ function updatePolylineLastPoint(x, y, event) {
                 }
                 break;
             case "rotate":
-                "" == zi ? -1 !== $.inArray(ei.type, ["sznde"]) && gs() : T(zi, {
-                    is_move_show: !1
-                }), "undefined" != typeof Zi && "undefined" !== Zi ? (Kr(Zi, _.angle, !0), "" == zi ? -1 !== $.inArray(ei.type, ["sznde"]) && (_e(), fe(), Zi = "undefined") : (se(), oe(), ce(), Zi.stroke("#ff8223"), Zi = "undefined")) : -1 === $.inArray(ei.type, ["sznde"]) ? SimpleCad.Action({
-                    type: "ModalShow",
-                    target: "rotate_btn_click_error"
-                }) : Yn({
-                    text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
-                    type: "error"
-                });
+               
+                // Если переменная `zi` пустая
+                if ("" == zi) {
+                    // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
+                    if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                        gs(); // Выполняем функцию `gs`, если условие выполнено
+                    }
+                } else {
+                    // Если `zi` не пустая, вызываем функцию `T` с параметрами
+                    // T(zi, {
+                    //     is_move_show: !1 // Устанавливаем флаг `is_move_show` в false
+                    // });
+                }
+
+                if ("undefined" != typeof Zi && "undefined" !== Zi) {
+                    rotateElement(Zi, _.angle, !0);
+                    
+                    if ("" == zi) {                        
+                        if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                            resetCADState();
+                            setDefaultMode();
+                            Zi = "undefined";
+                        }
+                    } else {
+                        se();
+                        oe();
+                        ce();
+                        Zi.stroke("#ff8223");
+                        Zi = "undefined";
+                    }
+                } else {
+                    if (-1 === $.inArray(ei.type, ["sznde"])) {
+                        console.log('zi not2')
+                        SimpleCad.Action({
+                            type: "ModalShow",
+                            target: "rotate_btn_click_error"
+                        });
+                    } else {
+                        Yn({
+                            text: "Элементов не найдено",
+                            type: "error"
+                        });
+                    }
+                }
                 break;
             case "mirror_hor":
                 "" != zi && T(zi, {
@@ -14908,16 +16888,16 @@ function updatePolylineLastPoint(x, y, event) {
                 break;
             case "pline_segment_highlight_set_length_submit":
                 if (Wt("pline_segment_highlight_set_length_form", ""), 0 < ai.errors.length) return;
-                var h = U($("#pline_segment_highlight_set_length_length").val()),
-                    u, f; - 1 !== $.inArray(ei.type, ["sznde"]) && (u = As(hi.segment_num, hi.parent[0].id()), f = u ? 10 : 17, h = Math.abs(h), h = Math.round_precision(h, 1), h < f && (h = f));
+                var h = parseNumericValue($("#pline_segment_highlight_set_length_length").val()),
+                    u, f; - 1 !== $.inArray(ei.type, ["sznde"]) && (u = isStartOrBeforeEndIndex(hi.segment_num, hi.parent[0].id()), f = u ? 10 : 17, h = Math.abs(h), h = Math.round_precision(h, 1), h < f && (h = f));
                 var b = Math.round(1e3 * hi.segment_length) - Math.round(1e3 * h);
-                if (b = U((b / 1e3).toFixed(yi.length.prec)), -1 !== $.inArray(ei.type, ["sznde"])) {
+                if (b = parseNumericValue((b / 1e3).toFixed(yi.length.prec)), -1 !== $.inArray(ei.type, ["sznde"])) {
                     var v = !!(hi.nearest_point_num_in_pline > hi.farthest_point_num_in_pline);
-                    an(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), _n(hi.parent[0].id(), {
+                    adjustElementAngle(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), updatePolylineSegmentLengths(hi.parent[0].id(), {
                         mode: "length_one",
                         num: hi.segment_num,
                         val: h
-                    }), rs(hi.parent[0]), fs(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
+                    }), processPolylineParameters(hi.parent[0]), fs(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
                 } else Zr(hi.parent[0], hi.nearest_point_num_in_pline, hi.farthest_point_num_in_pline, b), refreshCurrentLayer();
                 $("#modal_html").modal("hide");
                 break;
@@ -14953,7 +16933,7 @@ function updatePolylineLastPoint(x, y, event) {
                 });
                 break;
             case "roof_specification_full_project":
-                W(_.type, {});
+                showModalWindow(_.type, {});
                 var k = S_("roof_specification_full_project");
                 K(_.type, {
                     roof_data: k
@@ -15095,7 +17075,7 @@ function updatePolylineLastPoint(x, y, event) {
                 It("roof_new_form");
                 break;
             case "roof_data_params_add_no_backend_data":
-                "block" == $("#roof_new_type_reassign").css("display") && (Mo.type = $("#roof_new_type_reassign").val()), Mo.gap_y = parseInt(U($("#roof_new_gap_y").val())), Mo.sheet_width_useful = parseInt($("#roof_new_sheet_width_useful").val()), Mo.gap_x = Mo.sheet_width - Mo.sheet_width_useful, Mo.sheet_allowed_length_rounding = parseInt($("#roof_new_sheet_allowed_length_rounding").val()), Mo.offset_run = parseInt(U($("#roof_new_offset_run").val())), Mo.chess_offset = parseInt($("#roof_new_chess_offset").val()), Mo.sheet_allowed_length_correct_min = parseInt($("#roof_new_sheet_allowed_length_correct_min").val()), Mo.sheet_allowed_length_correct_max = parseInt($("#roof_new_sheet_allowed_length_correct_max").val()), Mo.mch_edited_shal_calc_mode = $("#roof_new_mch_edited_shal_calc_mode").find("input[name=\"roof_new_mch_edited_shal_calc_mode\"]:checked").val();
+                "block" == $("#roof_new_type_reassign").css("display") && (Mo.type = $("#roof_new_type_reassign").val()), Mo.gap_y = parseInt(parseNumericValue($("#roof_new_gap_y").val())), Mo.sheet_width_useful = parseInt($("#roof_new_sheet_width_useful").val()), Mo.gap_x = Mo.sheet_width - Mo.sheet_width_useful, Mo.sheet_allowed_length_rounding = parseInt($("#roof_new_sheet_allowed_length_rounding").val()), Mo.offset_run = parseInt(parseNumericValue($("#roof_new_offset_run").val())), Mo.chess_offset = parseInt($("#roof_new_chess_offset").val()), Mo.sheet_allowed_length_correct_min = parseInt($("#roof_new_sheet_allowed_length_correct_min").val()), Mo.sheet_allowed_length_correct_max = parseInt($("#roof_new_sheet_allowed_length_correct_max").val()), Mo.mch_edited_shal_calc_mode = $("#roof_new_mch_edited_shal_calc_mode").find("input[name=\"roof_new_mch_edited_shal_calc_mode\"]:checked").val();
                 var E = [],
                     M = $("#sheet_allowed_length_text_edit_cells").find(".selected");
                 0 < M.length && $.each(M, function(e, t) {
@@ -15293,7 +17273,7 @@ function updatePolylineLastPoint(x, y, event) {
                 V();
                 break;
             case "ModalShow":
-                W(_.target, {});
+                showModalWindow(_.target, {});
                 break;
             case "SheetSubmenu":
                 y(_.thisObject);
@@ -15413,10 +17393,10 @@ function updatePolylineLastPoint(x, y, event) {
                 if (we) {
                     var ke = as(_.pline_params),
                         ze = createPolyline(ke);
-                    oa(ze), v_(), Fs(_.pline_params), _n(ze.id(), {
+                    oa(ze), v_(), Fs(_.pline_params), updatePolylineSegmentLengths(ze.id(), {
                         mode: "lengths_all",
                         lengths: _.pline_params.lengths
-                    }), rs(ze), fs(ze), updateElementParametersDisplay(ze), 0 < Object.keys(ze.attrs.pline_breaks).length ? v_() : refreshCurrentLayer(), $("#modal_html").modal("hide")
+                    }), processPolylineParameters(ze), fs(ze), updateElementParametersDisplay(ze), 0 < Object.keys(ze.attrs.pline_breaks).length ? v_() : refreshCurrentLayer(), $("#modal_html").modal("hide")
                 } else alert("\u041D\u0435\u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u043E\u043B\u0438\u043B\u0438\u043D\u0438\u0438!");
                 break;
             case "modal_paste_figure_img":
@@ -15502,7 +17482,7 @@ function updatePolylineLastPoint(x, y, event) {
                 break;
             case "trigonom_figure_input_blur_other":
                 var Se = _.thisObject[0].value + "",
-                    Pe = Math.abs(U(Se)),
+                    Pe = Math.abs(parseNumericValue(Se)),
                     Ie = 0,
                     Fe = _.thisObject[0].attributes.id.value,
                     Ye = Fe.replace("trigonom_" + _.figure + "_", ""),
@@ -15576,13 +17556,13 @@ function updatePolylineLastPoint(x, y, event) {
                 });
                 break;
             case "nde_inp_focus":
-                ss(_);
+                handleElementParameter(_);
                 break;
             case "nde_inp_blur":
-                is(_);
+                handleParameterUpdate(_);
                 break;
             case "nde_inp_keyup":
-                os(_);
+                handleFieldNavigation(_);
                 break;
             case "nde_radio_change":
                 ls(_);
