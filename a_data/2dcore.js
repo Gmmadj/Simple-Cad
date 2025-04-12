@@ -965,6 +965,23 @@ function SimpleCad() {
         })
     }
 
+    function updateUI() {
+        setCurrentElement()
+        var polylineId, polyline;
+
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            polylineId = Zi.id();
+            polyline = Bi.findOne("#" + polylineId);
+        }
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            ms();
+            updatePolylineSegmentLengths(polylineId, { mode: "create" });
+            processPolylineParameters(polyline);
+            updateElementParametersDisplay(polyline);
+            refreshCurrentLayer();
+        }
+    }
+
     /**
      * Обрабатывает клик по кнопке элемента в панели инструментов CAD.
      * Переключает режим работы редактора в зависимости от выбранного инструмента.
@@ -973,35 +990,34 @@ function SimpleCad() {
      * @param {jQuery} t - jQuery-объект кнопки, на которую кликнули.
      */
     function handleElementButtonClick(e, t) {        
-        // Проверка для SZNDE-типа: запрещаем выбор инструментов pline и figure_nde, если уже есть элемент
-        // if (-1 !== $.inArray(ei.type, ["sznde"]) && 
-        //     -1 !== $.inArray(t.attr("data-element"), ["pline", "figure_nde"]) && 
-        //     0 < b_()) {
-        //     // Показываем уведомление об ошибке
-        //     Yn({
-        //         text: "\u0423\u0434\u0430\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
-        //         type: "error"
-        //     });
-        //     return;
-        // }
+        setCurrentElement()
+        var polylineId, polyline;
+
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            polylineId = Zi.id();
+            polyline = Bi.findOne("#" + polylineId);
+        }
         
         if (Oo.mode == 'add_element' && Oo["data-element"] == "pline") {
-            setCurrentElement()
-            // TODO: нужно отследить рисование, т.к. тут удаляется последняя точка.
-    
-            polylineId = Zi.id();
             let points = Zi.points();
-            points = points.slice(0, points.length - 2);        
+            points = points.slice(0, points.length - 2);
     
             Zi.setPoints(points);
             processAndClearElement(Zi);
             yt(Zi.id(), false);
-            processElementAndAddMovePoints(Zi, false);        
-    
+            processElementAndAddMovePoints(Zi, false);
             En();
-    
-            setCurrentElement()
         }
+        
+        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+            ms();
+            updatePolylineSegmentLengths(polylineId, { mode: "create" });
+            processPolylineParameters(polyline);
+            updateElementParametersDisplay(polyline);
+            refreshCurrentLayer();
+        }
+
+        setCurrentElement()
 
         // Очищаем текущее состояние редактора
         resetCADState();
@@ -2971,12 +2987,15 @@ function SimpleCad() {
     }
 
     function ye(e) {
+        if (1 == e.evt.button) return e.evt.preventDefault(), $('[data-element="select"]').trigger('click'), !1;
         if (2 == e.evt.button) return e.evt.preventDefault(), ya(e), !1;
         switch ($o && (kl.hide(), $o = !1), Oo.mode) {
             case "default":
+                updateUI()
                 resetCADState(), setDefaultMode(), Zi = "undefined", zi = "";
                 break;
             case "add_element":
+                updateUI()
                 handleCanvasClick(e);
                 break;
             default:
@@ -4424,7 +4443,7 @@ function SimpleCad() {
             var w = new Konva.Text({
                 x: y + (v - y) / 2,
                 y: b + (x - b) / 2,
-                text: p.toFixed(2) / 1 + "\xB0",
+                text: p.toFixed(0) / 1 + "\xB0",
                 fontSize: 14,
                 fontFamily: "Arial",
                 fontStyle: "bold",
@@ -4523,7 +4542,7 @@ function SimpleCad() {
                     }
                     
                     // Update text with new angle
-                    textObj.text(newAngle.toFixed(2) / 1 + '°');
+                    textObj.text(newAngle.toFixed(0) / 1 + '°');
                     
                     // Make text visible again
                     textObj.visible(true);
@@ -7636,8 +7655,8 @@ function SimpleCad() {
                     if (polylineId !== "" && $.inArray(ei.type, ["sznde"]) !== -1) {
                         const polyline = Bi.findOne("#" + polylineId);
                         ms();
-                        _n(polylineId, { mode: "create" });
-                        rs(polyline);
+                        updatePolylineSegmentLengths(polylineId, { mode: "create" });
+                        processPolylineParameters(polyline);
                         updateElementParametersDisplay(polyline);
                         refreshCurrentLayer();
                         $("#d_elements_button_select").trigger("click");
@@ -8286,6 +8305,7 @@ function SimpleCad() {
                 var t = e.target;
                 document.body.style.cursor = "default", "undefined" == typeof oi[n] && (t.stroke(mainColors.default_element_color), t.strokeWidth(1), to[vo].batchDraw())
             }), l.on("click", function(e) {
+                
                 switch (ye(e), Oo.mode) {
                     case "":
                     case "default":
@@ -10357,7 +10377,7 @@ function SimpleCad() {
             Ya(event);
         });
         movePoint.on("mouseout", function (event) {
-            Da(event);
+            // Da(event);
         });
         movePoint.on("dragstart", function (event) {
             Xa(event);
@@ -10446,9 +10466,9 @@ function SimpleCad() {
         var t = e.target,
             _ = Bi.findOne("#" + t.attrs.parent_id),
             a = JSON.copy(_.points());
-        li[ci].pline_data.points.after = a, -1 !== $.inArray(ei.type, ["sznde"]) && (ms(), _n(_.id(), {
+        li[ci].pline_data.points.after = a, -1 !== $.inArray(ei.type, ["sznde"]) && (ms(), updatePolylineSegmentLengths(_.id(), {
             mode: "update_considering_pline_breaks"
-        }), rs(_), updateElementParametersDisplay(_), refreshCurrentLayer())
+        }), processPolylineParameters(_), updateElementParametersDisplay(_), refreshCurrentLayer())
     }
 
     function Wa(e, t, _) {
@@ -10489,7 +10509,7 @@ function SimpleCad() {
         }), t && (di.pline_data.points.after = JSON.copy(n), An({
             mode: "add",
             element: di
-        })), vt(r, !1), _n(r.id(), {
+        })), vt(r, !1), updatePolylineSegmentLengths(r.id(), {
             mode: "update_considering_pline_breaks"
         }), processAndClearElement(r), Ma(e), r.draw()
     }
@@ -12085,30 +12105,101 @@ function SimpleCad() {
         a.attrs.pline_breaks["l" + t] = _, 0 == _ && (a.attrs.pline_breaks["l" + t] = null, delete a.attrs.pline_breaks["l" + t])
     }
 
-    function _n(e, t) {
+    /**
+     * Обрабатывает длины сегментов полилинии в зависимости от указанного режима.
+     * 
+     * @param {string} elementId - ID элемента полилинии
+     * @param {Object} options - Параметры обработки
+     * @param {string} options.mode - Режим обработки ("lengths_all", "length_one", "create", "update_considering_pline_breaks")
+     * @param {Array} [options.lengths] - Массив длин для режима "lengths_all"
+     * @param {number} [options.num] - Индекс сегмента для изменения (для режима "length_one")
+     * @param {number} [options.val] - Новое значение длины (для режима "length_one")
+     */
+    function updatePolylineSegmentLengths(elementId, options) {
+        // Проверяем, соответствует ли тип элемента требуемому
         if ("sznde" == ei.type) {
-            var _ = Bi.findOne("#" + e),
-                a = [],
-                r = 0,
-                n = 0,
-                s = 0,
-                o = 0;
-            if ("undefined" != typeof t.mode) switch (t.mode) {
-                case "lengths_all":
-                    _.attrs.pline_lengths_ish = t.lengths;
-                    break;
-                case "length_one":
-                    _.attrs.pline_lengths_ish[t.num] = t.val;
-                    break;
-                case "create":
-                    a = _.points(), r = a.length, _.attrs.pline_lengths_ish = [];
-                    for (var l = 0; l < (r - 2) / 2; l++) n = Te(a[2 * s + 0], a[2 * s + 1], a[2 * s + 2], a[2 * s + 3], !1), n = parseFloat((100 * n / Go.g_scale[vo]).toFixed(3)), _.attrs.pline_lengths_ish.push(n), s++;
-                    break;
-                case "update_considering_pline_breaks":
-                    a = _.points(), r = a.length, _.attrs.pline_lengths_ish = [];
-                    for (var l = 0; l < (r - 2) / 2; l++) n = Te(a[2 * s + 0], a[2 * s + 1], a[2 * s + 2], a[2 * s + 3], !1), o = 0, "undefined" != typeof _.attrs.pline_breaks["l" + l] && -1 !== $.inArray(parseInt(_.attrs.pline_breaks["l" + l]), Ei) && (o = parseInt(_.attrs.pline_breaks["l" + l])), 0 < o && (n = 100 * (n / o)), n = parseFloat((100 * n / Go.g_scale[vo]).toFixed(3)), _.attrs.pline_lengths_ish.push(n), s++;
-                    break;
-                default:
+            // Находим элемент по ID
+            var element = Bi.findOne("#" + elementId);
+            var points = [];
+            var pointsCount = 0;
+            var segmentLength = 0;
+            var segmentIndex = 0;
+            var breakFactor = 0;
+
+            if ("undefined" != typeof options.mode) {
+                switch (options.mode) {
+                    case "lengths_all":
+                        // Устанавливаем все длины сегментов одним массивом
+                        element.attrs.pline_lengths_ish = options.lengths;
+                        break;
+
+                    case "length_one":
+                        // Устанавливаем длину для конкретного сегмента
+                        element.attrs.pline_lengths_ish[options.num] = options.val;
+                        break;
+
+                    case "create":
+                        // Создаем массив длин на основе координат точек полилинии
+                        points = element.points();
+                        pointsCount = points.length;
+                        element.attrs.pline_lengths_ish = [];
+
+                        // Вычисляем длину для каждого сегмента полилинии
+                        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+                            // Вычисляем длину между двумя точками (x1,y1) и (x2,y2)
+                            segmentLength = Te(
+                                points[2 * segmentIndex + 0], // x1
+                                points[2 * segmentIndex + 1], // y1
+                                points[2 * segmentIndex + 2], // x2
+                                points[2 * segmentIndex + 3], // y2
+                                false
+                            );
+                            // Масштабирование и форматирование длины
+                            segmentLength = parseFloat((100 * segmentLength / Go.g_scale[vo]).toFixed(0));
+                            element.attrs.pline_lengths_ish.push(segmentLength);
+                            segmentIndex++;
+                        }
+                        break;
+
+                    case "update_considering_pline_breaks":
+                        // Обновляем длины с учетом разрывов в полилинии
+                        points = element.points();
+                        pointsCount = points.length;
+                        element.attrs.pline_lengths_ish = [];
+
+                        // Вычисляем длину для каждого сегмента с учетом разрывов
+                        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+                            // Вычисляем базовую длину сегмента
+                            segmentLength = Te(
+                                points[2 * segmentIndex + 0], // x1
+                                points[2 * segmentIndex + 1], // y1
+                                points[2 * segmentIndex + 2], // x2
+                                points[2 * segmentIndex + 3], // y2
+                                false
+                            );
+                            
+                            breakFactor = 0;
+                            // Проверяем наличие разрыва для текущего сегмента
+                            if ("undefined" != typeof element.attrs.pline_breaks["l" + i] && 
+                                -1 !== $.inArray(parseInt(element.attrs.pline_breaks["l" + i]), Ei)) {
+                                breakFactor = parseInt(element.attrs.pline_breaks["l" + i]);
+                            }
+                            
+                            // Корректируем длину с учетом фактора разрыва
+                            if (0 < breakFactor) {
+                                segmentLength = 100 * (segmentLength / breakFactor);
+                            }
+                            
+                            // Масштабирование и форматирование длины
+                            segmentLength = parseFloat((100 * segmentLength / Go.g_scale[vo]).toFixed(0));
+                            element.attrs.pline_lengths_ish.push(segmentLength);
+                            segmentIndex++;
+                        }
+                        break;
+
+                    default:
+                        // Для неизвестного режима ничего не делаем
+                }
             }
         }
     }
@@ -13752,25 +13843,73 @@ function SimpleCad() {
         })), t
     }
 
-    function rs(e) {
-        var t = e.points(),
-            _ = t.length,
-            a = 0,
-            r = 0,
-            n = 0,
-            s = {},
-            o = e.attrs.pline_lengths_ish,
-            l = JSON.copy(e.attrs.pline_breaks),
+    /**
+     * Обрабатывает элемент полилинии, вычисляя и отправляя его параметры
+     * для дальнейшей обработки в системе.
+     * 
+     * @param {Object} e - Объект элемента полилинии
+     */
+    function processPolylineParameters(e) {
+        // Получение основных характеристик из элемента
+        var t = e.points(),                     // Точки полилинии
+            _ = t.length,                       // Количество точек
+            a = 0,                              // Длина сегмента
+            r = 0,                              // Счетчик рядов/сегментов
+            n = 0,                              // Угол между сегментами
+            s = {},                             // Объект для хранения параметров
+            o = e.attrs.pline_lengths_ish,      // Длины сегментов полилинии
+            l = JSON.copy(e.attrs.pline_breaks), // Копируем точки разрыва полилинии
+            c = 0;                              // Тип разрыва полилинии
+        
+        // Очистка глобальных коллекций
+        Ll.empty();
+        Ol.empty();
+        
+        // Обработка каждого сегмента полилинии
+        for (var d = 0; d < (_ - 2) / 2; d++) {
+            // Получаем длину сегмента или устанавливаем 0, если не определена
+            a = typeof o[d] === "undefined" ? 0 : o[d];
+            
+            // Вычисляем угол между сегментами для всех кроме первого
+            if (r > 0) {
+                n = calculateAngle(
+                    t[2 * r - 2], t[2 * r - 1],
+                    t[2 * r], t[2 * r + 1],
+                    t[2 * r + 2], t[2 * r + 3],
+                    true, true, false
+                );
+                
+                // Проверка на корректность угла
+                if (isNaN(n)) {
+                    n = 0;
+                }
+                
+                n = parseFloat(n.toFixed(2));
+            } else {
+                n = 0;
+            }
+            
+            // Определение типа разрыва для текущего сегмента
             c = 0;
-        Ll.empty(), Ol.empty();
-        for (var d = 0; d < (_ - 2) / 2; d++) a = "undefined" == typeof o[d] ? 0 : o[d], 0 < r ? (n = calculateAngle(t[2 * r + 0 - 2], t[2 * r + 1 - 2], t[2 * r + 2 - 2], t[2 * r + 3 - 2], t[2 * r + 4 - 2], t[2 * r + 5 - 2], !0, !0, !1), isNaN(n) && (n = 0), n = parseFloat(n.toFixed(2))) : n = 0, c = 0, "undefined" != typeof l["l" + d] && -1 !== $.inArray(parseInt(l["l" + d]), Ei) && (c = parseInt(l["l" + d])), s = {
-            type: "size_angle",
-            row_counter: r,
-            length: a,
-            angle: n,
-            element_id: e.id(),
-            pline_break: c
-        }, ns(s), r++;
+            if (typeof l["l" + d] !== "undefined" && $.inArray(parseInt(l["l" + d]), Ei) !== -1) {
+                c = parseInt(l["l" + d]);
+            }
+            
+            // Формирование и отправка данных о размере и угле сегмента
+            s = {
+                type: "size_angle",
+                row_counter: r,
+                length: a,
+                angle: n,
+                element_id: e.id(),
+                pline_break: c
+            };
+            ns(s);
+            
+            r++;
+        }
+        
+        // Отправка информации о начале полилинии
         s = {
             type: "zavalc",
             param: "pline_start",
@@ -13779,7 +13918,11 @@ function SimpleCad() {
             num: 1,
             focus: 2 * r - 1,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о конце полилинии
+        s = {
             type: "zavalc",
             param: "pline_end",
             pline_end: e.attrs.pline_end,
@@ -13787,51 +13930,83 @@ function SimpleCad() {
             num: 2,
             focus: 2 * r,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о боковой окраске
+        s = {
             type: "side_okras",
             side_okras: e.attrs.side_okras,
             element_id: e.id()
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о цвете продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_color",
             param2: "color",
-            text: "\u0426\u0432\u0435\u0442",
+            text: "Цвет",
             param_val: e.attrs.prod_color,
             element_id: e.id(),
             focus: 2 * r + 1
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о покрытии продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_cover",
             param2: "cover",
-            text: "\u041F\u043E\u043A\u0440\u044B\u0442\u0438\u0435",
+            text: "Покрытие",
             param_val: e.attrs.prod_cover,
             element_id: e.id(),
             focus: 2 * r + 2
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о толщине продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_thickness",
             param2: "thickness",
-            text: "\u0422\u043E\u043B\u0449\u0438\u043D\u0430",
+            text: "Толщина",
             param_val: e.attrs.prod_thickness,
             element_id: e.id(),
             focus: 2 * r + 3
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о размере (длине) продукта
+        s = {
             type: "prod_nom_param",
             param: "prod_size",
             param2: "size",
-            text: "\u0414\u043B\u0438\u043D\u0430",
+            text: "Длина",
             param_val: e.attrs.prod_size,
             element_id: e.id(),
             focus: 2 * r + 4
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка информации о количестве продукта
+        s = {
             type: "amount",
             amount: e.attrs.prod_amount,
             element_id: e.id(),
             focus: 2 * r + 5
-        }, ns(s), s = {
+        };
+        ns(s);
+        
+        // Отправка суммарной информации о размере
+        s = {
             type: "size_summ",
             summ: 0
-        }, ns(s), ds(e.id())
+        };
+        ns(s);
+        
+        // Завершающая обработка элемента
+        ds(e.id());
     }
 
     function ns(e) {
@@ -13882,7 +14057,7 @@ function SimpleCad() {
 								</div>
 								<div class="nde_tbl_row_size_ang_ang">&ang;` + e.row_counter + `</div>
 								<div class="nde_tbl_row_size_ang_ang_inp">
-									<input type="text" class="form-control" value="` + e.angle + `" data-focus="` + 2 * e.row_counter + `" 
+									<input type="text" class="form-control" value="` + e.angle.toFixed(0) + `" data-focus="` + 2 * e.row_counter + `" 
 									onfocus="SimpleCad.Action({ 'type':'nde_inp_focus', 'thisObject':$(this), 'param':'angle', 'num':` + (e.row_counter - 1) + `, 'element_id':'` + e.element_id + `' })" 
 									onblur="SimpleCad.Action({  'type':'nde_inp_blur',  'thisObject':$(this), 'param':'angle', 'num':` + (e.row_counter - 1) + `, 'element_id':'` + e.element_id + `' })" 
 									onkeyup="SimpleCad.Action({ 'type':'nde_inp_keyup', 'thisObject':$(this), 'param':'angle', 'eventObject':event })" >
@@ -14226,7 +14401,7 @@ function SimpleCad() {
                 var r = Bi.findOne("#" + e.element_id);
                 
                 // Обновление размера элемента
-                _n(e.element_id, {
+                updatePolylineSegmentLengths(e.element_id, {
                     mode: "length_one",
                     num: e.num,
                     val: t
@@ -16693,11 +16868,11 @@ function SimpleCad() {
                 var b = Math.round(1e3 * hi.segment_length) - Math.round(1e3 * h);
                 if (b = parseNumericValue((b / 1e3).toFixed(yi.length.prec)), -1 !== $.inArray(ei.type, ["sznde"])) {
                     var v = !!(hi.nearest_point_num_in_pline > hi.farthest_point_num_in_pline);
-                    adjustElementAngle(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), _n(hi.parent[0].id(), {
+                    adjustElementAngle(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), updatePolylineSegmentLengths(hi.parent[0].id(), {
                         mode: "length_one",
                         num: hi.segment_num,
                         val: h
-                    }), rs(hi.parent[0]), fs(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
+                    }), processPolylineParameters(hi.parent[0]), fs(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
                 } else Zr(hi.parent[0], hi.nearest_point_num_in_pline, hi.farthest_point_num_in_pline, b), refreshCurrentLayer();
                 $("#modal_html").modal("hide");
                 break;
@@ -17193,10 +17368,10 @@ function SimpleCad() {
                 if (we) {
                     var ke = as(_.pline_params),
                         ze = createPolyline(ke);
-                    oa(ze), v_(), Fs(_.pline_params), _n(ze.id(), {
+                    oa(ze), v_(), Fs(_.pline_params), updatePolylineSegmentLengths(ze.id(), {
                         mode: "lengths_all",
                         lengths: _.pline_params.lengths
-                    }), rs(ze), fs(ze), updateElementParametersDisplay(ze), 0 < Object.keys(ze.attrs.pline_breaks).length ? v_() : refreshCurrentLayer(), $("#modal_html").modal("hide")
+                    }), processPolylineParameters(ze), fs(ze), updateElementParametersDisplay(ze), 0 < Object.keys(ze.attrs.pline_breaks).length ? v_() : refreshCurrentLayer(), $("#modal_html").modal("hide")
                 } else alert("\u041D\u0435\u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u043E\u043B\u0438\u043B\u0438\u043D\u0438\u0438!");
                 break;
             case "modal_paste_figure_img":
