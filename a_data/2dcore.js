@@ -2661,7 +2661,7 @@ function SimpleCad() {
             var a = e[0].attributes["data-validate-type"].value;
             switch (a) {
                 case "numeric":
-                    _ = U(_), isNaN(_) && (t.is_success = !1);
+                    _ = parseNumericValue(_), isNaN(_) && (t.is_success = !1);
                     break;
                 default:
             }
@@ -2669,8 +2669,24 @@ function SimpleCad() {
         return t.is_success || e.addClass("f-has-error"), t
     }
 
-    function U(e) {
-        return e += "", e = e.replace(",", "."), e = parseFloat(e), isNaN(e) && (e = 0), e
+    /**
+     * Преобразует входное значение в число.
+     * Заменяет запятые на точки, обрабатывает ошибки преобразования.
+     * 
+     * @param {*} e - Значение для преобразования в число
+     * @returns {number} - Преобразованное число, или 0 если преобразование не удалось
+     */
+    function parseNumericValue(e) {        
+        // Преобразуем значение в строку
+        e += "";
+        // Заменяем запятую на точку (для поддержки разных форматов записи чисел)
+        e = e.replace(",", ".");
+        // Преобразуем строку в число
+        e = parseFloat(e);
+        // Если результат не является числом, устанавливаем значение в 0
+        isNaN(e) && (e = 0);
+        
+        return e;
     }
 
     function ee(e) {
@@ -2691,7 +2707,7 @@ function SimpleCad() {
                     Zi.text(s), t = !0, _ = !1, a = !1, r = !1;
                     break;
                 case "points":
-                    i = parseInt(i), s = U(s), s = s * Go.g_scale[vo] / 100, i % 2 ? (s *= -1, s += Ao[vo]) : s += Fo[vo];
+                    i = parseInt(i), s = parseNumericValue(s), s = s * Go.g_scale[vo] / 100, i % 2 ? (s *= -1, s += Ao[vo]) : s += Fo[vo];
                     var l = Zi.points();
                     l[i] = s, Zi.setPoints(l), t = !0, _ = !0, a = !0;
                     break;
@@ -2701,7 +2717,7 @@ function SimpleCad() {
                     break;
                 case "lb_length":
                 case "lb_offset":
-                    s = U(s), Zi.attrs[n] = s, St(Zi.id()), processElementById(Zi.attrs.parent_id);
+                    s = parseNumericValue(s), Zi.attrs[n] = s, St(Zi.id()), processElementById(Zi.attrs.parent_id);
                     var c = Bi.findOne("#" + Zi.attrs.parent_id);
                     He(c), t = !0, _ = !1, a = !1;
                     break;
@@ -4358,7 +4374,7 @@ function SimpleCad() {
         }
     }
 
-     /**
+    /**
      * Рисует дугу угла между двумя линиями и отображает значение угла.
      *
      * @param {number} e - Координата X первой точки первой линии.
@@ -4388,6 +4404,10 @@ function SimpleCad() {
             parent_id: s,
             clockwise: !1
         });
+        // d.on("click", function(e) {
+        //     console.log('test'); // Обработчик выбора сегмента
+        // });
+
         $s[vo].add(d);
         var p = Math.abs(i),
             m = 45;
@@ -4415,6 +4435,152 @@ function SimpleCad() {
                 visible: !0,
                 listening: y_("listening_konva_text_angle"),
                 angle_num_counter: o
+            });
+
+            w.on("click", function(e) {
+                // Prevent event propagation
+                e.evt.preventDefault();
+                e.evt.stopPropagation();
+                
+                // Store reference to the text object
+                const textObj = this;
+                
+                // Get current angle value (removing the degree symbol)
+                const currentAngle = parseInt(textObj.text().replace('°', ''));
+
+                var signAngle = (mathSignAngle = () => {
+                    var parentElement = Bi.findOne("#" +  textObj.attrs.parent_id);
+                    var points = JSON.copy(parentElement.points());
+                    var pointIndex = textObj.attrs.angle_num_counter;
+    
+                    var currentAngle = calculateAngle(
+                        points[2 * (pointIndex - 1) + 0], points[2 * (pointIndex - 1) + 1],
+                        points[2 * (pointIndex - 1) + 2], points[2 * (pointIndex - 1) + 3],
+                        points[2 * (pointIndex - 1) + 4], points[2 * (pointIndex - 1) + 5],
+                        true, true, false
+                    );
+                    
+                    return currentAngle > 0 ? 1 : -1;
+                })();
+                
+
+
+                // Create input element for editing
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentAngle;
+                input.style.position = 'absolute';
+                input.style.zIndex = '10000';
+                
+                // Position input at the same location as the text
+                const absPos = textObj.getAbsolutePosition();
+                const stage = textObj.getStage();
+                const containerRect = stage.container().getBoundingClientRect();
+                
+                input.style.left = `${containerRect.left + absPos.x}px`;
+                input.style.top = `${containerRect.top + absPos.y}px`;
+                input.style.width = '60px';
+                input.style.fontSize = '14px';
+                input.style.fontFamily = 'Arial';
+                input.style.textAlign = 'center';
+                
+                // Hide original text while editing
+                textObj.visible(false);
+                to[vo].draw();
+                
+                // Add input to document
+                document.body.appendChild(input);
+                input.focus();
+                input.select();
+                
+                // Function to update angle value with validation
+                const updateAngle = () => {
+                    // Get and validate input                    
+                    let newAngle = parseInt(input.value);
+                    
+                    // Basic validation for NaN
+                    if (isNaN(newAngle)) {
+                        newAngle = currentAngle;
+                    } else {
+                        // Apply additional validation logic
+                        newAngle = Math.round_precision_nearest ? 
+                            Math.round_precision_nearest(newAngle, 5) : 
+                            parseFloat(newAngle.toFixed(5));
+                        
+                        // Fix negative zero
+                        if (newAngle == -0) {
+                            newAngle = 0;
+                        }
+                        
+                        // Apply minimum angle constraints if not zero
+                        if (newAngle != 0) {
+                            if (newAngle > 0 && newAngle < 35) {
+                                newAngle = 35;
+                            } else if (newAngle < 0 && newAngle > -35) {
+                                newAngle = -35;
+                            }
+                        }
+                    }
+                    
+                    // Update text with new angle
+                    textObj.text(newAngle.toFixed(2) / 1 + '°');
+                    
+                    // Make text visible again
+                    textObj.visible(true);
+                    to[vo].draw();
+                    
+                    // Clean up
+                    document.body.removeChild(input);
+                    
+                    // Update any angle-related data/geometry if needed
+                    if (typeof recalculatePathAnglesByPoint === 'function') {
+                        // If parent element and angle counter are available                        
+                        if (textObj.attrs.parent_id && textObj.attrs.angle_num_counter !== undefined) {                                                        
+                            recalculatePathAnglesByPoint(
+                                textObj.attrs.parent_id,
+                                textObj.attrs.angle_num_counter - 1,
+                                newAngle * signAngle
+                            );
+
+                            $inputAngle = $('.nde_tbl_row_size_ang_ang_inp > [data-focus="'+ 2 * textObj.attrs.angle_num_counter +'"]')
+                            
+                            if ($inputAngle.length > 0) {
+                                console.log($inputAngle)
+                                $inputAngle.val(newAngle * signAngle);
+                            }
+                            
+                            processLayerElements({});
+                             // Очищаем временные элементы
+                            Re(); // Удаление временных объектов
+                            gt({}); // Обновление видимости объектов
+                            qa({}); // Дополнительная обработка объектов
+                            W_({}); // Очистка вспомогательных данных
+
+                            // Если активный элемент существует, отображаем его, иначе скрываем
+                            if (typeof Zi !== "undefined" && Zi !== "undefined") {
+                                le(); // Отображение активного элемента
+                            } else {
+                                ce(); // Скрытие активного элемента
+                            }
+                            ds(textObj.attrs.parent_id);
+                        }
+                    }
+                };
+                
+                // Handle keyboard events
+                input.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        updateAngle();
+                    } else if (event.key === 'Escape') {
+                        // Cancel editing
+                        textObj.visible(true);
+                        to[vo].draw();
+                        document.body.removeChild(input);
+                    }
+                });
+                
+                // Update on blur
+                input.addEventListener('blur', updateAngle);
             });
             $s[vo].add(w)
         }
@@ -5216,8 +5382,8 @@ function SimpleCad() {
     function qt(e, t) {
         var _ = {
             name: e.lineblock_name,
-            length: U(e.lineblock_length),
-            offset: U(e.lineblock_offset),
+            length: parseNumericValue(e.lineblock_length),
+            offset: parseNumericValue(e.lineblock_offset),
             type: e.lineblock_type,
             parent_id: t.lineblock_params.pi,
             parent_segment_num: t.lineblock_params.sn
@@ -5374,7 +5540,7 @@ function SimpleCad() {
         if ("undefined" != typeof Hi[e]) {
             var a = !1;
             "undefined" != typeof Hi[e].is_more_zero_all && Hi[e].is_more_zero_all && (a = !0), $.each(Hi[e].inputs, function(e, r) {
-                ("undefined" == typeof t[e] || "" == t[e].toString()) && ai.errors.push("\u0423\u043A\u0430\u0436\u0438\u0442\u0435 <b>" + r.label + "</b>."), "undefined" != typeof r.is_check_as_int && r.is_check_as_int && (t[e] = parseInt(U(t[e]))), (a || "undefined" != typeof r.is_more_zero && r.is_more_zero) && ("undefined" == typeof r.is_more_zero_if_id_visible || "undefined" != typeof r.is_more_zero_if_id_visible && "block" == $("#" + r.is_more_zero_if_id_visible).css("display")) && 0 >= t[e] && ("undefined" == typeof r.is_more_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push(r.is_more_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.is_more_equal_zero && r.is_more_equal_zero && 0 > t[e] && ("undefined" == typeof r.is_more_equal_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push(r.is_more_equal_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.value_must_be && t[e] != r.value_must_be && ai.errors.push(r.value_must_be_message), "undefined" != typeof r.value_must_be_more_equal && t[e] < r.value_must_be_more_equal && ai.errors.push(r.value_must_be_more_equal_message)
+                ("undefined" == typeof t[e] || "" == t[e].toString()) && ai.errors.push("\u0423\u043A\u0430\u0436\u0438\u0442\u0435 <b>" + r.label + "</b>."), "undefined" != typeof r.is_check_as_int && r.is_check_as_int && (t[e] = parseInt(parseNumericValue(t[e]))), (a || "undefined" != typeof r.is_more_zero && r.is_more_zero) && ("undefined" == typeof r.is_more_zero_if_id_visible || "undefined" != typeof r.is_more_zero_if_id_visible && "block" == $("#" + r.is_more_zero_if_id_visible).css("display")) && 0 >= t[e] && ("undefined" == typeof r.is_more_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F.") : ai.errors.push(r.is_more_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.is_more_equal_zero && r.is_more_equal_zero && 0 > t[e] && ("undefined" == typeof r.is_more_equal_zero_message ? "undefined" == typeof r.label ? ai.errors.push("<b>" + e + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push("<b>" + r.label + "</b> \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u0438\u043B\u0438 \u0440\u0430\u0432\u043D\u043E \u043D\u0443\u043B\u044E.") : ai.errors.push(r.is_more_equal_zero_message), ai.error_ids.push(_ + e)), "undefined" != typeof r.value_must_be && t[e] != r.value_must_be && ai.errors.push(r.value_must_be_message), "undefined" != typeof r.value_must_be_more_equal && t[e] < r.value_must_be_more_equal && ai.errors.push(r.value_must_be_more_equal_message)
             })
         } else ai.errors.push("\u041D\u0435 \u0437\u0430\u0434\u0430\u043D\u0430 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u0444\u043E\u0440\u043C\u044B (#1)");
         switch (e) {
@@ -5413,7 +5579,7 @@ function SimpleCad() {
         return form_inputs = {}, $.each($("#" + e + " input"), function(e, _) {
             var a = $(_)[0].attributes.id.value,
                 r = a.replace(t, "");
-            form_inputs[r] = $(_).hasClass("js_cad_chb_elem") ? $(_).prop("checked") ? 1 : 0 : $(_).hasClass("js_cad_inp_mb_minus") ? U($(_)[0].value) : Math.abs(U($(_)[0].value))
+            form_inputs[r] = $(_).hasClass("js_cad_chb_elem") ? $(_).prop("checked") ? 1 : 0 : $(_).hasClass("js_cad_inp_mb_minus") ? parseNumericValue($(_)[0].value) : Math.abs(parseNumericValue($(_)[0].value))
         }), form_inputs
     }
 
@@ -7521,7 +7687,7 @@ function SimpleCad() {
         switch (t) {
             case "line_length":
                 var _ = Tl;
-                f_(_);
+                updateElementsColorById(_);
                 break;
             default:
         }
@@ -7547,22 +7713,64 @@ function SimpleCad() {
         }), $s[vo].draw(), to[vo].draw()
     }
 
-    function u_(e, t) {
-        $.each($s[vo].children, function(_, a) {
-            "undefined" != typeof a.attrs.angle_num_counter && (a.attrs.parent_id == e && a.attrs.angle_num_counter.toString() == t.toString() ? a.setAttrs({
-                fill: "red"
-            }) : a.setAttrs({
-                fill: "#333"
-            }))
-        }), $s[vo].draw(), to[vo].draw()
+    /**
+     * Функция для подсветки элемента с определенным родительским ID и номером угла
+     * 
+     * @param {number|string} parentId - Идентификатор родительского элемента
+     * @param {number|string} angleCounter - Номер угла для подсветки
+     */
+    function highlightAngleElement(parentId, angleCounter) {
+        // Перебираем все дочерние элементы
+        $.each($s[vo].children, function(_, element) {
+            // Проверяем, имеет ли элемент атрибут счетчика угла
+            if (typeof element.attrs.angle_num_counter !== "undefined") {
+                // Если родительский ID совпадает и номер угла совпадает
+                if (element.attrs.parent_id == parentId && 
+                    element.attrs.angle_num_counter.toString() == angleCounter.toString()) {
+                    // Устанавливаем красный цвет для выбранного элемента
+                    element.setAttrs({
+                        fill: "red"
+                    });
+                } else {
+                    // Устанавливаем темно-серый цвет для остальных элементов
+                    element.setAttrs({
+                        fill: "#333"
+                    });
+                }
+            }
+        });
+        
+        // Перерисовываем холсты для отображения изменений
+        $s[vo].draw();
+        to[vo].draw();
     }
 
-    function f_(e) {
-        $.each($s[vo].children, function(t, _) {
-            (_.attrs.parent_id == e || "" == e) && ("undefined" != typeof _.attrs.line_num_counter || "undefined" != typeof _.attrs.angle_num_counter) && _.setAttrs({
-                fill: "#333"
-            })
-        }), $s[vo].draw(), to[vo].draw()
+    /**
+     * Обновляет цвет элементов по указанному родительскому ID
+     * 
+     * @param {string} parentId - ID родительского элемента, для дочерних элементов которого будет изменен цвет.
+     *                           Если передана пустая строка, обновляются все элементы.
+     */
+    function updateElementsColorById(parentId) {
+        // Перебираем все дочерние элементы в коллекции
+        $.each($s[vo].children, function(index, element) {
+            // Проверяем условия для обновления цвета:
+            // 1. Элемент имеет указанный родительский ID или parentId пустой
+            // 2. Элемент имеет line_num_counter или angle_num_counter
+            if ((element.attrs.parent_id == parentId || parentId == "") && 
+                ("undefined" != typeof element.attrs.line_num_counter || 
+                "undefined" != typeof element.attrs.angle_num_counter)) {
+                
+                // Устанавливаем цвет заполнения элемента
+                element.setAttrs({
+                    fill: "#333" // Темно-серый цвет
+                });
+            }
+        });
+        
+        // Перерисовываем необходимые элементы для отображения изменений
+        $s[vo].draw();
+        to[vo].draw();
     }
 
     /**
@@ -7589,7 +7797,7 @@ function SimpleCad() {
                 
             case "lineblock":
                 // Очистка и вызов соответствующих функций
-                f_(""); 
+                updateElementsColorById(""); 
                 A_();
                 break;
                 
@@ -8226,7 +8434,7 @@ function SimpleCad() {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = U_(1e3 * U($("#roof_param_sheet_max_length_" + Mo.type + "_input").val()));
+                            var r = U_(1e3 * parseNumericValue($("#roof_param_sheet_max_length_" + Mo.type + "_input").val()));
                             r > Mo.sheet_max_length_tech ? r = Mo.sheet_max_length_tech : r < Mo.sheet_min_length_tech && (r = Mo.sheet_min_length_tech), Oi = {
                                 param: "sheet_max_length",
                                 before: Mo.sheet_max_length[vo],
@@ -8303,7 +8511,7 @@ function SimpleCad() {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = 1e3 * U($("#roof_param_offset_x_input").val());
+                            var r = 1e3 * parseNumericValue($("#roof_param_offset_x_input").val());
                             r > s ? r = s : r < -1 * s && (r = -1 * s), Oi = {
                                 param: "offset_x",
                                 before: Mo.offset_x[vo],
@@ -8377,7 +8585,7 @@ function SimpleCad() {
                         break;
                     case "submit":
                         if (Us) {
-                            var r = 1e3 * U($("#roof_param_offset_y_input").val());
+                            var r = 1e3 * parseNumericValue($("#roof_param_offset_y_input").val());
                             r > o ? r = o : r < -1 * o && (r = -1 * o), Oi = {
                                 param: "offset_y",
                                 before: Mo.offset_y[vo],
@@ -8411,7 +8619,7 @@ function SimpleCad() {
                     case "submit":
                         if (Us) {
                             var i = Mo.cornice[vo];
-                            Mo.cornice[vo] = 1e3 * U($("#roof_param_cornice_input").val()), 1e3 < Mo.cornice[vo] ? Mo.cornice[vo] = 1e3 : 0 > Mo.cornice[vo] && (Mo.cornice[vo] = 0), Oi = {
+                            Mo.cornice[vo] = 1e3 * parseNumericValue($("#roof_param_cornice_input").val()), 1e3 < Mo.cornice[vo] ? Mo.cornice[vo] = 1e3 : 0 > Mo.cornice[vo] && (Mo.cornice[vo] = 0), Oi = {
                                 param: "cornice",
                                 before: i,
                                 after: Mo.cornice[vo]
@@ -8878,7 +9086,7 @@ function SimpleCad() {
         var _ = e[0].attributes.id.value,
             a = 0,
             r = e[0].value + "";
-        a = e.hasClass("js_cad_inp_mb_minus") ? U(r) : Math.abs(U(r));
+        a = e.hasClass("js_cad_inp_mb_minus") ? parseNumericValue(r) : Math.abs(parseNumericValue(r));
         var n = a.toFixed(yi.length.prec);
         if (0 == Wo.settings_programm_figures_razmer.is_use_razmer_template || n != yi.length.str ? $("#" + _).val(n) : $("#" + _).val(Wo.settings_programm_figures_razmer.razmer_template), "offset" != t && "delta" != t) {
             var s = e[0].form.id,
@@ -10426,13 +10634,13 @@ function SimpleCad() {
                 break;
             case "blur":
                 var a = e.thisObject.val() + "",
-                    r = U(a);
+                    r = parseNumericValue(a);
                 e.thisObject.val(r);
                 break;
             case "submit_point":
                 if ("" != zi && 0 <= ki) {
-                    var n = U(jl.val() + ""),
-                        s = U(Cl.val() + "");
+                    var n = parseNumericValue(jl.val() + ""),
+                        s = parseNumericValue(Cl.val() + "");
                     jl.val(n), Cl.val(s);
                     var o = parseInt(Math.round(1e3 * n)),
                         l = parseInt(Math.round(1e3 * s));
@@ -10475,8 +10683,8 @@ function SimpleCad() {
                 break;
             case "submit_delta":
                 if ("" != zi) {
-                    var f = U($("#figure_move_controller_delta_x").val() + ""),
-                        g = U($("#figure_move_controller_delta_y").val() + "");
+                    var f = parseNumericValue($("#figure_move_controller_delta_x").val() + ""),
+                        g = parseNumericValue($("#figure_move_controller_delta_y").val() + "");
                     $("#figure_move_controller_delta_x").val(f), $("#figure_move_controller_delta_y").val(g);
                     var m = parseInt(Math.round(1e3 * f)),
                         h = parseInt(Math.round(1e3 * g)),
@@ -10797,7 +11005,7 @@ function SimpleCad() {
                 break;
             case "submit":
                 var _ = Ea(),
-                    l = 1e3 * U($("#move_point_controller_" + e.param).val()),
+                    l = 1e3 * parseNumericValue($("#move_point_controller_" + e.param).val()),
                     c = l * Go.g_scale[vo] / 100000;
                 switch (e.param) {
                     case "x":
@@ -11787,7 +11995,7 @@ function SimpleCad() {
                 false
             );
             // Масштабируем и округляем длину сегмента с нужной точностью
-            hi.segment_length = U(
+            hi.segment_length = parseNumericValue(
                 (100 * hi.segment_length / Go.g_scale[vo]).toFixed(yi.length.prec)
             );
         }
@@ -11905,43 +12113,196 @@ function SimpleCad() {
         }
     }
 
-    // Изменяет размер отрезка 
-    function an(e, t, _, a) {        
-        var r = Bi.findOne("#" + e),
-            n = 0,
-            s = [],
-            o = 0,
-            l = 0,
-            c = 0,
-            d = 0;
-        if ("undefined" !== r && (s = r.points(), o = s.length, n = Te(s[2 * t + 0], s[2 * t + 1], s[2 * t + 2], s[2 * t + 3], !1), _.toFixed(3) != n.toFixed(3))) {
-            if (l = calculateAngle(s[2 * t + 0], -1e4, s[2 * t + 0], s[2 * t + 1], s[2 * t + 2], s[2 * t + 3], !0, !1, !1), d = _ * Go.g_scale[vo] / 100, c = De(s, d, t, l), a)
-                for (var p = t; p < o / 2 - 1; p++) s[2 * p + 2] += c.delta_x, s[2 * p + 3] += c.delta_y;
-            else
-                for (var p = t; 0 <= p; p--) s[2 * p + 0] -= c.delta_x, s[2 * p + 1] -= c.delta_y;
-            r.setPoints(s)
+    /**
+     * Корректирует угол между точками элемента и передвигает соответствующие точки
+     * 
+     * @param {string} elementId - ID элемента, для которого выполняется корректировка
+     * @param {number} pointIndex - Индекс точки, относительно которой производится корректировка
+     * @param {number} targetAngle - Целевой угол, который необходимо установить
+     * @param {boolean} adjustFollowingPoints - Если true, корректировать последующие точки, иначе - предыдущие
+     */
+    function adjustElementAngle(elementId, pointIndex, targetAngle, adjustFollowingPoints) {        
+        // Находим элемент по ID
+        var element = Bi.findOne("#" + elementId);
+        var currentAngle = 0;
+        var points = [];
+        var pointsCount = 0;
+        var baseAngle = 0;
+        var scaledTargetAngle = 0;
+        var deltaCoordinates = 0;
+        
+        // Проверяем существование элемента и продолжаем работу
+        if ("undefined" !== element) {
+            // Получаем массив точек элемента
+            points = element.points();
+            pointsCount = points.length;
+            
+            // Вычисляем текущий угол между точками
+            currentAngle = Te(
+                points[2 * pointIndex + 0], 
+                points[2 * pointIndex + 1], 
+                points[2 * pointIndex + 2], 
+                points[2 * pointIndex + 3], 
+                false
+            );
+            
+            // Проверяем, отличается ли текущий угол от целевого
+            if (targetAngle.toFixed(3) != currentAngle.toFixed(3)) {
+                // Вычисляем базовый угол для точки
+                baseAngle = calculateAngle(
+                    points[2 * pointIndex + 0], -10000, 
+                    points[2 * pointIndex + 0], points[2 * pointIndex + 1], 
+                    points[2 * pointIndex + 2], points[2 * pointIndex + 3], 
+                    true, false, false
+                );
+                
+                // Масштабируем целевой угол согласно глобальному масштабу
+                scaledTargetAngle = targetAngle * Go.g_scale[vo] / 100;
+                
+                // Вычисляем изменение координат для достижения целевого угла
+                deltaCoordinates = De(points, scaledTargetAngle, pointIndex, baseAngle);
+                
+                if (adjustFollowingPoints) {
+                    // Корректируем все последующие точки
+                    for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                        points[2 * i + 2] += deltaCoordinates.delta_x;
+                        points[2 * i + 3] += deltaCoordinates.delta_y;
+                    }
+                } else {
+                    // Корректируем все предыдущие точки
+                    for (var i = pointIndex; i >= 0; i--) {
+                        points[2 * i + 0] -= deltaCoordinates.delta_x;
+                        points[2 * i + 1] -= deltaCoordinates.delta_y;
+                    }
+                }
+                
+                // Обновляем точки элемента
+                element.setPoints(points);
+            }
         }
     }
 
-    function rn(e, t, _) {
-        var a = Bi.findOne("#" + e),
-            r = 0,
-            n = [],
-            s = 0,
-            o = {},
-            c = {},
-            d = 0,
-            p = {},
-            m = 0,
-            h = 0,
-            u = {},
-            f = 0;
-        if ("undefined" !== a && (-0 == _ && (_ = 0), r = t, t++, n = JSON.copy(a.points()), s = n.length, f = calculateAngle(n[2 * (t - 1) + 0], n[2 * (t - 1) + 1], n[2 * (t - 1) + 2], n[2 * (t - 1) + 3], n[2 * (t - 1) + 4], n[2 * (t - 1) + 5], !0, !0, !1), isNaN(f) && (f = 0), _.toFixed(3) != f.toFixed(3))) {
-            o["ha_" + t] = _;
-            for (var g = t + 1; g < s / 2 - 1; g++) o["ha_" + g] = calculateAngle(n[2 * (g - 1) + 0], n[2 * (g - 1) + 1], n[2 * (g - 1) + 2], n[2 * (g - 1) + 3], n[2 * (g - 1) + 4], n[2 * (g - 1) + 5], !0, !0, !1), isNaN(o["ha_" + g]) && (o["ha_" + g] = 0);
-            for (var g = t; g < s / 2 - 1; g++) c["hl_" + g] = Te(n[2 * g + 0], n[2 * g + 1], n[2 * g + 2], n[2 * g + 3], !1);
-            for (var g = t; g < s / 2 - 1; g++) d = o["ha_" + g] * l["pi/180"], p = {}, p = We(n[2 * (g - 1) + 0], n[2 * (g - 1) + 1], n[2 * (g - 1) + 2], n[2 * (g - 1) + 3], d), n[2 * g + 2] = parseFloat(p.endPoint_x), n[2 * g + 3] = parseFloat(p.endPoint_y), m = parseFloat(c["hl_" + g]), h = calculateAngle(n[2 * g + 0], -1e4, n[2 * g + 0], n[2 * g + 1], n[2 * g + 2], n[2 * g + 3], !0, !1, !1), isNaN(h) && (h = 0), u = De(n, m, g, h), n[2 * g + 2] += u.delta_x, n[2 * g + 3] += u.delta_y;
-            a.setPoints(n)
+    /**
+     * Функция пересчитывает углы между точками пути, начиная с заданной точки,
+     * если заданный угол отличается от текущего
+     * 
+     * @param {string} elementId - ID элемента, содержащего точки пути
+     * @param {number} pointIndex - Индекс точки, с которой начинается пересчет
+     * @param {number} targetAngle - Целевой угол для указанной точки (в градусах)
+     */
+    function recalculatePathAnglesByPoint(elementId, pointIndex, targetAngle) {
+        // Находим элемент по ID
+        var element = Bi.findOne("#" + elementId);
+        var originalPointIndex = 0;
+        var points = [];
+        var pointsCount = 0;
+        var angles = {};        // Углы между точками
+        var segmentLengths = {}; // Длины сегментов
+        var angleInRadians = 0;
+        var newEndPoint = {};
+        var segmentLength = 0;
+        var verticalAngle = 0;
+        var adjustments = {};
+        var currentAngle = 0;
+        
+        // Проверяем существование элемента и необходимость изменения угла
+        if ("undefined" !== element) {
+            // Обрабатываем особый случай с отрицательным нулем
+            if (-0 == targetAngle) {
+                targetAngle = 0;
+            }
+            
+            originalPointIndex = pointIndex;
+            pointIndex++; // Увеличиваем индекс для работы со следующей точкой
+            
+            // Копируем массив точек элемента
+            points = JSON.copy(element.points());
+            pointsCount = points.length;
+            
+            // Вычисляем текущий угол между точками
+            currentAngle = calculateAngle(
+                points[2 * (pointIndex - 1) + 0], points[2 * (pointIndex - 1) + 1],
+                points[2 * (pointIndex - 1) + 2], points[2 * (pointIndex - 1) + 3],
+                points[2 * (pointIndex - 1) + 4], points[2 * (pointIndex - 1) + 5],
+                true, true, false
+            );
+            
+            // Если угол NaN, устанавливаем его в 0
+            if (isNaN(currentAngle)) {
+                currentAngle = 0;
+            }
+            
+            // Если целевой угол отличается от текущего (с точностью до 3 знаков)
+            if (targetAngle.toFixed(3) != currentAngle.toFixed(3)) {
+                // Сохраняем новый угол для заданной точки
+                angles["ha_" + pointIndex] = targetAngle;
+                
+                // Вычисляем углы для всех последующих точек
+                for (var i = pointIndex + 1; i < pointsCount / 2 - 1; i++) {
+                    angles["ha_" + i] = calculateAngle(
+                        points[2 * (i - 1) + 0], points[2 * (i - 1) + 1],
+                        points[2 * (i - 1) + 2], points[2 * (i - 1) + 3],
+                        points[2 * (i - 1) + 4], points[2 * (i - 1) + 5],
+                        true, true, false
+                    );
+                    
+                    if (isNaN(angles["ha_" + i])) {
+                        angles["ha_" + i] = 0;
+                    }
+                }
+                
+                // Вычисляем длины сегментов для всех затронутых точек
+                for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                    segmentLengths["hl_" + i] = Te(
+                        points[2 * i + 0], points[2 * i + 1],
+                        points[2 * i + 2], points[2 * i + 3],
+                        false
+                    );
+                }
+                
+                // Пересчитываем координаты точек с учетом новых углов
+                for (var i = pointIndex; i < pointsCount / 2 - 1; i++) {
+                    // Преобразуем угол из градусов в радианы
+                    angleInRadians = angles["ha_" + i] * l["pi/180"];
+                    
+                    // Вычисляем новую конечную точку сегмента на основе угла
+                    newEndPoint = {};
+                    newEndPoint = We(
+                        points[2 * (i - 1) + 0], points[2 * (i - 1) + 1],
+                        points[2 * (i - 1) + 2], points[2 * (i - 1) + 3],
+                        angleInRadians
+                    );
+                    
+                    // Обновляем координаты конечной точки текущего сегмента
+                    points[2 * i + 2] = parseFloat(newEndPoint.endPoint_x);
+                    points[2 * i + 3] = parseFloat(newEndPoint.endPoint_y);
+                    
+                    // Получаем длину текущего сегмента
+                    segmentLength = parseFloat(segmentLengths["hl_" + i]);
+                    
+                    // Вычисляем угол относительно вертикали для корректировки
+                    verticalAngle = calculateAngle(
+                        points[2 * i + 0], -10000,
+                        points[2 * i + 0], points[2 * i + 1],
+                        points[2 * i + 2], points[2 * i + 3],
+                        true, false, false
+                    );
+                    
+                    if (isNaN(verticalAngle)) {
+                        verticalAngle = 0;
+                    }
+                    
+                    // Получаем корректировки для сохранения длины сегмента
+                    adjustments = De(points, segmentLength, i, verticalAngle);
+                    
+                    // Применяем корректировки к конечной точке
+                    points[2 * i + 2] += adjustments.delta_x;
+                    points[2 * i + 3] += adjustments.delta_y;
+                }
+                                
+                // Устанавливаем обновленные точки в элемент
+                element.setPoints(points);
+            }
         }
     }
 
@@ -11997,10 +12358,10 @@ function SimpleCad() {
                     }
                     switch (d.type) {
                         case "float":
-                            t = Math.abs(U(l)), _ = t * Math.pow(10, d.precision), a = Math.round(_), r = a / Math.pow(10, d.precision), n = r.toFixed(d.precision), s = parseFloat(n), Ri[c][e].value = s;
+                            t = Math.abs(parseNumericValue(l)), _ = t * Math.pow(10, d.precision), a = Math.round(_), r = a / Math.pow(10, d.precision), n = r.toFixed(d.precision), s = parseFloat(n), Ri[c][e].value = s;
                             break;
                         case "int":
-                            t = Math.abs(U(l)), o = Math.round(t), i = parseInt(o), Ri[c][e].value = i;
+                            t = Math.abs(parseNumericValue(l)), o = Math.round(t), i = parseInt(o), Ri[c][e].value = i;
                             break;
                         case "string":
                             Ri[c][e].value = l;
@@ -12267,7 +12628,7 @@ function SimpleCad() {
             _ = e[0].value + "",
             a = 0,
             r = "";
-        if (a = Math.abs(U(_)), "undefined" != typeof e[0].attributes["data-max-val-int"]) {
+        if (a = Math.abs(parseNumericValue(_)), "undefined" != typeof e[0].attributes["data-max-val-int"]) {
             var n = parseInt(e[0].attributes["data-max-val-int"].value);
             a > n && (a = n)
         }
@@ -12672,7 +13033,7 @@ function SimpleCad() {
             a = ["proc", "otn", "ukl", "kukl"],
             r = "";
         $.each(["al", "be", "ga"], function(n, s) {
-            e = $("#trigonom_triangle_" + s).val(), t = Math.abs(U(e)), 90 < t && (t = 180 - t), _ = !!$("#trigonom_triangle_" + s).prop("disabled"), $.each(a, function(e, a) {
+            e = $("#trigonom_triangle_" + s).val(), t = Math.abs(parseNumericValue(e)), 90 < t && (t = 180 - t), _ = !!$("#trigonom_triangle_" + s).prop("disabled"), $.each(a, function(e, a) {
                 if (90 == t) r = "-";
                 else if (0 < t) switch (a) {
                     case "proc":
@@ -13668,70 +14029,218 @@ function SimpleCad() {
         }
     }
 
-    function ss(e) {
+    /**
+     * Обрабатывает элементы в зависимости от переданного параметра
+     * 
+     * @param {Object} e - Объект с параметрами обработки
+     * @param {string} e.param - Тип параметра ("size", "angle", "zavalc_val", "amount")
+     * @param {Object} e.thisObject - Объект, содержащий метод select()
+     * @param {string} e.element_id - Идентификатор элемента
+     * @param {number} e.num - Числовой параметр для обработки (используется для size и angle)
+     * @param {*} e.zavalc_param - Параметр для обработки zavalc_val
+     * @param {*} e.zavalc_param_direct - Направление для параметра zavalc_val
+     */
+    function handleElementParameter(e) {
+        // Выбор действия в зависимости от типа параметра
         switch (e.param) {
             case "size":
-                e.thisObject.select(), m_(e.element_id, e.num + 1);
+                // Выбираем объект и обрабатываем его размер
+                e.thisObject.select();
+                m_(e.element_id, e.num + 1);
                 break;
+                
             case "angle":
-                e.thisObject.select(), u_(e.element_id, e.num + 1);
+                // Выбираем объект и обрабатываем его угол
+                e.thisObject.select();
+                highlightAngleElement(e.element_id, e.num + 1);
                 break;
+                
             case "zavalc_val":
-                e.thisObject.select(), h_(e.element_id, e.zavalc_param, e.zavalc_param_direct);
+                // Выбираем объект и применяем специальные значения
+                e.thisObject.select();
+                h_(e.element_id, e.zavalc_param, e.zavalc_param_direct);
                 break;
+                
             case "amount":
+                // Только выбираем объект без дополнительных действий
                 e.thisObject.select();
                 break;
+                
             default:
+                // Для остальных параметров ничего не делаем
         }
     }
 
-    function os(e) {
+    /**
+     * Обрабатывает нажатие клавиши Enter в полях формы и переключает фокус на следующее поле.
+     * 
+     * @param {Object} e - Объект с данными события
+     * @param {string} e.param - Тип поля ("size", "angle", "zavalc_val", "amount")
+     * @param {Object} e.eventObject - Объект события клавиатуры
+     * @param {number} e.eventObject.keyCode - Код нажатой клавиши
+     * @param {jQuery} e.thisObject - jQuery объект текущего элемента формы
+     */
+    function handleFieldNavigation(e) {
         switch (e.param) {
+            // Обрабатываем указанные типы полей
             case "size":
             case "angle":
             case "zavalc_val":
             case "amount":
-                var t = e.eventObject.keyCode;
-                if (13 == t) {
-                    var _ = e.thisObject[0].attributes["data-focus"].value;
-                    _ = parseInt(_) + 1, $("#nderight_accordion_body").find("[data-focus=\"" + _ + "\"]").focus(), "amount" == e.param && e.thisObject.trigger("blur")
+                // Получаем код нажатой клавиши
+                var keyCode = e.eventObject.keyCode;
+                
+                // Проверяем, была ли нажата клавиша Enter (код 13)
+                if (13 === keyCode) {
+                    // Получаем текущий индекс фокуса из атрибута data-focus
+                    var currentFocusIndex = e.thisObject[0].attributes["data-focus"].value;
+                    
+                    // Увеличиваем индекс фокуса для перехода к следующему полю
+                    currentFocusIndex = parseInt(currentFocusIndex) + 1;
+                    
+                    // Находим элемент со следующим индексом фокуса и устанавливаем на него фокус
+                    $("#nderight_accordion_body").find("[data-focus=\"" + currentFocusIndex + "\"]").focus();
+                    
+                    // Если поле типа "amount", дополнительно снимаем фокус с текущего элемента
+                    if ("amount" === e.param) {
+                        e.thisObject.trigger("blur");
+                    }
                 }
                 break;
+                
             default:
+                // Для остальных типов полей ничего не делаем
+                break;
         }
     }
 
-    // Функционал доборный элемент изменение параметров
-    function is(e) {
-        var t = 0;
-        switch (f_(e.element_id), e.param) {
-            case "size":
-                var _ = As(e.num, e.element_id),
-                    a = _ ? 10 : 15;
-                t = Math.abs(U(e.thisObject.val())), t = Math.round_precision(t, 1), t < a && (t = a), e.thisObject.val(t), an(e.element_id, e.num, t, !0);
+    /**
+     * Обрабатывает изменение параметров элемента и обновляет связанные значения.
+     * Функция работает с различными типами параметров: размер (size), угол (angle),
+     * значение завальцовки (zavalc_val) и количество (amount).
+     * 
+     * @param {Object} e - Объект с данными параметра
+     * @param {string} e.element_id - ID элемента
+     * @param {string} e.param - Тип параметра (size, angle, zavalc_val, amount)
+     * @param {Object} e.thisObject - jQuery объект текущего элемента
+     * @param {number} e.num - Номер элемента (для параметров размера и угла)
+     * @param {string} [e.zavalc_param] - Параметр завальцовки
+     * @returns {void}
+     */
+    function handleParameterUpdate(e) {
+        var t = 0; // Итоговое значение параметра
+        
+        // Вызов функции предварительной обработки для элемента
+        updateElementsColorById(e.element_id);
+        
+        // Обработка различных типов параметров
+        switch (e.param) {
+            case "size": // Обработка параметра размера
+                var _ = isStartOrBeforeEndIndex(e.num, e.element_id);
+                var a = _ ? 10 : 15; // Минимальный размер в зависимости от элемента
+                
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = Math.round_precision(t, 1);
+                
+                // Проверка минимального значения
+                if (t < a) {
+                    t = a;
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                adjustElementAngle(e.element_id, e.num, t, true);
                 break;
-            case "angle":
-                t = U(e.thisObject.val()), t = Math.round_precision_nearest(t, 5), -0 == t && (t = 0), 0 == t || (0 < t ? 35 > t && (t = 35) : 0 > t && -35 < t && (t = -35)), e.thisObject.val(t), rn(e.element_id, e.num, t);
+                
+            case "angle": // Обработка параметра угла
+                // Получение и форматирование значения
+                t = parseNumericValue(e.thisObject.val());
+                t = Math.round_precision_nearest(t, 5);
+                
+                // Исправление отрицательного нуля
+                if (t == -0) {
+                    t = 0;
+                }
+                
+                // Проверка ограничений угла: минимум ±35 градусов (если не 0)
+                if (t != 0) {
+                    if (t > 0 && t < 35) {
+                        t = 35;
+                    } else if (t < 0 && t > -35) {
+                        t = -35;
+                    }
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                recalculatePathAnglesByPoint(e.element_id, e.num, t);
                 break;
-            case "zavalc_val":
-                t = Math.abs(U(e.thisObject.val())), t = parseInt(t.toFixed(0)), 0 < t && 5 > t && (t = 5), e.thisObject.val(t), Jr(e.element_id, e.zavalc_param, t), 0 == t && e.thisObject.parent().parent().find(".js_empty").trigger("click");
+                
+            case "zavalc_val": // Обработка параметра завальцовки
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = parseInt(t.toFixed(0));
+                
+                // Проверка минимального значения (5 для положительных чисел)
+                if (t > 0 && t < 5) {
+                    t = 5;
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                Jr(e.element_id, e.zavalc_param, t);
+                
+                // При нулевом значении вызвать клик на элементе .js_empty
+                if (t == 0) {
+                    e.thisObject.parent().parent().find(".js_empty").trigger("click");
+                }
                 break;
-            case "amount":
-                t = Math.abs(U(e.thisObject.val())), t = parseInt(t.toFixed(0)), 0 >= t && (t = ""), e.thisObject.val(t), en(e.element_id, "prod_amount", t);
+                
+            case "amount": // Обработка параметра количества
+                // Получение и форматирование значения
+                t = Math.abs(parseNumericValue(e.thisObject.val()));
+                t = parseInt(t.toFixed(0));
+                
+                // Проверка минимального значения
+                if (t <= 0) {
+                    t = "";
+                }
+                
+                // Установка нового значения и обновление элемента
+                e.thisObject.val(t);
+                en(e.element_id, "prod_amount", t);
                 break;
+                
             default:
+                // Для неизвестных параметров ничего не делаем
         }
-        switch (refreshCurrentLayer(), ds(e.element_id), e.param) {
-            case "size":
+        
+        // Обновление текущего слоя и элемента
+        refreshCurrentLayer();
+        ds(e.element_id);
+        
+        // Дополнительная обработка для определенных параметров
+        switch (e.param) {
+            case "size": // Дополнительное обновление для параметра размера
                 var r = Bi.findOne("#" + e.element_id);
+                
+                // Обновление размера элемента
                 _n(e.element_id, {
                     mode: "length_one",
                     num: e.num,
                     val: t
-                }), fs(r), ds(e.element_id), updateElementParametersDisplay(r), refreshCurrentLayer();
+                });
+                
+                // Обновление отображения элемента
+                fs(r);
+                ds(e.element_id);
+                updateElementParametersDisplay(r);
+                refreshCurrentLayer();
                 break;
+                
             default:
+                // Для других параметров дополнительной обработки не требуется
         }
     }
 
@@ -13766,7 +14275,7 @@ function SimpleCad() {
                 var t = Bi.findOne("#" + e.element_id),
                     _ = t.attrs.pline_lengths_ish,
                     a = _[e.num];
-                0 == e.thisObject.val() ? (an(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (fs(t), refreshCurrentLayer());
+                0 == e.thisObject.val() ? (adjustElementAngle(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (fs(t), refreshCurrentLayer());
                 break;
             default:
         }
@@ -13934,7 +14443,7 @@ function SimpleCad() {
 
     function fs(e) {
         if (0 < Object.keys(e.attrs.pline_breaks).length) {
-            for (var t = e.points(), _ = t.length, a = JSON.copy(e.attrs.pline_breaks), r = 0, n = e.attrs.pline_lengths_ish, s = 0, o = 0, l = 0; l < (_ - 2) / 2; l++) "undefined" != typeof a["l" + l] && -1 !== $.inArray(parseInt(a["l" + l]), Ei) && (r = parseInt(a["l" + l]), s = n[l], o = parseFloat((s / 100 * r).toFixed(3)), an(e.id(), l, o, !0), is_changed = !0);
+            for (var t = e.points(), _ = t.length, a = JSON.copy(e.attrs.pline_breaks), r = 0, n = e.attrs.pline_lengths_ish, s = 0, o = 0, l = 0; l < (_ - 2) / 2; l++) "undefined" != typeof a["l" + l] && -1 !== $.inArray(parseInt(a["l" + l]), Ei) && (r = parseInt(a["l" + l]), s = n[l], o = parseFloat((s / 100 * r).toFixed(3)), adjustElementAngle(e.id(), l, o, !0), is_changed = !0);
             is_changed && refreshCurrentLayer()
         }
     }
@@ -14403,18 +14912,42 @@ function SimpleCad() {
         }), t && $("#d_elements_button_select").trigger("click")
     }
 
-    function As(e, t) {
-        var _ = !1;
-        if (e = parseInt(e), 0 == e) _ = !0;
-        else {
-            var a = Bi.findOne("#" + t);
-            if ("undefined" !== a) {
-                var r = a.points(),
-                    n = r.length / 2 - 1;
-                e == n - 1 && (_ = !0)
+    /**
+     * Проверяет, является ли индекс особым (равным 0 или предпоследним в списке точек элемента).
+     * 
+     * @param {number} e - Индекс для проверки.
+     * @param {string} t - Идентификатор элемента, для которого нужно проверить точки.
+     * @returns {boolean} - true, если индекс является особым, иначе false.
+     */
+    function isStartOrBeforeEndIndex(e, t) {
+        var result = false;
+        
+        // Преобразуем входной параметр в целое число
+        e = parseInt(e);
+        
+        // Если индекс равен 0, это особый случай
+        if (e == 0) {
+            result = true;
+        } else {
+            // Ищем элемент по идентификатору
+            var element = Bi.findOne("#" + t);
+            
+            // Если элемент найден
+            if ("undefined" !== element) {
+                // Получаем точки элемента
+                var points = element.points();
+                
+                // Вычисляем количество сегментов
+                var segmentsCount = points.length / 2 - 1;
+                
+                // Проверяем, является ли индекс предпоследним
+                if (e == segmentsCount - 1) {
+                    result = true;
+                }
             }
         }
-        return _
+        
+        return result;
     }
 
     function qs(e, t) {
@@ -16155,12 +16688,12 @@ function SimpleCad() {
                 break;
             case "pline_segment_highlight_set_length_submit":
                 if (Wt("pline_segment_highlight_set_length_form", ""), 0 < ai.errors.length) return;
-                var h = U($("#pline_segment_highlight_set_length_length").val()),
-                    u, f; - 1 !== $.inArray(ei.type, ["sznde"]) && (u = As(hi.segment_num, hi.parent[0].id()), f = u ? 10 : 17, h = Math.abs(h), h = Math.round_precision(h, 1), h < f && (h = f));
+                var h = parseNumericValue($("#pline_segment_highlight_set_length_length").val()),
+                    u, f; - 1 !== $.inArray(ei.type, ["sznde"]) && (u = isStartOrBeforeEndIndex(hi.segment_num, hi.parent[0].id()), f = u ? 10 : 17, h = Math.abs(h), h = Math.round_precision(h, 1), h < f && (h = f));
                 var b = Math.round(1e3 * hi.segment_length) - Math.round(1e3 * h);
-                if (b = U((b / 1e3).toFixed(yi.length.prec)), -1 !== $.inArray(ei.type, ["sznde"])) {
+                if (b = parseNumericValue((b / 1e3).toFixed(yi.length.prec)), -1 !== $.inArray(ei.type, ["sznde"])) {
                     var v = !!(hi.nearest_point_num_in_pline > hi.farthest_point_num_in_pline);
-                    an(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), _n(hi.parent[0].id(), {
+                    adjustElementAngle(hi.parent[0].id(), hi.segment_num, h, v), refreshCurrentLayer(), _n(hi.parent[0].id(), {
                         mode: "length_one",
                         num: hi.segment_num,
                         val: h
@@ -16342,7 +16875,7 @@ function SimpleCad() {
                 It("roof_new_form");
                 break;
             case "roof_data_params_add_no_backend_data":
-                "block" == $("#roof_new_type_reassign").css("display") && (Mo.type = $("#roof_new_type_reassign").val()), Mo.gap_y = parseInt(U($("#roof_new_gap_y").val())), Mo.sheet_width_useful = parseInt($("#roof_new_sheet_width_useful").val()), Mo.gap_x = Mo.sheet_width - Mo.sheet_width_useful, Mo.sheet_allowed_length_rounding = parseInt($("#roof_new_sheet_allowed_length_rounding").val()), Mo.offset_run = parseInt(U($("#roof_new_offset_run").val())), Mo.chess_offset = parseInt($("#roof_new_chess_offset").val()), Mo.sheet_allowed_length_correct_min = parseInt($("#roof_new_sheet_allowed_length_correct_min").val()), Mo.sheet_allowed_length_correct_max = parseInt($("#roof_new_sheet_allowed_length_correct_max").val()), Mo.mch_edited_shal_calc_mode = $("#roof_new_mch_edited_shal_calc_mode").find("input[name=\"roof_new_mch_edited_shal_calc_mode\"]:checked").val();
+                "block" == $("#roof_new_type_reassign").css("display") && (Mo.type = $("#roof_new_type_reassign").val()), Mo.gap_y = parseInt(parseNumericValue($("#roof_new_gap_y").val())), Mo.sheet_width_useful = parseInt($("#roof_new_sheet_width_useful").val()), Mo.gap_x = Mo.sheet_width - Mo.sheet_width_useful, Mo.sheet_allowed_length_rounding = parseInt($("#roof_new_sheet_allowed_length_rounding").val()), Mo.offset_run = parseInt(parseNumericValue($("#roof_new_offset_run").val())), Mo.chess_offset = parseInt($("#roof_new_chess_offset").val()), Mo.sheet_allowed_length_correct_min = parseInt($("#roof_new_sheet_allowed_length_correct_min").val()), Mo.sheet_allowed_length_correct_max = parseInt($("#roof_new_sheet_allowed_length_correct_max").val()), Mo.mch_edited_shal_calc_mode = $("#roof_new_mch_edited_shal_calc_mode").find("input[name=\"roof_new_mch_edited_shal_calc_mode\"]:checked").val();
                 var E = [],
                     M = $("#sheet_allowed_length_text_edit_cells").find(".selected");
                 0 < M.length && $.each(M, function(e, t) {
@@ -16749,7 +17282,7 @@ function SimpleCad() {
                 break;
             case "trigonom_figure_input_blur_other":
                 var Se = _.thisObject[0].value + "",
-                    Pe = Math.abs(U(Se)),
+                    Pe = Math.abs(parseNumericValue(Se)),
                     Ie = 0,
                     Fe = _.thisObject[0].attributes.id.value,
                     Ye = Fe.replace("trigonom_" + _.figure + "_", ""),
@@ -16823,13 +17356,13 @@ function SimpleCad() {
                 });
                 break;
             case "nde_inp_focus":
-                ss(_);
+                handleElementParameter(_);
                 break;
             case "nde_inp_blur":
-                is(_);
+                handleParameterUpdate(_);
                 break;
             case "nde_inp_keyup":
-                os(_);
+                handleFieldNavigation(_);
                 break;
             case "nde_radio_change":
                 ls(_);
