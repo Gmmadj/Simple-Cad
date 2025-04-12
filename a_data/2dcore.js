@@ -3471,7 +3471,7 @@ function SimpleCad() {
 
     var isMagnet30click = false;
     function handlerMagnet30(event) {
-        if (! $('[data-element="pline"]').hasClass('active')) {
+        if (! $('[data-element="pline"]').hasClass('active') && ! $('[data-element="rotate"]').hasClass('active')) {
             return;
         }
 
@@ -3485,7 +3485,9 @@ function SimpleCad() {
         } 
     }
 
-    function handlerRotate(event) {
+    function handlerRotate(e) {
+        e.preventDefault();
+
         $(".d_elements_button").removeClass('active');
 
         if (Oo.mode == 'add_element') {
@@ -3516,7 +3518,9 @@ function SimpleCad() {
         }
 
         setTimeout(function() {
-            $(document).on('click', function(event) {
+            $('#cad_block').on('click', function(e) {
+                e.preventDefault();                
+
                 if (isRotateClick) {
                     $rotate.removeClass('active');
                     isRotateClick = false;
