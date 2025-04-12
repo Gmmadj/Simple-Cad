@@ -3063,26 +3063,28 @@ function SimpleCad() {
             var currentMouseX = event.evt.layerX;
             var currentMouseY = event.evt.layerY;
             
-            // Если у нас еще нет предыдущей позиции мыши
-            if (!window.lastMousePosition) {
-                window.lastMousePosition = {
-                    x: currentMouseX,
-                    y: currentMouseY
+            // Инициализируем переменные для отслеживания вращения, если они еще не определены
+            if (!window.rotationTracking) {
+                window.rotationTracking = {
+                    lastMousePosition: {
+                        x: currentMouseX,
+                        y: currentMouseY
+                    },
+                    accumulatedAngle: 0,
+                    lastAppliedAngle: 0
                 };
                 return; // Пропускаем первый кадр для сбора начальных данных
             }
             
             // Если выбран элемент и мы можем определить его центр
             if (typeof Zi !== "undefined" && Zi !== "undefined") {
-
-                // TODO: центр элемента считается неверно.
                 // Определяем центр элемента для расчета угла
                 var elementCenter = getElementCenter(Zi);
                 
                 // Вычисляем углы для предыдущей и текущей позиции мыши относительно центра элемента
                 var previousAngle = Math.atan2(
-                    window.lastMousePosition.y - elementCenter.y, 
-                    window.lastMousePosition.x - elementCenter.x
+                    window.rotationTracking.lastMousePosition.y - elementCenter.y, 
+                    window.rotationTracking.lastMousePosition.x - elementCenter.x
                 );
                 var currentAngle = Math.atan2(
                     currentMouseY - elementCenter.y, 
@@ -3096,15 +3098,28 @@ function SimpleCad() {
                 if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
                 if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
                 
-                // Определяем направление вращения
-                var rotationDirection = deltaAngle > 0 ? 1 : -1;
+                // Накапливаем угол поворота
+                window.rotationTracking.accumulatedAngle += deltaAngle;
                 
-                // Применяем вращение к элементу (используем небольшое значение для плавности)
-                var rotationAmount = 1 * rotationDirection;
-                rotateElement(Zi, rotationAmount, true);
+                // Проверяем режим магнита
+                var rotationStep = checkMagnet30(event.evt) ? Math.PI / 6 : Math.PI / 180; // 30 или 1 градус в радианах
+                
+                // Проверяем, достигнут ли пороговый угол для применения поворота
+                if (Math.abs(window.rotationTracking.accumulatedAngle - window.rotationTracking.lastAppliedAngle) >= rotationStep) {
+                    // Определяем количество шагов поворота и направление
+                    var steps = Math.floor(Math.abs(window.rotationTracking.accumulatedAngle - window.rotationTracking.lastAppliedAngle) / rotationStep);
+                    var rotationDirection = window.rotationTracking.accumulatedAngle > window.rotationTracking.lastAppliedAngle ? 1 : -1;
+                    
+                    // Применяем вращение к элементу
+                    var rotationAmount = (checkMagnet30(event.evt) ? 30 : 1) * steps * rotationDirection;
+                    rotateElement(Zi, rotationAmount, true);
+                    
+                    // Запоминаем последний примененный угол
+                    window.rotationTracking.lastAppliedAngle += rotationStep * steps * rotationDirection;
+                }
                 
                 // Обновляем позицию для следующего кадра
-                window.lastMousePosition = {
+                window.rotationTracking.lastMousePosition = {
                     x: currentMouseX,
                     y: currentMouseY
                 };
@@ -3168,21 +3183,31 @@ function SimpleCad() {
      * @param {Object} element - Элемент Konva
      * @returns {Object} - Координаты центра элемента {x, y}
      */
-    function getElementCenter(element) {
+    function getElementCenter(element) {     
         // Определяем центр элемента в зависимости от его типа
         switch (element.className) {
             case 'Line':
             case 'Arrow':
-                // Для линий и стрелок вычисляем центр как среднее всех точек
+                // Для линий и стрелок вычисляем центр как центр ограничивающего прямоугольника
                 var points = element.points();
-                var sumX = 0, sumY = 0;
+                var minX = Infinity, minY = Infinity;
+                var maxX = -Infinity, maxY = -Infinity;
+                
+                // Находим минимальные и максимальные координаты
                 for (var i = 0; i < points.length; i += 2) {
-                    sumX += points[i];
-                    sumY += points[i + 1];
+                    var x = points[i];
+                    var y = points[i + 1];
+                    
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
                 }
+                
+                // Вычисляем центр ограничивающего прямоугольника
                 return {
-                    x: sumX / (points.length / 2),
-                    y: sumY / (points.length / 2)
+                    x: minX + (maxX - minX) / 2,
+                    y: minY + (maxY - minY) / 2
                 };
             case 'Text':
                 // Для текста центр - это его координаты плюс половина размеров
