@@ -1305,7 +1305,7 @@ function SimpleCad() {
 
                     // TODO: При зажатом shift неправильно устанавливаются координаты
                     // Если Shift зажат, корректируем координаты для угла 30 градусов
-                    if (checkMagnet30(event.evt)) {
+                    if (checkMagnet30(e.evt)) {
                         var deltaX = startX - points[indices[0]];
                         var deltaY = startY - points[indices[1]];
                         var angle = Math.atan2(deltaY, deltaX); // Вычисляем угол в радианах
