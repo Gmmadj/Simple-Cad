@@ -2500,7 +2500,7 @@ function SimpleCad() {
         //                     default:
         //                 }
         //             }), 0 < _.notifications.length && $.each(_.notifications, function(e, t) {
-        //                 Pn(t)
+        //                 showTemporaryNotification(t)
         //             }), 0 < _.append_html.length && $.each(_.append_html, function(e, t) {
         //                 $("#" + t.id).append(t.html)
         //             }), "" != _.location_blank && window.open(_.location_blank, "_blank"), e) {
@@ -7591,7 +7591,7 @@ function SimpleCad() {
                     c_("btn_finish_cad_draw_close");
                     En();
                     if (b_() === 1) {
-                        v_();
+                        fitContentToView();
                     }
                 }
                 break;
@@ -7676,7 +7676,7 @@ function SimpleCad() {
                     da();
 
                     if (b_() === 1) {
-                        v_();
+                        fitContentToView();
                     }
 
                     En();
@@ -7891,25 +7891,54 @@ function SimpleCad() {
         }), e
     }
 
-    function v_() {
-        var e = {
-                width: Ui.width(),
-                height: Ui.height()
-            },
-            t = {
-                width: e.width - Fo[vo] - 100,
-                height: e.height - 100 - 100
-            },
-            _ = Ee(vo, !1, !1, !1, !1),
-            a = t.width / _.width,
-            r = t.height / _.height,
-            n = 1;
-        n = a > r ? r : a, Ke("=", Go.g_scale[vo] * n, !0, !0);
-        var s = Ee(vo, !1, !1, !1, !1),
-            o = s.x_min - Fo[vo],
-            i = s.y_max - Ao[vo];
-        Me(-o, -i);
-        Es[vo].moveToTop(), Zs[vo].moveToTop(), to[vo].draw()
+    /**
+     * Центрирует и масштабирует отображаемый контент в рабочей области
+     * 
+     * @description Функция вычисляет оптимальный масштаб для отображения контента
+     * в доступном пространстве экрана, применяет этот масштаб, центрирует содержимое
+     * и обновляет отображение.
+     */
+    function fitContentToView() {
+        // Получаем текущие размеры интерфейса
+        var uiDimensions = {
+            width: Ui.width(),
+            height: Ui.height()
+        };
+        
+        // Вычисляем доступное пространство, учитывая отступы
+        var availableSpace = {
+            width: uiDimensions.width - Fo[vo] - 100,
+            height: uiDimensions.height - 100 - 100
+        };
+        
+        // Получаем оригинальные размеры объекта для текущего вида
+        var originalViewSize = Ee(vo, false, false, false, false);
+        
+        // Рассчитываем коэффициенты масштабирования для сохранения пропорций
+        var widthRatio = availableSpace.width / originalViewSize.width;
+        var heightRatio = availableSpace.height / originalViewSize.height;
+        
+        // Выбираем минимальный коэффициент для сохранения пропорций
+        var scaleFactor = 1;
+        scaleFactor = widthRatio > heightRatio ? heightRatio : widthRatio;
+        
+        // Применяем итоговый масштаб
+        Ke("=", Go.g_scale[vo] * scaleFactor, true, true);
+        
+        // Получаем размеры после масштабирования
+        var scaledViewSize = Ee(vo, false, false, false, false);
+        
+        // Вычисляем необходимое смещение для центрирования
+        var offsetX = scaledViewSize.x_min - Fo[vo];
+        var offsetY = scaledViewSize.y_max - Ao[vo];
+        
+        // Применяем смещение для центрирования
+        Me(-offsetX, -offsetY);
+        
+        // Обновляем порядок отображения элементов и перерисовываем
+        Es[vo].moveToTop();
+        Zs[vo].moveToTop();
+        to[vo].draw();
     }
 
     function x_() {
@@ -9920,14 +9949,45 @@ function SimpleCad() {
         }, An({
             mode: "add",
             element: di
-        }), oa(r), 1 == b_() && v_(), to[vo].draw(), $("#modal_html").modal("hide"))
+        }), processPolylineElement(r), 1 == b_() && fitContentToView(), to[vo].draw(), $("#modal_html").modal("hide"))
     }
 
-    function oa(e) {
-        to[vo].add(e), addElementToObjectsList({
+    /**
+     * Обрабатывает линейный элемент и обновляет его отображение в интерфейсе
+     * 
+     * @param {Object} element - Элемент для обработки
+     */
+    function processPolylineElement(element) {
+        // Добавляем элемент в коллекцию объектов
+        to[vo].add(element);
+        
+        // Регистрируем элемент в общем списке объектов
+        addElementToObjectsList({
             "data-element": "pline",
-            id: e.id()
-        }), processAndClearElement(e), vt(e, !1), processElementAndAddMovePoints(e, !1), hs(e), updateElementParametersDisplay(e), se(), ie(), oe(), ce(), da()
+            id: element.id()
+        });
+        
+        // Обрабатываем и очищаем временные данные элемента
+        processAndClearElement(element);
+        
+        // Обновляем визуальное представление элемента
+        vt(element, false);
+        
+        // Обрабатываем точки взаимодействия элемента
+        processElementAndAddMovePoints(element, false);
+        
+        // Устанавливаем состояние выделения для элемента
+        hs(element);
+        
+        // Обновляем отображение параметров элемента в панели свойств
+        updateElementParametersDisplay(element);
+        
+        // Обновляем состояния различных компонентов интерфейса
+        se(); // Обновление селектора
+        ie(); // Обновление индикаторов
+        oe(); // Обновление опций
+        ce(); // Обновление контекстных элементов
+        da(); // Обновление области рисования
     }
 
     function ia(e) {
@@ -10647,7 +10707,7 @@ function SimpleCad() {
                 y: nn(e.offset_origin.y + n.offset_origin.y)
             };
             var s = createPolyline(JSON.copy(n));
-            oa(s), to[vo].batchDraw(), e.is_history && di.plines_data.push({
+            processPolylineElement(s), to[vo].batchDraw(), e.is_history && di.plines_data.push({
                 id: s.attrs.id,
                 name: s.attrs.name,
                 points: JSON.copy(s.attrs.points),
@@ -13367,7 +13427,7 @@ function SimpleCad() {
                                 break;
                             case "after":
                                 var p = createPolyline(JSON.copy(t.pline_data));
-                                oa(p), to[vo].draw();
+                                processPolylineElement(p), to[vo].draw();
                                 break;
                             default:
                         }
@@ -13400,7 +13460,7 @@ function SimpleCad() {
                         switch (_) {
                             case "before":
                                 var p = createPolyline(JSON.copy(t.pline_data));
-                                oa(p), N_(p), da(), to[vo].draw();
+                                processPolylineElement(p), N_(p), da(), to[vo].draw();
                                 break;
                             case "after":
                                 T(t.pline_data.id, {
@@ -13449,7 +13509,7 @@ function SimpleCad() {
                             case "after":
                                 $.each(t.plines_data, function(e, t) {
                                     var _ = createPolyline(JSON.copy(t));
-                                    oa(_), to[vo].draw()
+                                    processPolylineElement(_), to[vo].draw()
                                 });
                                 break;
                             default:
@@ -13482,39 +13542,111 @@ function SimpleCad() {
         $("#" + e).val(t).select(), window.document.execCommand("copy")
     }
 
-    function Sn(e) {
-        for (var t = "", _ = 0, a, r; _ < e; _++) a = Math.floor(62 * Math.random()), r = a += 9 < a ? 36 > a ? 55 : 61 : 48, t += String.fromCharCode(r);
-        return t
-    }
-
-    function Pn(e) {
-        $("#notifications_all").prepend(e.html), setTimeout(function() {
-            $("[data-notification-id=\"" + e.id + "\"]").remove()
-        }, 5e3)
-    }
-
-    function In(e) {
-        return e.id = Sn(12), {
-            id: e.id,
-            html: "<div data-notification-id=\"" + e.id + "\" class=\"notification_row\"><div class=\"notification_one " + {
-                default: {
-                    class: ""
-                },
-                success: {
-                    class: "notification_one_success"
-                },
-                error: {
-                    class: "notification_one_error"
-                },
-                wait: {
-                    class: "notification_one_wait"
+    /**
+     * Генерирует случайную строку указанной длины из букв (a-z, A-Z) и цифр (0-9)
+     * @param {number} length - Длина генерируемой строки
+     * @returns {string} - Случайная строка
+     */
+    function generateRandomString(e) {
+        // Инициализация результирующей строки
+        var result = "";
+        
+        // Цикл по количеству символов
+        for (var i = 0, randomNumber, charCode; i < e; i++) {
+            // Генерация случайного числа от 0 до 61
+            randomNumber = Math.floor(62 * Math.random());
+            
+            // Преобразование числа в код символа:
+            // 0-9 -> коды ASCII для "0"-"9" (48-57)
+            // 10-35 -> коды ASCII для "A"-"Z" (65-90)
+            // 36-61 -> коды ASCII для "a"-"z" (97-122)
+            if (randomNumber > 9) {
+                if (randomNumber < 36) {
+                    charCode = randomNumber + 55; // Получаем заглавные буквы A-Z
+                } else {
+                    charCode = randomNumber + 61; // Получаем строчные буквы a-z
                 }
-            } [e.type]["class"] + "\">" + e.text + "</div></div>"
+            } else {
+                charCode = randomNumber + 48; // Получаем цифры 0-9
+            }
+            
+            // Добавление символа в результирующую строку
+            result += String.fromCharCode(charCode);
         }
+        
+        return result;
     }
 
-    function Yn(e) {
-        Pn(In(e))
+    /**
+     * Отображает временное уведомление на странице и автоматически удаляет его через 5 секунд.
+     * 
+     * @param {Object} notificationData - Данные уведомления
+     * @param {string} notificationData.html - HTML-содержимое уведомления
+     * @param {string|number} notificationData.id - Уникальный идентификатор уведомления
+     */
+    function showTemporaryNotification(notificationData) {
+        // Время отображения уведомления в миллисекундах
+        var displayDuration = 5000;
+        
+        // Добавляем HTML уведомления в начало контейнера уведомлений
+        $("#notifications_all").prepend(notificationData.html);
+        
+        // Устанавливаем таймер для автоматического удаления уведомления
+        setTimeout(function() {
+            // Находим элемент по его data-атрибуту и удаляем его
+            $("[data-notification-id=\"" + notificationData.id + "\"]").remove();
+        }, displayDuration);
+    }
+
+    /**
+     * Создает объект уведомления с HTML-представлением
+     * @param {Object} notificationData - Параметры уведомления
+     * @param {string} [notificationData.type] - Тип уведомления ('default', 'success', 'error', 'wait')
+     * @param {string} notificationData.text - Текст уведомления
+     * @returns {Object} Объект с id уведомления и HTML-строкой
+     */
+    function createNotification(notificationData) {
+        // Генерируем уникальный идентификатор для уведомления
+        notificationData.id = generateRandomString(12);
+        
+        // Объект со стилевыми классами для различных типов уведомлений
+        var notificationTypes = {
+            default: {
+                class: ""
+            },
+            success: {
+                class: "notification_one_success"
+            },
+            error: {
+                class: "notification_one_error"
+            },
+            wait: {
+                class: "notification_one_wait"
+            }
+        };
+        
+        // Формируем HTML-разметку уведомления и возвращаем результат
+        return {
+            id: notificationData.id,
+            html: "<div data-notification-id=\"" + notificationData.id + 
+                "\" class=\"notification_row\"><div class=\"notification_one " + 
+                notificationTypes[notificationData.type].class + "\">" + 
+                notificationData.text + 
+                "</div></div>"
+        };
+    }
+
+    /**
+     * Создает и отображает временное уведомление на основе переданных данных
+     * 
+     * @param {Object} notificationData - Данные для создания уведомления
+     */
+    function createAndShowTemporaryNotification(notificationData) {
+        // Создаем уведомление на основе переданных данных
+        const notification = createNotification(notificationData);
+        
+        // Отображаем временное уведомление пользователю
+        showTemporaryNotification(notification);
     }
 
     function Dn() {
@@ -13540,7 +13672,7 @@ function SimpleCad() {
     }
 
     function Wn() {
-        "" != Gs.uid && (Yn({
+        "" != Gs.uid && (createAndShowTemporaryNotification({
             text: "\u041E\u0442\u043A\u0440\u044B\u0442\u0438\u0435 \u0441\u0441\u044B\u043B\u043A\u0438...",
             type: "wait"
         }), K("roof_load", {
@@ -13830,46 +13962,158 @@ function SimpleCad() {
         return !0
     }
 
-    function as(e) {
-        var t = {
-                points: [],
-                pline_start: "empty",
-                pline_start_val: "",
-                pline_end: "empty",
-                pline_end_val: "",
-                side_okras: "empty",
-                color: "",
-                cover: "",
-                thickness: "",
-                size: "",
-                amount: "",
-                pline_breaks: {},
-                pline_lengths_ish: []
-            },
-            _ = 0,
-            a = 0,
-            r = 0,
-            n = 0,
-            s = 0,
-            o = [];
-        return $.each(e.lengths, function(i, l) {
-            switch (e.angles_mode) {
+    /**
+     * Построение полилинии на основе заданных параметров
+     * 
+     * @param {Object} inputData - Параметры для построения полилинии
+     * @param {Array} inputData.lengths - Массив длин сегментов полилинии
+     * @param {string} inputData.angles_mode - Режим задания углов ("y_line", "line_line" и др.)
+     * @param {Array} inputData.angles - Массив углов для сегментов
+     * @returns {Object} - Объект с данными построенной полилинии
+     */
+    function buildPolyline(inputData) {
+        // Инициализация результирующего объекта со свойствами полилинии
+        var resultPolyline = {
+            points: [],             // Массив точек полилинии
+            pline_start: "empty",   // Тип начала полилинии
+            pline_start_val: "",    // Значение для начала полилинии
+            pline_end: "empty",     // Тип конца полилинии
+            pline_end_val: "",      // Значение для конца полилинии
+            side_okras: "empty",    // Тип окраски сторон
+            color: "",              // Цвет
+            cover: "",              // Покрытие
+            thickness: "",          // Толщина
+            size: "",               // Размер
+            amount: "",             // Количество
+            pline_breaks: {},       // Разрывы полилинии
+            pline_lengths_ish: []   // Исходные длины сегментов
+        };
+        
+        // Переменные для вычисления сегментов полилинии
+        var currentAngle = 0,        // Текущий угол сегмента
+            startX = 0,              // Начальная координата X
+            startY = 0,              // Начальная координата Y
+            endX = 0,                // Конечная координата X
+            endY = 0,                // Конечная координата Y
+            segmentResult = [];      // Результат вычисления сегмента
+        
+        // Обрабатываем каждый сегмент полилинии
+        $.each(inputData.lengths, function(i, length) {
+            // Определяем угол в зависимости от режима
+            switch (inputData.angles_mode) {
                 case "y_line":
-                    _ = e.angles[i];
+                    currentAngle = inputData.angles[i];
                     break;
                 case "line_line":
-                    _ = e.angles[i];
+                    currentAngle = inputData.angles[i];
                     break;
                 default:
+                    // В других режимах угол не меняется
             }
-            0 == i ? (a = Fo[vo], r = Ao[vo]) : (a = n, r = s), o = Ie(a, r, l, !0, _), 0 == i ? t.points = [o.points[0], o.points[1], o.points[2], o.points[3]] : t.points.push(o.points[2], o.points[3]), n = o.points[2], s = o.points[3]
-        }), typeof("undefined" != e.pline_start) && "" != e.pline_start && (t.pline_start = e.pline_start), typeof("undefined" != e.pline_start_val) && (t.pline_start_val = e.pline_start_val), typeof("undefined" != e.pline_end) && "" != e.pline_end && (t.pline_end = e.pline_end), typeof("undefined" != e.pline_end_val) && (t.pline_end_val = e.pline_end_val), typeof("undefined" != e.side_okras) && "" != e.side_okras && (t.side_okras = e.side_okras), typeof("undefined" != e.color) && "" != e.color && (t.color = e.color), typeof("undefined" != e.cover) && "" != e.cover && (t.cover = e.cover), typeof("undefined" != e.thickness) && (t.thickness = e.thickness), typeof("undefined" != e.size) && (t.size = e.size), typeof("undefined" != e.amount) && (t.amount = e.amount), typeof("undefined" != e.pline_breaks) && (t.pline_breaks = e.pline_breaks), typeof("undefined" != e.pline_lengths_ish) && (t.pline_lengths_ish = e.pline_lengths_ish), ("zavalc_in" == t.pline_start || "zavalc_out" == t.pline_start) && 10 != parseFloat(t.pline_start_val) && (t.pline_start_val = 10, Yn({
-            text: "\u0417\u0430\u0432\u0430\u043B\u044C\u0446\u043E\u0432\u043A\u0430 1 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430 \u043D\u0430 10 \u043C\u043C",
-            type: "wait"
-        })), ("zavalc_in" == t.pline_end || "zavalc_out" == t.pline_end) && 10 != parseFloat(t.pline_end_val) && (t.pline_end_val = 10, Yn({
-            text: "\u0417\u0430\u0432\u0430\u043B\u044C\u0446\u043E\u0432\u043A\u0430 2 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430 \u043D\u0430 10 \u043C\u043C",
-            type: "wait"
-        })), t
+            
+            // Определяем начальные координаты
+            if (i == 0) {
+                // Для первого сегмента берем глобальные координаты
+                startX = Fo[vo];
+                startY = Ao[vo];
+            } else {
+                // Для последующих сегментов используем конечную точку предыдущего
+                startX = endX;
+                startY = endY;
+            }
+            
+            // Вычисляем сегмент полилинии
+            segmentResult = Ie(startX, startY, length, true, currentAngle);
+            
+            // Добавляем точки в результат
+            if (i == 0) {
+                // Для первого сегмента добавляем начальную и конечную точки
+                resultPolyline.points = [
+                    segmentResult.points[0], 
+                    segmentResult.points[1], 
+                    segmentResult.points[2], 
+                    segmentResult.points[3]
+                ];
+            } else {
+                // Для последующих сегментов добавляем только конечную точку
+                resultPolyline.points.push(segmentResult.points[2], segmentResult.points[3]);
+            }
+            
+            // Сохраняем конечные координаты для следующего сегмента
+            endX = segmentResult.points[2];
+            endY = segmentResult.points[3];
+        });
+        
+        // Копируем свойства из входных данных, если они определены
+        if (typeof("undefined" != inputData.pline_start) && "" != inputData.pline_start) {
+            resultPolyline.pline_start = inputData.pline_start;
+        }
+        
+        if (typeof("undefined" != inputData.pline_start_val)) {
+            resultPolyline.pline_start_val = inputData.pline_start_val;
+        }
+        
+        if (typeof("undefined" != inputData.pline_end) && "" != inputData.pline_end) {
+            resultPolyline.pline_end = inputData.pline_end;
+        }
+        
+        if (typeof("undefined" != inputData.pline_end_val)) {
+            resultPolyline.pline_end_val = inputData.pline_end_val;
+        }
+        
+        if (typeof("undefined" != inputData.side_okras) && "" != inputData.side_okras) {
+            resultPolyline.side_okras = inputData.side_okras;
+        }
+        
+        if (typeof("undefined" != inputData.color) && "" != inputData.color) {
+            resultPolyline.color = inputData.color;
+        }
+        
+        if (typeof("undefined" != inputData.cover) && "" != inputData.cover) {
+            resultPolyline.cover = inputData.cover;
+        }
+        
+        if (typeof("undefined" != inputData.thickness)) {
+            resultPolyline.thickness = inputData.thickness;
+        }
+        
+        if (typeof("undefined" != inputData.size)) {
+            resultPolyline.size = inputData.size;
+        }
+        
+        if (typeof("undefined" != inputData.amount)) {
+            resultPolyline.amount = inputData.amount;
+        }
+        
+        if (typeof("undefined" != inputData.pline_breaks)) {
+            resultPolyline.pline_breaks = inputData.pline_breaks;
+        }
+        
+        if (typeof("undefined" != inputData.pline_lengths_ish)) {
+            resultPolyline.pline_lengths_ish = inputData.pline_lengths_ish;
+        }
+        
+        // Проверка и корректировка значений завальцовки на первом конце
+        if (("zavalc_in" == resultPolyline.pline_start || "zavalc_out" == resultPolyline.pline_start) && 
+            10 != parseFloat(resultPolyline.pline_start_val)) {
+            resultPolyline.pline_start_val = 10;
+            createAndShowTemporaryNotification({
+                text: "\u0417\u0430\u0432\u0430\u043B\u044C\u0446\u043E\u0432\u043A\u0430 1 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430 \u043D\u0430 10 \u043C\u043C",
+                type: "wait"
+            });
+        }
+        
+        // Проверка и корректировка значений завальцовки на втором конце
+        if (("zavalc_in" == resultPolyline.pline_end || "zavalc_out" == resultPolyline.pline_end) && 
+            10 != parseFloat(resultPolyline.pline_end_val)) {
+            resultPolyline.pline_end_val = 10;
+            createAndShowTemporaryNotification({
+                text: "\u0417\u0430\u0432\u0430\u043B\u044C\u0446\u043E\u0432\u043A\u0430 2 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430 \u043D\u0430 10 \u043C\u043C",
+                type: "wait"
+            });
+        }
+        
+        return resultPolyline;
     }
 
     /**
@@ -14685,15 +14929,15 @@ function SimpleCad() {
             a = "";
         ho = !1, $.each(to[vo].children, function(_, a) {
             "Line" == a.className && "undefined" != typeof a.attrs.side_okras && (e = a.id(), t++)
-        }), 1 == t ? (_ = validateElementConfiguration(e), 0 == _.errors.length ? (Yn({
+        }), 1 == t ? (_ = validateElementConfiguration(e), 0 == _.errors.length ? (createAndShowTemporaryNotification({
             text: "\u041E\u0448\u0438\u0431\u043E\u043A \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
             type: "success"
         }), ho = !0) : (a = vs(_.errors, "modal_nde_validate_errors"), showModalWindow("nde_validate_errors", {
             errors_html: a
-        }))) : 0 == t ? Yn({
+        }))) : 0 == t ? createAndShowTemporaryNotification({
             text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
             type: "error"
-        }) : Yn({
+        }) : createAndShowTemporaryNotification({
             text: "\u041D\u0430\u0439\u0434\u0435\u043D\u043E \u0431\u043E\u043B\u044C\u0448\u0435 \u043E\u0434\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430",
             type: "error"
         })
@@ -15042,48 +15286,96 @@ function SimpleCad() {
         $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), showModalWindow("save", {})
     }
 
-    function Ls() {
-        var e = "",
-            t = 0,
-            _ = {},
-            a;
-        if ($.each(to[vo].children, function(_, a) {
-                "Line" == a.className && "undefined" != typeof a.attrs.side_okras && (e = a.id(), t++)
-            }), 1 == t) {
-            Yn({
+    /**
+     * Сохраняет выбранный элемент линии как шаблон
+     * Находит элемент с классом "Line" и атрибутом "side_okras",
+     * создает его изображение и сохраняет как шаблон
+     */
+    function saveLineAsTemplate() {
+        var elementId = "",
+            elementsCount = 0,
+            templateParams = {},
+            isArrowVisible;
+            
+        // Поиск элементов типа Line с атрибутом side_okras
+        if ($.each(to[vo].children, function(_, element) {
+                if ("Line" == element.className && "undefined" != typeof element.attrs.side_okras) {
+                    elementId = element.id();
+                    elementsCount++;
+                }
+            }), elementsCount == 1) {
+            // Если найден ровно один нужный элемент
+            createAndShowTemporaryNotification({
                 text: "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u0430...",
                 type: "wait"
-            }), a = co.arrow[vo].attrs.visible, a && co.arrow[vo].hide(), $s[vo].hide(), Zs[vo].hide();
-            var r = [],
-                n = Ct({
+            });
+            
+            // Скрываем элементы интерфейса для создания чистого изображения
+            isArrowVisible = co.arrow[vo].attrs.visible;
+            if (isArrowVisible) co.arrow[vo].hide();
+            $s[vo].hide();
+            Zs[vo].hide();
+            
+            var textElementIds = [],
+                visibleTextElements = Ct({
                     filter_type: ["text"],
                     filter_visible: "1"
                 }),
-                s;
-            $.each(n, function(e, t) {
-                r.push(t.id), s = Bi.findOne("#" + t.id), s.hide()
-            }), to[vo].draw(), uo = {};
+                currentElement;
+                
+            // Скрываем все текстовые элементы
+            $.each(visibleTextElements, function(index, textElement) {
+                textElementIds.push(textElement.id);
+                currentElement = Bi.findOne("#" + textElement.id);
+                currentElement.hide();
+            });
+            
+            to[vo].draw();
+            uo = {};
+            
+            // Создаем изображение элемента
             to[vo].toImage({
-                callback: function(t) {
-                    a && co.arrow[vo].show(), $s[vo].show(), Zs[vo].show(), $.each(r, function(e, t) {
-                        s = Bi.findOne("#" + t), s.show()
-                    }), to[vo].draw(), uo.tab_img_src = t.src, uo.tab_region = Ee(vo, !1, !1, !1, !1), _ = zs(e), K("nde_save_as_template", {
+                callback: function(imageData) {
+                    // Восстанавливаем видимость элементов интерфейса
+                    if (isArrowVisible) co.arrow[vo].show();
+                    $s[vo].show();
+                    Zs[vo].show();
+                    
+                    // Восстанавливаем видимость текстовых элементов
+                    $.each(textElementIds, function(index, textId) {
+                        currentElement = Bi.findOne("#" + textId);
+                        currentElement.show();
+                    });
+                    
+                    to[vo].draw();
+                    uo.tab_img_src = imageData.src;
+                    uo.tab_region = Ee(vo, false, false, false, false);
+                    templateParams = zs(elementId);
+                    
+                    // Сохраняем шаблон
+                    K("nde_save_as_template", {
                         image: uo,
-                        nde_params: _
-                    })
+                        nde_params: templateParams
+                    });
                 }
-            })
-        } else 0 == t ? Yn({
-            text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
-            type: "error"
-        }) : Yn({
-            text: "\u041D\u0430\u0439\u0434\u0435\u043D\u043E \u0431\u043E\u043B\u044C\u0448\u0435 \u043E\u0434\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430",
-            type: "error"
-        })
+            });
+        } else if (elementsCount == 0) {
+            // Если не найдено ни одного элемента
+            createAndShowTemporaryNotification({
+                text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
+                type: "error"
+            });
+        } else {
+            // Если найдено больше одного элемента
+            createAndShowTemporaryNotification({
+                text: "\u041D\u0430\u0439\u0434\u0435\u043D\u043E \u0431\u043E\u043B\u044C\u0448\u0435 \u043E\u0434\u043D\u043E\u0433\u043E \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430",
+                type: "error"
+            });
+        }
     }
 
     function Os(e) {
-        Yn({
+        createAndShowTemporaryNotification({
             text: "\u0423\u0434\u0430\u043B\u0435\u043D\u0438\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u0430...",
             type: "wait"
         }), K("nde_template_remove", {
@@ -15091,29 +15383,68 @@ function SimpleCad() {
         })
     }
 
-    function Fs(e) {
-        var t = !1;
-        $.each(e.texts, function(e, _) {
-            t = !0, $("#d_elements_button_text").trigger("click"), incrementCounter(), incrementElementCounter("text");
-            var a = new Konva.Text({
-                x: _.x * Go.g_scale[vo] / 100 + Fo[vo],
-                y: Ao[vo] - _.y * Go.g_scale[vo] / 100,
-                text: _.text,
+    /**
+     * Обрабатывает и создает текстовые элементы на холсте из переданных данных.
+     * 
+     * @param {Object} data - Объект с данными, содержащий массив текстовых элементов в поле texts
+     * @returns {void}
+     */
+    function renderTextElements(data) {
+        // Флаг наличия текстовых элементов
+        var hasTextElements = false;
+        
+        // Обработка каждого текстового элемента
+        $.each(data.texts, function(index, textElement) {
+            // Устанавливаем флаг и активируем кнопку текста в интерфейсе
+            hasTextElements = true;
+            $("#d_elements_button_text").trigger("click");
+            
+            // Увеличиваем счетчики элементов
+            incrementCounter();
+            incrementElementCounter("text");
+            
+            // Создаем текстовый объект Konva с заданными параметрами
+            var textObject = new Konva.Text({
+                // Позиционирование с учетом масштаба и смещения
+                x: textElement.x * Go.g_scale[vo] / 100 + Fo[vo],
+                y: Ao[vo] - textElement.y * Go.g_scale[vo] / 100,
+                text: textElement.text,
                 fontSize: 18,
                 fontFamily: "Arial",
                 fill: mainColors.selected_element_color,
                 id: "text__" + xo,
-                name: _.name,
-                draggable: !1,
-                visible: !(1 != _.is_visible),
-                is_object_visible: _.is_visible
+                name: textElement.name,
+                draggable: false,
+                visible: !(1 != textElement.is_visible),  // Преобразование флага видимости
+                is_object_visible: textElement.is_visible
             });
-            a.on("click", function(e) {
-                handleElementClick(e, "text")
-            }), a.on("mousemove", function(e) {
-                handleMouseMove(e)
-            }), j(a), 0 == _.is_visible && al.find("[data-obj-id=\"" + a.id() + "\"]").parent().find(".fa").removeClass("fa-eye").addClass("fa-eye-slash")
-        }), t && $("#d_elements_button_select").trigger("click")
+            
+            // Добавляем обработчики событий
+            textObject.on("click", function(event) {
+                handleElementClick(event, "text");
+            });
+            
+            textObject.on("mousemove", function(event) {
+                handleMouseMove(event);
+            });
+            
+            // Применяем дополнительную обработку объекта
+            j(textObject);
+            
+            // Если текст невидимый, обновляем соответствующую иконку в интерфейсе
+            if (textElement.is_visible == 0) {
+                al.find("[data-obj-id=\"" + textObject.id() + "\"]")
+                .parent()
+                .find(".fa")
+                .removeClass("fa-eye")
+                .addClass("fa-eye-slash");
+            }
+        });
+        
+        // После обработки всех текстов активируем режим выбора
+        if (hasTextElements) {
+            $("#d_elements_button_select").trigger("click");
+        }
     }
 
     /**
@@ -16875,7 +17206,7 @@ function SimpleCad() {
                             target: "rotate_btn_click_error"
                         });
                     } else {
-                        Yn({
+                        createAndShowTemporaryNotification({
                             text: "Элементов не найдено",
                             type: "error"
                         });
@@ -17226,7 +17557,7 @@ function SimpleCad() {
                 P_(_);
                 break;
             case "roof_link":
-                Tn("clipboard_roof_link", Xs + "?uid=" + _.uid), Yn({
+                Tn("clipboard_roof_link", Xs + "?uid=" + _.uid), createAndShowTemporaryNotification({
                     text: "\u0421\u0441\u044B\u043B\u043A\u0430 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0430",
                     type: "success"
                 });
@@ -17253,7 +17584,7 @@ function SimpleCad() {
                 w_(_);
                 break;
             case "scale_auto":
-                v_();
+                fitContentToView();
                 break;
             case "size_draw_element_highlight_pline_otrez":
                 m_(_.parent_id, _.line_num_counter), L_({
@@ -17366,7 +17697,7 @@ function SimpleCad() {
                     })), "lineblock" == ve && (xe = Zi.attrs.parent_id), ("pline" == ve || "line" == ve) && q(Zi.id()), "pline" == ve && removeChildElementsByParentId(Zi.id()), "pline" == ve && -1 !== $.inArray(ei.type, ["roof", "sznde"]) && $_(Zi.id()), resetActiveElement(), "" != xe && (processElementById(xe), to[vo].draw()), k_(), "pline" == ve && "roof" == ei.type && da(), C_(), "" != zi && kl.hide(), zi = "", "pline" == ve && "sznde" == ei.type && ys()
                 } else switch (ei.type) {
                     case "sznde":
-                        Yn({
+                        createAndShowTemporaryNotification({
                             text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
                             type: "error"
                         });
@@ -17387,21 +17718,59 @@ function SimpleCad() {
                 $("#nav_li_file_image").hasClass("disabled") || ft();
                 break;
             case "save_as_template":
-                Ls();
+                saveLineAsTemplate();
                 break;
             case "nde_as_modal_cropped_image":
                 js();
                 break;
             case "figures_add_doborn":
-                var we = _s(_.pline_params);
-                if (we) {
-                    var ke = as(_.pline_params),
-                        ze = createPolyline(ke);
-                    oa(ze), v_(), Fs(_.pline_params), updatePolylineSegmentLengths(ze.id(), {
+                // Проверяем корректность параметров полилинии
+                var isValidParameters = _s(_.pline_params);
+                
+                if (isValidParameters) {
+                    // Создаем данные для полилинии и сам элемент полилинии
+                    var polylineData = buildPolyline(_.pline_params),
+                        polylineElement = createPolyline(polylineData);
+                    
+                    // Обрабатываем созданный элемент полилинии
+                    processPolylineElement(polylineElement);
+                    
+                    // Подгоняем содержимое к области просмотра
+                    fitContentToView();
+                    
+                    // Отрисовываем текстовые элементы
+                    renderTextElements(_.pline_params);
+                    
+                    // Обновляем длины сегментов полилинии
+                    updatePolylineSegmentLengths(polylineElement.id(), {
                         mode: "lengths_all",
                         lengths: _.pline_params.lengths
-                    }), processPolylineParameters(ze), fs(ze), updateElementParametersDisplay(ze), 0 < Object.keys(ze.attrs.pline_breaks).length ? v_() : refreshCurrentLayer(), $("#modal_html").modal("hide")
-                } else alert("\u041D\u0435\u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u043E\u043B\u0438\u043B\u0438\u043D\u0438\u0438!");
+                    });
+                    
+                    // Обрабатываем параметры полилинии
+                    processPolylineParameters(polylineElement);
+                    
+                    // Применяем дополнительную обработку элемента
+                    fs(polylineElement);
+                    
+                    // Обновляем отображение параметров элемента
+                    updateElementParametersDisplay(polylineElement);
+                    
+                    // Если у полилинии есть разрывы, подгоняем содержимое к области просмотра,
+                    // иначе обновляем текущий слой
+                    if (0 < Object.keys(polylineElement.attrs.pline_breaks).length) {
+                        fitContentToView();
+                    } else {
+                        refreshCurrentLayer();
+                    }
+                    
+                    // Скрываем модальное окно
+                    $("#modal_html").modal("hide");
+                } else {
+                    // Выводим сообщение об ошибке, если параметры некорректны
+                    alert("Некорректные параметры полилинии!");
+                }
+                
                 break;
             case "modal_paste_figure_img":
                 var je = _.target.replace("target_", ""),
