@@ -60,10 +60,10 @@ function SimpleCad() {
         if (-1 !== $.inArray(ei.type, ["roof", "sznde"]) && typeof ei.access_data !== "undefined") {
             if (-1 !== $.inArray(ei.type, ["roof"])) {
                 la(); // Настройки для "roof"
-                K("pagination_releasenotes_list", { page: 1 }); // Загрузка списка релизов
+                sendServerRequest("pagination_releasenotes_list", { page: 1 }); // Загрузка списка релизов
             }
 
-            K("user_settings_load", { page: 1 }); // Загрузка пользовательских настроек
+            sendServerRequest("user_settings_load", { page: 1 }); // Загрузка пользовательских настроек
 
             if (-1 !== $.inArray(ei.type, ["roof"])) {
                 Xn(); // Дополнительная инициализация для "roof"
@@ -85,7 +85,7 @@ function SimpleCad() {
         if (-1 !== $.inArray(ei.type, ["sznde"])) {
             es(); // Инициализация для "sznde"
             ts(); // Дополнительная инициализация для "sznde"
-            K("nde_nom_fields", {}); // Загрузка полей NDE
+            sendServerRequest("nde_nom_fields", {}); // Загрузка полей NDE
         }
 
         $('[data-element="pline"]').trigger('click')
@@ -1999,7 +1999,7 @@ function SimpleCad() {
     function X(e, t) {
         switch (e) {
             case "releasenotes_one":
-                $("#proektor_z_modal_title").html("\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F"), $("#proektor_z_modal_content").html(Jo), K(e, t);
+                $("#proektor_z_modal_title").html("\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F"), $("#proektor_z_modal_content").html(Jo), sendServerRequest(e, t);
                 break;
             default:
         }
@@ -2041,7 +2041,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u0422\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0430\u043B\u044C\u043A\u0443\u043B\u044F\u0442\u043E\u0440");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2051,7 +2051,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u043C\u0435\u0442\u0430\u043B\u043B\u043E\u0447\u0435\u0440\u0435\u043F\u0438\u0446\u0430, \u043F\u0440\u043E\u0444\u043D\u0430\u0441\u0442\u0438\u043B");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2061,7 +2061,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u041A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u0443\u044E\u0449\u0438\u0435 - \u0444\u0430\u043B\u044C\u0446");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2159,7 +2159,7 @@ function SimpleCad() {
                 // Модальное окно блока линий
                 G([""]);
                 $("#modal_lineblock_form").html(Jo);
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 $("#modal_lineblock").show();
                 break;
                 
@@ -2185,7 +2185,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u0412\u0441\u0442\u0430\u0432\u043A\u0430 \u0444\u0438\u0433\u0443\u0440\u044B");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {
+                sendServerRequest(Bo, {
                     relative_from_mode: Eo
                 });
                 vl.show();
@@ -2194,10 +2194,10 @@ function SimpleCad() {
             case "figure_nde":
                 // Шаблоны доборных элементов
                 G(["modal-full-width"]);
-                $("#modal_info_contents").html(Jo);
+                // $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u0445 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2244,7 +2244,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u041D\u043E\u0432\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442 \u043A\u0440\u043E\u0432\u043B\u0438");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2255,7 +2255,7 @@ function SimpleCad() {
                     $("#modal_info_contents").html(Jo);
                     $("#modal_info_h").html("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u0430\u043A");
                     $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                    K(Bo, {});
+                    sendServerRequest(Bo, {});
                     vl.show();
                 } else {
                     return;
@@ -2270,7 +2270,7 @@ function SimpleCad() {
                     $("#modal_info_contents").html(Jo);
                     $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0440\u0430\u0441\u0447\u0451\u0442\u0430 \u043A\u0440\u043E\u0432\u043B\u0438");
                     $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                    K(Bo, {
+                    sendServerRequest(Bo, {
                         roof_data_params: Mo
                     });
                     vl.show();
@@ -2285,7 +2285,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2295,7 +2295,7 @@ function SimpleCad() {
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_h").html("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0440\u0430\u0441\u0447\u0451\u0442");
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2319,7 +2319,7 @@ function SimpleCad() {
                 $("#modal_info_h").html("\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u043D\u044B\u0445 \u0433\u0440\u0443\u043F\u043F");
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2338,7 +2338,7 @@ function SimpleCad() {
                 $("#modal_info_h").html("\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F \u043A \u0434\u043E\u0431\u043E\u0440\u043D\u044B\u043C \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C");
                 $("#modal_info_contents").html(Jo);
                 $("#modal_info_footer").html("<button type=\"button\" data-dismiss=\"modal\" aria-label=\"Close\" class=\"btn btn-default\">\u0417\u0430\u043A\u0440\u044B\u0442\u044C</button>");
-                K(Bo, {});
+                sendServerRequest(Bo, {});
                 vl.show();
                 break;
                 
@@ -2350,234 +2350,499 @@ function SimpleCad() {
         $("#modal_html").modal("show");
     }
 
-    function K(e, t) {
-        var _ = {
-                type: e,
-                data: {},
-                g_start_data: ei,
-                g_project_file: ti,
-                current_layer_name: vo,
-                token_data: zl.val(),
-                js_ver: "26022025"
-            },
-            a = {},
-            r = "";
-        switch (e) {
+    /**
+     * Выполняет запрос к серверу с указанными параметрами и обрабатывает ответ.
+     * 
+     * @param {string} actionType - Тип действия/запроса к серверу
+     * @param {Object} actionParams - Параметры для выполнения действия
+     */
+    function sendServerRequest(actionType, actionParams) {
+        // Формируем основные данные для запроса
+        var requestData = {
+            type: actionType,
+            data: {},
+            g_start_data: ei,
+            g_project_file: ti,
+            current_layer_name: vo,
+            token_data: zl.val(),
+            js_ver: "26022025"
+        };
+        
+        var formInputs = {};
+        var formId = "";
+        
+        // Подготавливаем данные в зависимости от типа запроса
+        switch (actionType) {
             case "form":
-                switch (r = t.form_id, a = $("#" + r).serializeArray(), a = Nt(a), _.form_id = r, _.form_inputs = a, r) {
+                // Обработка отправки формы
+                formId = actionParams.form_id;
+                formInputs = $("#" + formId).serializeArray();
+                formInputs = Nt(formInputs);
+                requestData.form_id = formId;
+                requestData.form_inputs = formInputs;
+                
+                // Обработка специфичных форм
+                switch (formId) {
                     case "roof_new_form":
-                        _.roof_data_params = Mo;
+                        requestData.roof_data_params = Mo;
                         break;
                     case "roof_save_as_form":
-                        _.data = "";
+                        requestData.data = "";
                         break;
                     default:
+                        // Для других форм дополнительной обработки нет
                 }
                 break;
+                
             case "roof_specification_full_project_demand":
-                if (_.data = {
-                        mode: si,
-                        specification: ni.sheets_filtered_sorted_grouped,
-                        branch_id_1c: Mo.branch_id_1c,
-                        pdf_attach_file_name: ni.pdf_attach_file_name,
-                        png_attach_files_name: ni.png_attach_files_name,
-                        employee_id_1c: $("#roof_specification_full_project_employee_selected_id_1c").val()
-                    }, "[]" != Mo.sheet_allowed_length_edit && (-1 !== $.inArray(Mo.type, ["siding", "siding_vert"]) || "mch" == Mo.type && "warehouse_cutted_schemed" == Mo.mch_edited_shal_calc_mode)) {
-                    var n = [];
-                    $.each(Di.sizes, function(e, t) {
-                        n.push({
-                            size: (t.size / 1e3).toFixed(2),
-                            amount: t.count.toFixed(0),
-                            quantity: (t.size * t.count * Mo.sheet_width / 1e6).toFixed(2),
+                // Запрос для спецификации проекта
+                requestData.data = {
+                    mode: si,
+                    specification: ni.sheets_filtered_sorted_grouped,
+                    branch_id_1c: Mo.branch_id_1c,
+                    pdf_attach_file_name: ni.pdf_attach_file_name,
+                    png_attach_files_name: ni.png_attach_files_name,
+                    employee_id_1c: $("#roof_specification_full_project_employee_selected_id_1c").val()
+                };
+                
+                // Добавляем спецификацию для определенных типов материалов
+                if ("[]" != Mo.sheet_allowed_length_edit && 
+                    (-1 !== $.inArray(Mo.type, ["siding", "siding_vert"]) || 
+                    "mch" == Mo.type && "warehouse_cutted_schemed" == Mo.mch_edited_shal_calc_mode)) {
+                    
+                    var sizesArray = [];
+                    $.each(Di.sizes, function(index, sizeItem) {
+                        sizesArray.push({
+                            size: (sizeItem.size / 1e3).toFixed(2),
+                            amount: sizeItem.count.toFixed(0),
+                            quantity: (sizeItem.size * sizeItem.count * Mo.sheet_width / 1e6).toFixed(2),
                             id_1c: Mo.nom_id_1c,
                             code_1c: Mo.nom_code_1c
-                        })
-                    }), _.data.specification = JSON.copy(n)
+                        });
+                    });
+                    requestData.data.specification = JSON.copy(sizesArray);
                 }
                 break;
+                
             case "objectaddlayerrow":
             case "save":
-                _.data.params = t;
+                // Запросы для добавления слоя и сохранения
+                requestData.data.params = actionParams;
                 break;
+                
             case "roof_calc":
-                _.data = t, $("#nav_roof_calc_process_btn").addClass("active"), Us = !1;
+                // Расчет кровли
+                requestData.data = actionParams;
+                $("#nav_roof_calc_process_btn").addClass("active");
+                Us = false;
                 break;
+                
             case "roof_save":
             case "roof_load":
-                _.data = t;
+                // Сохранение и загрузка кровли
+                requestData.data = actionParams;
                 break;
+                
             case "lineblock":
-                if (incrementElementCounter(e), _.data.glob_elem_name_counter = wo[e], _.data.elements = Ct({
-                        filter_type: ["line", "pline"],
-                        filter_visible: "1"
-                    }), "glzabor" == ei.type) {
-                    var s = $("#d_elements_accordion").find("[data-element=\"lineblock\"]").attr("data_raschet_ogragdeniy_lineblock_type_mode");
-                    _.data.data_raschet_ogragdeniy_lineblock_type_mode = "undefined" == typeof s ? "selectprod_stand16" : s
+                // Обработка блока линий
+                incrementElementCounter(actionType);
+                requestData.data.glob_elem_name_counter = wo[actionType];
+                requestData.data.elements = Ct({
+                    filter_type: ["line", "pline"],
+                    filter_visible: "1"
+                });
+                
+                // Специфика для типа glzabor
+                if ("glzabor" == ei.type) {
+                    var lineblockTypeMode = $("#d_elements_accordion")
+                        .find("[data-element=\"lineblock\"]")
+                        .attr("data_raschet_ogragdeniy_lineblock_type_mode");
+                    
+                    requestData.data.data_raschet_ogragdeniy_lineblock_type_mode = 
+                        "undefined" == typeof lineblockTypeMode ? "selectprod_stand16" : lineblockTypeMode;
                 }
                 break;
+                
             default:
-                _.data = t;
+                // Для остальных типов просто передаем параметры
+                requestData.data = actionParams;
         }
-        // $.ajax({
-        //     url: Ds,
-        //     type: "post",
-        //     data: _,
-        //     dataType: "json",
-        //     success: function(_) {
-        //         if ("" != _.set_form_id && (r = _.set_form_id), 0 < _.errors.length) {
-        //             var s = "";
-        //             $.each(_.errors, function(e, t) {
-        //                 s += "<li>" + t + "</li>"
-        //             }), $("#" + r).find(".gl_form_err_ul").append(s)
-        //         }
-        //         if (0 < _.error_ids.length && $.each(_.error_ids, function(e, t) {
-        //                 $("#" + r).find("#" + t).parent().addClass("f-has-error")
-        //             }), "" != _.success_js_action) switch (_.success_js_action) {
-        //             case "LineBlockValidatedSuccess":
-        //                 SimpleCad.Action({
-        //                     type: "LineBlockValidatedSuccess",
-        //                     form_inputs: a,
-        //                     response_data: _.data
-        //                 });
-        //                 break;
-        //             case "roof_new_form_success":
-        //                 "success" == _.data.status && ($("#roof_new_find_nomenclature_btn").hide(), $("#roof_new_form_create_btn").show(), $("#roof_new_form_set_settings").show(), "undefined" == typeof _.data.roof_data_params_preloaded ? (alert("\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u0432"), Ho = {}) : Ho = JSON.parse(JSON.stringify(_.data.roof_data_params_preloaded)));
-        //                 break;
-        //             case "roof_save_as_form_success":
-        //                 "undefined" != typeof _.data.g_project_file_set_id && "undefined" != typeof _.data.g_project_file_set_name ? (ti.id = _.data.g_project_file_set_id, ti.name = _.data.g_project_file_set_name, $("#modal_html").modal("hide"), Gn(), SimpleCad.Action({
-        //                     type: "roof_save"
-        //                 })) : alert("\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438 \u043F\u0440\u0438 \u0432\u044B\u0437\u043E\u0432");
-        //                 break;
-        //             case "roof_remove_roof_files_list_update":
-        //                 Ro = -1, la();
-        //                 break;
-        //             case "nde_check_and_attach_crop_success":
-        //                 ws(_.data);
-        //                 break;
-        //             case "nde_as_modal_cropped_image_success":
-        //                 Cs(_.data);
-        //                 break;
-        //             default:
-        //         }
-        //         switch (e) {
-        //             case "form":
-        //                 Dt(r);
-        //                 break;
-        //             case "roof_calc":
-        //                 0 < _.errors.length ? showModalWindow("roof_has_errors", {}) : Y_(_);
-        //                 break;
-        //             case "roof_save":
-        //                 "undefined" != typeof _.data.g_project_file_set_id && (ti.id = _.data.g_project_file_set_id), la();
-        //                 var o = ti.name.replace("[[", "").replace("]]", "");
-        //                 $("#r_d_nav_bot_file").html("<b>id:</b> " + ti.id + "&nbsp;&nbsp; <b>\u0424\u0430\u0439\u043B:</b> " + o), t.is_restart_autosave && qn();
-        //                 break;
-        //             case "roof_menu_edit_sheet_paste":
-        //                 "undefined" != typeof _.data.sheet_tab && ("undefined" == typeof _.data.cad_elements && (_.data.cad_elements = []), "undefined" == typeof _.data.tabs_axis_point_paste_tab_set && (_.data.tabs_axis_point_paste_tab_set = {}), Fn(_.data.sheet_tab, _.data.cad_elements, -1, e, _.data.tabs_axis_point_paste_tab_set));
-        //                 break;
-        //             case "roof_load":
-        //                 I_(_);
-        //                 break;
-        //             case "user_settings_load":
-        //                 "undefined" == typeof _.data.user_settings ? alert("\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u0432 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044F.") : ("undefined" != typeof _.data.user_settings.settings_programm_sheet_tabs && "undefined" != typeof _.data.user_settings.settings_programm_sheet_tabs.name_mode && (Wo.settings_programm_sheet_tabs.name_mode = parseInt(_.data.user_settings.settings_programm_sheet_tabs.name_mode), Oa()), "undefined" != typeof _.data.user_settings.settings_programm_autosave && "undefined" != typeof _.data.user_settings.settings_programm_autosave.is_use_autosave && "undefined" != typeof _.data.user_settings.settings_programm_autosave.autosave_interval && (Wo.settings_programm_autosave.is_use_autosave = parseInt(_.data.user_settings.settings_programm_autosave.is_use_autosave), Wo.settings_programm_autosave.autosave_interval = Math.ceil(_.data.user_settings.settings_programm_autosave.autosave_interval)));
-        //                 break;
-        //             default:
-        //         }
-        //         switch (0 < _.hide_html.length && $.each(_.hide_html, function(e, t) {
-        //                 $("#" + t.id).hide()
-        //             }), 0 < _.update_html.length && $.each(_.update_html, function(e, t) {
-        //                 $("#" + t.id).html(t.html)
-        //             }), 0 < _.update_value.length && $.each(_.update_value, function(e, t) {
-        //                 $("#" + t.id).val(t.val)
-        //             }), 0 < _.set_attr.length && $.each(_.set_attr, function(e, t) {
-        //                 if ("undefined" != typeof t.type) switch (t.type) {
-        //                     case "data-param":
-        //                         $("[" + t["data-param"] + "=\"" + t["data-param-value"] + "\"]").attr(t.attr_name, t.attr_value);
-        //                         break;
-        //                     default:
-        //                 }
-        //             }), 0 < _.remove_html.length && $.each(_.remove_html, function(e, t) {
-        //                 if ("undefined" != typeof t.type) switch (t.type) {
-        //                     case "data-param":
-        //                         $("[" + t["data-param"] + "=\"" + t["data-param-value"] + "\"]").remove();
-        //                         break;
-        //                     default:
-        //                 }
-        //             }), 0 < _.notifications.length && $.each(_.notifications, function(e, t) {
-        //                 showTemporaryNotification(t)
-        //             }), 0 < _.append_html.length && $.each(_.append_html, function(e, t) {
-        //                 $("#" + t.id).append(t.html)
-        //             }), "" != _.location_blank && window.open(_.location_blank, "_blank"), e) {
-        //             case "calc_trigonom":
-        //                 SimpleCad.Action({
-        //                     type: "calc_trigonom_modal_success"
-        //                 });
-        //                 break;
-        //             case "form":
-        //                 switch (r) {
-        //                     case "form_settings_programm_sheet_tabs":
-        //                         "undefined" != typeof _.data.user_settings && "undefined" != typeof _.data.user_settings.settings_programm_sheet_tabs && "undefined" != typeof _.data.user_settings.settings_programm_sheet_tabs.name_mode && (Wo.settings_programm_sheet_tabs.name_mode = parseInt(_.data.user_settings.settings_programm_sheet_tabs.name_mode));
-        //                         break;
-        //                     case "form_settings_programm_autosave":
-        //                         "undefined" != typeof _.data.user_settings && "undefined" != typeof _.data.user_settings.settings_programm_autosave && "undefined" != typeof _.data.user_settings.settings_programm_autosave.is_use_autosave && "undefined" != typeof _.data.user_settings.settings_programm_autosave.autosave_interval && (Wo.settings_programm_autosave.is_use_autosave = parseInt(_.data.user_settings.settings_programm_autosave.is_use_autosave), Wo.settings_programm_autosave.autosave_interval = Math.ceil(_.data.user_settings.settings_programm_autosave.autosave_interval), qn());
-        //                         break;
-        //                     default:
-        //                 }
-        //                 break;
-        //             case "objectaddlayerrow":
-        //                 se(), k_();
-        //                 break;
-        //             case "lineblock":
-        //                 $("#id_lb_first").trigger("click");
-        //                 break;
-        //             case "roof_specification_full_project":
-        //                 Ir(), ni.roof_data_full = S_("roof_specification_full_project_table"), Tr(), Di = {
-        //                     positions: [],
-        //                     sizes: []
-        //                 }, ar("modal_show"), Sr();
-        //                 break;
-        //             case "roof_specification_full_project_pdf":
-        //             case "roof_specification_full_project_pdf_and_demand":
-        //                 $("#roof_specification_full_project_pdf_btn").find(".table_cad_span_link_loading").hide(), ni.pdf_attach_file_name = _.data.specification_pdf_attach_file_name, ni.png_attach_files_name = _.data.specification_pdf_attach_file_name_png, "roof_specification_full_project_pdf_and_demand" == e && K("roof_specification_full_project_demand", {});
-        //                 break;
-        //             case "roof_calc":
-        //                 $("#nav_roof_calc_process_btn").removeClass("active"), Us = !0;
-        //                 break;
-        //             case "figure":
-        //                 "undefined" != typeof _.data.user_settings && "undefined" != typeof _.data.user_settings.settings_programm_figures_razmer && "undefined" != typeof _.data.user_settings.settings_programm_figures_razmer.is_use_razmer_template && "undefined" != typeof _.data.user_settings.settings_programm_figures_razmer.razmer_template && (Wo.settings_programm_figures_razmer.is_use_razmer_template = parseInt(_.data.user_settings.settings_programm_figures_razmer.is_use_razmer_template), Wo.settings_programm_figures_razmer.razmer_template = _.data.user_settings.settings_programm_figures_razmer.razmer_template);
-        //                 break;
-        //             case "figure_nde":
-        //                 var n = $("#r_d_root").height() - 225;
-        //                 $("#figures_nde_doborn_left").css("height", n + "px"), $("#figures_nde_doborn_right").css("height", n + "px");
-        //                 break;
-        //             case "nde_nom_fields":
-        //                 mo = _.data;
-        //                 break;
-        //             case "roof_accessories_mch_pn":
-        //                 cn({
-        //                     mode: "modal_loaded_success"
-        //                 });
-        //                 break;
-        //             default:
-        //         }
-        //     },
-        //     error: function(_, a, n) {
-        //         switch (console.log(_), console.log(a), console.log(n), e) {
-        //             case "form":
-        //                 Dt(r);
-        //                 break;
-        //             case "roof_calc":
-        //                 $("#nav_roof_calc_process_btn").removeClass("active"), Us = !0;
-        //                 break;
-        //             default:
-        //         }
-        //         N("backent_ajax_error_main", {
-        //             textStatus: a,
-        //             errorThrown: n,
-        //             ish_type: e,
-        //             ish_params: t
-        //         })
-        //     }
-        // })
+        return
+        // Выполняем AJAX-запрос
+        $.ajax({
+            url: Ds,
+            type: "post",
+            data: requestData,
+            dataType: "json",
+            success: function(response) {
+                // Если в ответе указан ID формы, обновляем текущий
+                if ("" != response.set_form_id) {
+                    formId = response.set_form_id;
+                }
+                
+                // Обработка ошибок, если они есть
+                if (0 < response.errors.length) {
+                    var errorHtml = "";
+                    $.each(response.errors, function(index, errorText) {
+                        errorHtml += "<li>" + errorText + "</li>";
+                    });
+                    $("#" + formId).find(".gl_form_err_ul").append(errorHtml);
+                }
+                
+                // Подсветка полей с ошибками
+                if (0 < response.error_ids.length) {
+                    $.each(response.error_ids, function(index, fieldId) {
+                        $("#" + formId).find("#" + fieldId).parent().addClass("f-has-error");
+                    });
+                }
+                
+                // Обработка успешного JS-действия, если указано
+                if ("" != response.success_js_action) {
+                    switch (response.success_js_action) {
+                        case "LineBlockValidatedSuccess":
+                            SimpleCad.Action({
+                                type: "LineBlockValidatedSuccess",
+                                form_inputs: formInputs,
+                                response_data: response.data
+                            });
+                            break;
+                            
+                        case "roof_new_form_success":
+                            if ("success" == response.data.status) {
+                                $("#roof_new_find_nomenclature_btn").hide();
+                                $("#roof_new_form_create_btn").show();
+                                $("#roof_new_form_set_settings").show();
+                                
+                                if ("undefined" == typeof response.data.roof_data_params_preloaded) {
+                                    alert("Ошибка загрузки параметров");
+                                    Ho = {};
+                                } else {
+                                    Ho = JSON.parse(JSON.stringify(response.data.roof_data_params_preloaded));
+                                }
+                            }
+                            break;
+                            
+                        case "roof_save_as_form_success":
+                            if ("undefined" != typeof response.data.g_project_file_set_id && 
+                                "undefined" != typeof response.data.g_project_file_set_name) {
+                                
+                                ti.id = response.data.g_project_file_set_id;
+                                ti.name = response.data.g_project_file_set_name;
+                                $("#modal_html").modal("hide");
+                                Gn();
+                                SimpleCad.Action({
+                                    type: "roof_save"
+                                });
+                            } else {
+                                alert("Ошибка записи при вызов");
+                            }
+                            break;
+                            
+                        case "roof_remove_roof_files_list_update":
+                            Ro = -1;
+                            la();
+                            break;
+                            
+                        case "nde_check_and_attach_crop_success":
+                            ws(response.data);
+                            break;
+                            
+                        case "nde_as_modal_cropped_image_success":
+                            Cs(response.data);
+                            break;
+                            
+                        default:
+                            // Для неизвестных JS-действий ничего не делаем
+                    }
+                }
+                
+                // Обработка в зависимости от типа запроса
+                switch (actionType) {
+                    case "form":
+                        Dt(formId);
+                        break;
+                        
+                    case "roof_calc":
+                        if (0 < response.errors.length) {
+                            showModalWindow("roof_has_errors", {});
+                        } else {
+                            Y_(response);
+                        }
+                        break;
+                        
+                    case "roof_save":
+                        if ("undefined" != typeof response.data.g_project_file_set_id) {
+                            ti.id = response.data.g_project_file_set_id;
+                        }
+                        la();
+                        
+                        var fileName = ti.name.replace("[[", "").replace("]]", "");
+                        $("#r_d_nav_bot_file").html("<b>id:</b> " + ti.id + "&nbsp;&nbsp; <b>Файл:</b> " + fileName);
+                        
+                        if (actionParams.is_restart_autosave) {
+                            qn();
+                        }
+                        break;
+                        
+                    case "roof_menu_edit_sheet_paste":
+                        if ("undefined" != typeof response.data.sheet_tab) {
+                            if ("undefined" == typeof response.data.cad_elements) {
+                                response.data.cad_elements = [];
+                            }
+                            if ("undefined" == typeof response.data.tabs_axis_point_paste_tab_set) {
+                                response.data.tabs_axis_point_paste_tab_set = {};
+                            }
+                            Fn(response.data.sheet_tab, response.data.cad_elements, -1, actionType, response.data.tabs_axis_point_paste_tab_set);
+                        }
+                        break;
+                        
+                    case "roof_load":
+                        I_(response);
+                        break;
+                        
+                    case "user_settings_load":
+                        if ("undefined" == typeof response.data.user_settings) {
+                            alert("Ошибка загрузки параметров пользователя.");
+                        } else {
+                            // Обновление настроек вкладок
+                            if ("undefined" != typeof response.data.user_settings.settings_programm_sheet_tabs && 
+                                "undefined" != typeof response.data.user_settings.settings_programm_sheet_tabs.name_mode) {
+                                
+                                Wo.settings_programm_sheet_tabs.name_mode = 
+                                    parseInt(response.data.user_settings.settings_programm_sheet_tabs.name_mode);
+                                Oa();
+                            }
+                            
+                            // Обновление настроек автосохранения
+                            if ("undefined" != typeof response.data.user_settings.settings_programm_autosave && 
+                                "undefined" != typeof response.data.user_settings.settings_programm_autosave.is_use_autosave && 
+                                "undefined" != typeof response.data.user_settings.settings_programm_autosave.autosave_interval) {
+                                
+                                Wo.settings_programm_autosave.is_use_autosave = 
+                                    parseInt(response.data.user_settings.settings_programm_autosave.is_use_autosave);
+                                Wo.settings_programm_autosave.autosave_interval = 
+                                    Math.ceil(response.data.user_settings.settings_programm_autosave.autosave_interval);
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        // Для других типов запросов специфической обработки нет
+                }
+                
+                // Обработка HTML-манипуляций из ответа
+                
+                // Скрытие элементов
+                if (0 < response.hide_html.length) {
+                    $.each(response.hide_html, function(index, item) {
+                        $("#" + item.id).hide();
+                    });
+                }
+                
+                // Обновление HTML-содержимого
+                if (0 < response.update_html.length) {
+                    $.each(response.update_html, function(index, item) {
+                        $("#" + item.id).html(item.html);
+                    });
+                }
+                
+                // Обновление значений полей
+                if (0 < response.update_value.length) {
+                    $.each(response.update_value, function(index, item) {
+                        $("#" + item.id).val(item.val);
+                    });
+                }
+                
+                // Установка атрибутов
+                if (0 < response.set_attr.length) {
+                    $.each(response.set_attr, function(index, item) {
+                        if ("undefined" != typeof item.type) {
+                            switch (item.type) {
+                                case "data-param":
+                                    $("[" + item["data-param"] + "=\"" + item["data-param-value"] + "\"]")
+                                        .attr(item.attr_name, item.attr_value);
+                                    break;
+                                default:
+                                    // Другие типы атрибутов не обрабатываются
+                            }
+                        }
+                    });
+                }
+                
+                // Удаление HTML-элементов
+                if (0 < response.remove_html.length) {
+                    $.each(response.remove_html, function(index, item) {
+                        if ("undefined" != typeof item.type) {
+                            switch (item.type) {
+                                case "data-param":
+                                    $("[" + item["data-param"] + "=\"" + item["data-param-value"] + "\"]").remove();
+                                    break;
+                                default:
+                                    // Другие типы не обрабатываются
+                            }
+                        }
+                    });
+                }
+                
+                // Отображение уведомлений
+                if (0 < response.notifications.length) {
+                    $.each(response.notifications, function(index, notification) {
+                        showTemporaryNotification(notification);
+                    });
+                }
+                
+                // Добавление HTML-содержимого
+                if (0 < response.append_html.length) {
+                    $.each(response.append_html, function(index, item) {
+                        $("#" + item.id).append(item.html);
+                    });
+                }
+                
+                // Открытие URL в новой вкладке, если указан
+                if ("" != response.location_blank) {
+                    window.open(response.location_blank, "_blank");
+                }
+                
+                // Дополнительная обработка в зависимости от типа запроса
+                switch (actionType) {
+                    case "calc_trigonom":
+                        SimpleCad.Action({
+                            type: "calc_trigonom_modal_success"
+                        });
+                        break;
+                        
+                    case "form":
+                        // Обработка специфичных форм
+                        switch (formId) {
+                            case "form_settings_programm_sheet_tabs":
+                                if ("undefined" != typeof response.data.user_settings && 
+                                    "undefined" != typeof response.data.user_settings.settings_programm_sheet_tabs && 
+                                    "undefined" != typeof response.data.user_settings.settings_programm_sheet_tabs.name_mode) {
+                                    
+                                    Wo.settings_programm_sheet_tabs.name_mode = 
+                                        parseInt(response.data.user_settings.settings_programm_sheet_tabs.name_mode);
+                                }
+                                break;
+                                
+                            case "form_settings_programm_autosave":
+                                if ("undefined" != typeof response.data.user_settings && 
+                                    "undefined" != typeof response.data.user_settings.settings_programm_autosave && 
+                                    "undefined" != typeof response.data.user_settings.settings_programm_autosave.is_use_autosave && 
+                                    "undefined" != typeof response.data.user_settings.settings_programm_autosave.autosave_interval) {
+                                    
+                                    Wo.settings_programm_autosave.is_use_autosave = 
+                                        parseInt(response.data.user_settings.settings_programm_autosave.is_use_autosave);
+                                    Wo.settings_programm_autosave.autosave_interval = 
+                                        Math.ceil(response.data.user_settings.settings_programm_autosave.autosave_interval);
+                                    qn();
+                                }
+                                break;
+                                
+                            default:
+                                // Для других форм специфической обработки нет
+                        }
+                        break;
+                        
+                    case "objectaddlayerrow":
+                        se();
+                        k_();
+                        break;
+                        
+                    case "lineblock":
+                        $("#id_lb_first").trigger("click");
+                        break;
+                        
+                    case "roof_specification_full_project":
+                        Ir();
+                        ni.roof_data_full = S_("roof_specification_full_project_table");
+                        Tr();
+                        Di = {
+                            positions: [],
+                            sizes: []
+                        };
+                        ar("modal_show");
+                        Sr();
+                        break;
+                        
+                    case "roof_specification_full_project_pdf":
+                    case "roof_specification_full_project_pdf_and_demand":
+                        $("#roof_specification_full_project_pdf_btn").find(".table_cad_span_link_loading").hide();
+                        ni.pdf_attach_file_name = response.data.specification_pdf_attach_file_name;
+                        ni.png_attach_files_name = response.data.specification_pdf_attach_file_name_png;
+                        
+                        if ("roof_specification_full_project_pdf_and_demand" == actionType) {
+                            sendServerRequest("roof_specification_full_project_demand", {});
+                        }
+                        break;
+                        
+                    case "roof_calc":
+                        $("#nav_roof_calc_process_btn").removeClass("active");
+                        Us = true;
+                        break;
+                        
+                    case "figure":
+                        if ("undefined" != typeof response.data.user_settings && 
+                            "undefined" != typeof response.data.user_settings.settings_programm_figures_razmer && 
+                            "undefined" != typeof response.data.user_settings.settings_programm_figures_razmer.is_use_razmer_template && 
+                            "undefined" != typeof response.data.user_settings.settings_programm_figures_razmer.razmer_template) {
+                            
+                            Wo.settings_programm_figures_razmer.is_use_razmer_template = 
+                                parseInt(response.data.user_settings.settings_programm_figures_razmer.is_use_razmer_template);
+                            Wo.settings_programm_figures_razmer.razmer_template = 
+                                response.data.user_settings.settings_programm_figures_razmer.razmer_template;
+                        }
+                        break;
+                        
+                    case "figure_nde":
+                        var panelHeight = $("#r_d_root").height() - 225;
+                        $("#figures_nde_doborn_left").css("height", panelHeight + "px");
+                        $("#figures_nde_doborn_right").css("height", panelHeight + "px");
+                        break;
+                        
+                    case "nde_nom_fields":
+                        mo = response.data;
+                        break;
+                        
+                    case "roof_accessories_mch_pn":
+                        cn({
+                            mode: "modal_loaded_success"
+                        });
+                        break;
+                        
+                    default:
+                        // Для других типов запросов специфической обработки нет
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // Вывод информации об ошибке в консоль
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                
+                // Обработка ошибок в зависимости от типа запроса
+                switch (actionType) {
+                    case "form":
+                        Dt(formId);
+                        break;
+                        
+                    case "roof_calc":
+                        $("#nav_roof_calc_process_btn").removeClass("active");
+                        Us = true;
+                        break;
+                        
+                    default:
+                        // Для других типов специфической обработки нет
+                }
+                
+                // Отправка информации об ошибке на сервер
+                N("backent_ajax_error_main", {
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    ish_type: actionType,
+                    ish_params: actionParams
+                });
+            }
+        });
     }
 
     function N(e, t) {
@@ -3875,7 +4140,7 @@ function SimpleCad() {
         
         // Формирование результата
         var result = {
-            type: 'figures_add_doborn',
+            type: 'figures_doborn',
             pline_params: {
                 lengths: JSON.copy(polylineElement.attrs.pline_lengths_ish || []),
                 angles: [],
@@ -3945,7 +4210,7 @@ function SimpleCad() {
         return result;
     }
 
-    function add_doborn_element(pline_params) {
+    function addDobornElement(pline_params) {
         // Создаем данные для полилинии и сам элемент полилинии
         var polylineData = buildPolyline(pline_params),
         polylineElement = createPolyline(polylineData);
@@ -5744,7 +6009,7 @@ function SimpleCad() {
     }
 
     function It(e) {
-        ql && (Yt(e), Xt(e), K("form", {
+        ql && (Yt(e), Xt(e), sendServerRequest("form", {
             form_id: e
         }))
     }
@@ -8262,13 +8527,13 @@ function SimpleCad() {
         e.elements = Ct({
             filter_type: ["pline"],
             filter_visible: "1"
-        }), e.params = Mo, K("roof_calc", e), Mo.tabs_re_roof[vo] = 0, Fa()
+        }), e.params = Mo, sendServerRequest("roof_calc", e), Mo.tabs_re_roof[vo] = 0, Fa()
     }
 
     function T_(e) {
         Ro = ti.id;
         var t = S_("roof_save");
-        K("roof_save", {
+        sendServerRequest("roof_save", {
             roof_data: t,
             is_restart_autosave: e
         })
@@ -8439,7 +8704,7 @@ function SimpleCad() {
     }
 
     function P_(e) {
-        Gn(), K("roof_load", e)
+        Gn(), sendServerRequest("roof_load", e)
     }
 
     function I_(e) {
@@ -10271,7 +10536,7 @@ function SimpleCad() {
     }
 
     function la() {
-        Ro != ti.id && K("roof_files_list_update", {})
+        Ro != ti.id && sendServerRequest("roof_files_list_update", {})
     }
 
     function ca() {
@@ -10562,14 +10827,14 @@ function SimpleCad() {
                     case "pagination_roof_open_modal_files":
                         switch ($("#roof_modal_files_list_table_tbody").find(".js_tr_data").remove(), $("#roof_modal_files_list_table_tbody_tr_loading").show(), e.submode) {
                             case "files_table_search_pagination":
-                                $("#pagination_roof_open_modal_files").html(""), c = $("#files_table_search").serializeArray(), c = Nt(c), c.page = i, K("files_table_search", c);
+                                $("#pagination_roof_open_modal_files").html(""), c = $("#files_table_search").serializeArray(), c = Nt(c), c.page = i, sendServerRequest("files_table_search", c);
                                 break;
                             default:
-                                K(e.id, c);
+                                sendServerRequest(e.id, c);
                         }
                         break;
                     case "pagination_releasenotes_list":
-                        $("#releasenotes_list").find(".one_release").remove(), $("#releasenotes_list").find(".loading_1").remove(), $("#releasenotes_list").append("<div class=\"rowcell loading_1\"></div>"), K(e.id, c);
+                        $("#releasenotes_list").find(".one_release").remove(), $("#releasenotes_list").find(".loading_1").remove(), $("#releasenotes_list").append("<div class=\"rowcell loading_1\"></div>"), sendServerRequest(e.id, c);
                         break;
                     default:
                 }
@@ -12931,7 +13196,7 @@ function SimpleCad() {
     }
 
     function mn() {
-        $("#roof_accessories_mch_pn_form_animation").html(Jo), $("#roof_accessories_mch_pn_form_link").html(""), K("roof_accessories_mch_pn_save_as_pdf", {
+        $("#roof_accessories_mch_pn_form_animation").html(Jo), $("#roof_accessories_mch_pn_form_link").html(""), sendServerRequest("roof_accessories_mch_pn_save_as_pdf", {
             accessories: Ri
         })
     }
@@ -13924,7 +14189,7 @@ function SimpleCad() {
         "" != Gs.uid && (createAndShowTemporaryNotification({
             text: "\u041E\u0442\u043A\u0440\u044B\u0442\u0438\u0435 \u0441\u0441\u044B\u043B\u043A\u0438...",
             type: "wait"
-        }), K("roof_load", {
+        }), sendServerRequest("roof_load", {
             type: "roof_load",
             uid: Gs.uid
         }))
@@ -14155,7 +14420,7 @@ function SimpleCad() {
             case "search":
                 $("#pagination_roof_open_modal_files").html(""), $("#roof_modal_files_list_table_tbody .js_tr_data").remove(), $("#roof_modal_files_list_table_tbody_tr_loading").show();
                 var _ = $("#files_table_search").serializeArray();
-                _ = Nt(_), _.page = 1, K("files_table_search", _);
+                _ = Nt(_), _.page = 1, sendServerRequest("files_table_search", _);
                 break;
             case "question":
                 break;
@@ -14181,7 +14446,7 @@ function SimpleCad() {
     }
 
     function Qn(e) {
-        $("#folders_tree_table_right_body_tbody").html("<tr><td colspan=\"2\" style=\"text-align:center !important;\">\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...</td></tr>"), K("tree_table_update", {
+        $("#folders_tree_table_right_body_tbody").html("<tr><td colspan=\"2\" style=\"text-align:center !important;\">\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...</td></tr>"), sendServerRequest("tree_table_update", {
             item_n: e.item_n,
             page: e.page
         })
@@ -15236,7 +15501,7 @@ function SimpleCad() {
             uo = {};
             to[vo].toImage({
                 callback: function(e) {
-                    uo.tab_img_src = e.src, uo.tab_region = calculateBoundingBox(vo, !1, !0, !0, !0), K("nde_check_and_attach_crop_image", {
+                    uo.tab_img_src = e.src, uo.tab_region = calculateBoundingBox(vo, !1, !0, !0, !0), sendServerRequest("nde_check_and_attach_crop_image", {
                         image: uo
                     })
                 }
@@ -15574,7 +15839,7 @@ function SimpleCad() {
                     // Определяем область изображения
                     uo.tab_region = calculateBoundingBox(vo, false, true, true, true);
                     // Отправляем данные изображения для дальнейшей обработки
-                    K("nde_as_modal_cropped_image", {
+                    sendServerRequest("nde_as_modal_cropped_image", {
                         image: uo
                     });
                 }
@@ -15655,7 +15920,7 @@ function SimpleCad() {
                     templateParams = zs(elementId);
                     
                     // Сохраняем шаблон
-                    // K("nde_save_as_template", {
+                    // sendServerRequest("nde_save_as_template", {
                     //     image: uo,
                     //     nde_params: templateParams
                     // });
@@ -15680,7 +15945,7 @@ function SimpleCad() {
         createAndShowTemporaryNotification({
             text: "\u0423\u0434\u0430\u043B\u0435\u043D\u0438\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u0430...",
             type: "wait"
-        }), K("nde_template_remove", {
+        }), sendServerRequest("nde_template_remove", {
             id: e.id
         })
     }
@@ -17555,7 +17820,7 @@ function SimpleCad() {
                     }), qr(), Pr(), 0 == ni.tabs_filtered.length) return void $("#roof_specification_full_project_table_err_ul").html("<li><i class=\"fa fa-exclamation-triangle\" aria-hidden=\"true\"></i> \u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B \u0434\u043B\u044F \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438.</li>");
                 $("#roof_specification_full_project_pdf_btn").find(".table_cad_span_link_loading").show();
                 var w = JSON.copy(Mo);
-                w.sheet_allowed_length = [], w.sheet_allowed_length_full = [], K(_.type, {
+                w.sheet_allowed_length = [], w.sheet_allowed_length_full = [], sendServerRequest(_.type, {
                     tabs: ni.tabs_filtered,
                     sheets_filtered_sorted_grouped: ni.sheets_filtered_sorted_grouped,
                     roof_data_params: w,
@@ -17564,7 +17829,7 @@ function SimpleCad() {
                 });
                 break;
             case "roof_specification_full_project_pdf_remove":
-                ("" != ni.pdf_attach_file_name || 0 < ni.png_attach_files_name.length) && K("roof_specification_full_project_pdf_remove", {
+                ("" != ni.pdf_attach_file_name || 0 < ni.png_attach_files_name.length) && sendServerRequest("roof_specification_full_project_pdf_remove", {
                     pdf_attach_file_name: ni.pdf_attach_file_name,
                     png_attach_files_name: ni.png_attach_files_name
                 });
@@ -17572,7 +17837,7 @@ function SimpleCad() {
             case "roof_specification_full_project":
                 showModalWindow(_.type, {});
                 var k = S_("roof_specification_full_project");
-                K(_.type, {
+                sendServerRequest(_.type, {
                     roof_data: k
                 });
                 break;
@@ -17590,7 +17855,7 @@ function SimpleCad() {
                     ni.sheets_filtered_sorted_grouped[e].code_1c = Mo.nom_code_1c, ni.sheets_filtered_sorted_grouped[e].id_1c = Mo.nom_id_1c
                 }), 0 < x.length && "" == ni.pdf_attach_file_name && 0 == ni.png_attach_files_name.length ? SimpleCad.Action({
                     type: "roof_specification_full_project_pdf_and_demand"
-                }) : K(_.type, {});
+                }) : sendServerRequest(_.type, {});
                 break;
             case "roof_specification_full_project_employee_select_toggle":
                 var j = _.thisObject.parent().parent();
@@ -17621,7 +17886,7 @@ function SimpleCad() {
                 "" == O ? SimpleCad.Action({
                     type: "roof_specification_full_project_employee_reset",
                     thisObject: _.thisObject
-                }) : (j.find(".form_div_like_select_bottom_inp_dropdown").html("<div class=\"form_div_like_select_bottom_inp_dropdown_loading\"><img src=\"" + Ys + "online/bloueloading_3.gif\" class=\"center-block\"></div>"), j.find(".form_div_like_select_bottom_inp_dropdown").show(), K("roof_specification_full_project_employees", {
+                }) : (j.find(".form_div_like_select_bottom_inp_dropdown").html("<div class=\"form_div_like_select_bottom_inp_dropdown_loading\"><img src=\"" + Ys + "online/bloueloading_3.gif\" class=\"center-block\"></div>"), j.find(".form_div_like_select_bottom_inp_dropdown").show(), sendServerRequest("roof_specification_full_project_employees", {
                     search_string: O
                 }));
                 break;
@@ -17635,13 +17900,13 @@ function SimpleCad() {
             case "roof_menu_edit_sheet_copy":
                 if (!$("#nav_li_edit_tab_copy").hasClass("disabled")) {
                     var k = S_("roof_menu_edit_sheet_copy");
-                    K(_.type, {
+                    sendServerRequest(_.type, {
                         roof_data: k
                     })
                 }
                 break;
             case "roof_menu_edit_sheet_paste":
-                $("#nav_li_edit_tab_paste").hasClass("disabled") || K(_.type, {});
+                $("#nav_li_edit_tab_paste").hasClass("disabled") || sendServerRequest(_.type, {});
                 break;
             case "roof_menu_edit_sheet_mirror":
                 Xr({
@@ -17875,7 +18140,7 @@ function SimpleCad() {
             case "roof_remove":
                 var r = _.thisObject,
                     re = "<img src=\"" + Ys + "online/bloueloading.gif\" >";
-                r.parent().html(re), K(_.type, {
+                r.parent().html(re), sendServerRequest(_.type, {
                     id: _.id
                 });
                 break;
@@ -18019,49 +18284,8 @@ function SimpleCad() {
             case "save":
                 $("#nav_li_file_image").hasClass("disabled") || ft();
                 break;
-            case "save_as_template":
-                // console.log("save_as_template");
-                // saveLineAsTemplate();
-
-                var $figures = {
-                    "type": "figures_add_doborn",
-                    "pline_params": {
-                        "lengths": [
-                            105,
-                            127,
-                            66
-                        ],
-                        "angles": [
-                            155,
-                            58,
-                            -49
-                        ],
-                        "angles_mode": "y_line",
-                        "pline_start": "",
-                        "pline_start_val": 0,
-                        "pline_end": "",
-                        "pline_end_val": 0,
-                        "side_okras": "",
-                        "color": "",
-                        "cover": "",
-                        "thickness": "",
-                        "size": "",
-                        "amount": "",
-                        "pline_breaks": {},
-                        "texts": [
-                            {
-                                "name": "Текст 1",
-                                "text": "Текст",
-                                "is_visible": 1,
-                                "x": 137.2,
-                                "y": 196.8
-                            }
-                        ]
-                    }
-                }
-                
-                add_doborn_element($figures.pline_params);
-                // console.log(extractFigureDataFromCurrentLayer());
+            case "save_as_template":                
+                extractFigureDataFromCurrentLayer();
                 break;
             case "nde_as_modal_cropped_image":
                 handleImageCreation();
@@ -18072,40 +18296,7 @@ function SimpleCad() {
                 
                 if (isValidParameters) {
                     // Создаем данные для полилинии и сам элемент полилинии
-                    var polylineData = buildPolyline(_.pline_params),
-                        polylineElement = createPolyline(polylineData);
-                    
-                    // Обрабатываем созданный элемент полилинии
-                    processPolylineElement(polylineElement);
-                    
-                    // Подгоняем содержимое к области просмотра
-                    fitContentToView();
-                    
-                    // Отрисовываем текстовые элементы
-                    renderTextElements(_.pline_params);
-                    
-                    // Обновляем длины сегментов полилинии
-                    updatePolylineSegmentLengths(polylineElement.id(), {
-                        mode: "lengths_all",
-                        lengths: _.pline_params.lengths
-                    });
-                    
-                    // Обрабатываем параметры полилинии
-                    processPolylineParameters(polylineElement);
-                    
-                    // Применяем дополнительную обработку элемента
-                    adjustPolylineBreaks(polylineElement);
-                    
-                    // Обновляем отображение параметров элемента
-                    updateElementParametersDisplay(polylineElement);
-                    
-                    // Если у полилинии есть разрывы, подгоняем содержимое к области просмотра,
-                    // иначе обновляем текущий слой
-                    if (0 < Object.keys(polylineElement.attrs.pline_breaks).length) {
-                        fitContentToView();
-                    } else {
-                        refreshCurrentLayer();
-                    }
+                    addDobornElement(_.pline_params);
                     
                     // Скрываем модальное окно
                     $("#modal_html").modal("hide");
@@ -18265,7 +18456,7 @@ function SimpleCad() {
             case "admin_nomenclature_group_change_one":
                 var r = _.thisObject,
                     Ge = r[0].value;
-                K(_.type, {
+                sendServerRequest(_.type, {
                     id_1c: _.id_1c,
                     param: _.param,
                     value: Ge

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <title>НДЭ | Simple Cad</title>
-    <script async="" src="tag.js"></script>
+<html lang="ru">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+	<title>НДЭ | Simple Cad</title>
+	<script async="" src="tag.js"></script>
 	<!-- <script src="a_data/widget2.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function (event) {
@@ -14,868 +16,1419 @@
                 'refreshToken': 1234,
             });
         });
-    </script> -->	
-<link href="a_data/bootstrap.min.css" rel="stylesheet"><link href="a_data/font-awesome.min.css" rel="stylesheet"><link href="a_data/2dcore.css" rel="stylesheet"><link href="a_data/roof.css" rel="stylesheet"><script src="a_data/jquery.min.js" type="text/javascript"></script><script src="a_data/bootstrap.min.js" type="text/javascript"></script><script src="a_data/konva.min.js" type="text/javascript"></script><script src="a_data/jquery.inputmask.min.js" type="text/javascript"></script><script src="a_data/2dcore.js" type="text/javascript"></script><script src="a_data/app_nde.js" type="text/javascript"></script></head>
+    </script> -->
+	<link href="a_data/bootstrap.min.css" rel="stylesheet">
+	<link href="a_data/font-awesome.min.css" rel="stylesheet">
+	<link href="a_data/2dcore.css" rel="stylesheet">
+	<link href="a_data/roof.css" rel="stylesheet">
+	<script src="a_data/jquery.min.js" type="text/javascript"></script>
+	<script src="a_data/bootstrap.min.js" type="text/javascript"></script>
+	<script src="a_data/konva.min.js" type="text/javascript"></script>
+	<script src="a_data/jquery.inputmask.min.js" type="text/javascript"></script>
+	<script src="a_data/2dcore.js" type="text/javascript"></script>
+	<script src="a_data/app_nde.js" type="text/javascript"></script>
+</head>
 
 <body>
 
 
-<div class="rowcell">
-<input id="access_data" type="hidden" value="cHplRkZWZmxHWXBtS0JBTDA1WVV5NFNDZUJlYm03QjN0YU0wOTM2ZXZGcjBYMlVSbit4ckNzWjdRRWNiVDloUDhzKzREbm5pRnIycDFEN1RhdU54bFR5bTdqdXMyMmhic3JoMWNOUi8xZ3hsV1cxQjFxK2lYYkpJN3NBaUsrTUNHOUx2bmllUjI1WnFpQW4xUXd6TlNKSXdGaTNGVkpUZ284T29oQ1VMR1RFQTNCK3k4OXFWVE1Iejc4QTdudHJJMDVJbGJ2UDhvSmt6c2ZFaDNVTGJsWGp4R25pYUpsWkRxd2Z0Y25iUk0wM2VDVEFQMG9GUU9DSHpZQjRxUHJuTzEwUnhXL0U1RHRrVjlhTWFRdWoxZHA0azUzcVFINEpEaXQrelhFeGZOYkswNDdMWmsyT0htT2I3Z09DK0MwZGc5ZW5NRVZ6azVaWFo5eWxsOHFDYU5EWVdSYlhMMjZlRW5tS2lCUmE0aGpPa0N4RGxxRGswMEtCSnlDZC81ZUdtYzF5THlWSHdXcnFwRGZLV3I0cDhoV2ZXTTNYdjFIUFZZN3Z1WXpHclZRYz0=">
+	<div class="rowcell">
+		<input id="access_data" type="hidden"
+			value="cHplRkZWZmxHWXBtS0JBTDA1WVV5NFNDZUJlYm03QjN0YU0wOTM2ZXZGcjBYMlVSbit4ckNzWjdRRWNiVDloUDhzKzREbm5pRnIycDFEN1RhdU54bFR5bTdqdXMyMmhic3JoMWNOUi8xZ3hsV1cxQjFxK2lYYkpJN3NBaUsrTUNHOUx2bmllUjI1WnFpQW4xUXd6TlNKSXdGaTNGVkpUZ284T29oQ1VMR1RFQTNCK3k4OXFWVE1Iejc4QTdudHJJMDVJbGJ2UDhvSmt6c2ZFaDNVTGJsWGp4R25pYUpsWkRxd2Z0Y25iUk0wM2VDVEFQMG9GUU9DSHpZQjRxUHJuTzEwUnhXL0U1RHRrVjlhTWFRdWoxZHA0azUzcVFINEpEaXQrelhFeGZOYkswNDdMWmsyT0htT2I3Z09DK0MwZGc5ZW5NRVZ6azVaWFo5eWxsOHFDYU5EWVdSYlhMMjZlRW5tS2lCUmE0aGpPa0N4RGxxRGswMEtCSnlDZC81ZUdtYzF5THlWSHdXcnFwRGZLV3I0cDhoV2ZXTTNYdjFIUFZZN3Z1WXpHclZRYz0=">
 
-<input id="token_data" type="hidden" value="cVVkZ0xWUlBLbW5XelZ0ZEloT3VCeDdJWFY0YmpKRWRrYXNjTisxWE00N1dhRVNUV2JZT2Z1WW1DY1NyK0tJNnRzcEhwSTZjOVlSWmw5ek5PdkZXL2QzcVI5eGRKNk02QllNc3ZyRlFjclBDRC9hMUMrQlp0OWlpS2w2SlpKM0pNSHlEaHVrSm5hbjAvRWZpSkFDL2QzeTJRcjRxZlVPUWdhM0hjUlFsYncyRGZUdCsrSy85cmJzUFRKL0dxYjZUQU9EOU5Ock4vTzNkV2VzN3plMldQMWV2K1ZmWlRhZmN1R3Z4cjhROCtlQk0yNlQrbnI3MUd6T1M4QUIyOFZpQzRTdm1MSXUxTWwvSW1PWVg1eFdXdTdrVzhaRXJsdFA4MkJwMnFBemhBSEdoUGo0MkQrVjJqVVkwSFd4VmQ0cWp2RlhCYVdHZzczQkFiL3FqSEdIRFUyOTQ4czMvcWZrQ3ZxMlJHeDVSaG9qYlpsSlJVNzR0Q2J1bno5ejFFZ0tvbklvSnZPN2NuMXh2c2RkQk5DS041U3NCcFVENE9zWlFQTkwyVG1tUDROS2lKZlJIVW1jTFdrYXlCVzlUVjBIZ0JqR3c3SDJMNG52N3h6a3pmSmFDNk1JMHhHYVZPc0wxMGF5SE1GZHBXMUgwalIvUlI5RmNXMG1GTnJ3MkpJb3dRNDMzcDRyV2JrSVpQNHJZMGRrOWdDUkRLYnJsVWpzbG5XK29lZ3EvbmtqdEdhSzlVRDlXRXBQUDFuWWNscHVaQ2R4K29kcGF2bTZ0dmZPMnlkb1ZldXhWMWdMUXRFbTl2b0dERU1Ea2E3L1dCL2thVWlKbHVQamtPMDRMRjN3MEw3TDRWbVNnY2gwR0R5VmNTa1RRVTgybGR3OHZxMlQzNzZYMlNyd3FML1FxbnRWaVFqY3VxOGJ0VHQ5ZDFCcVhjUnQxOHY3b09Fc2xxT2VjeTJVMTBOd2ZmUkRONWFKUXVtTVpmTnFpdkY4K2ovTTZneURmQ3hkQ2UvRTFhNCs1NWtDUi9IaDBDbCs2alNlMzM4VGdOQT09">
+		<input id="token_data" type="hidden"
+			value="cVVkZ0xWUlBLbW5XelZ0ZEloT3VCeDdJWFY0YmpKRWRrYXNjTisxWE00N1dhRVNUV2JZT2Z1WW1DY1NyK0tJNnRzcEhwSTZjOVlSWmw5ek5PdkZXL2QzcVI5eGRKNk02QllNc3ZyRlFjclBDRC9hMUMrQlp0OWlpS2w2SlpKM0pNSHlEaHVrSm5hbjAvRWZpSkFDL2QzeTJRcjRxZlVPUWdhM0hjUlFsYncyRGZUdCsrSy85cmJzUFRKL0dxYjZUQU9EOU5Ock4vTzNkV2VzN3plMldQMWV2K1ZmWlRhZmN1R3Z4cjhROCtlQk0yNlQrbnI3MUd6T1M4QUIyOFZpQzRTdm1MSXUxTWwvSW1PWVg1eFdXdTdrVzhaRXJsdFA4MkJwMnFBemhBSEdoUGo0MkQrVjJqVVkwSFd4VmQ0cWp2RlhCYVdHZzczQkFiL3FqSEdIRFUyOTQ4czMvcWZrQ3ZxMlJHeDVSaG9qYlpsSlJVNzR0Q2J1bno5ejFFZ0tvbklvSnZPN2NuMXh2c2RkQk5DS041U3NCcFVENE9zWlFQTkwyVG1tUDROS2lKZlJIVW1jTFdrYXlCVzlUVjBIZ0JqR3c3SDJMNG52N3h6a3pmSmFDNk1JMHhHYVZPc0wxMGF5SE1GZHBXMUgwalIvUlI5RmNXMG1GTnJ3MkpJb3dRNDMzcDRyV2JrSVpQNHJZMGRrOWdDUkRLYnJsVWpzbG5XK29lZ3EvbmtqdEdhSzlVRDlXRXBQUDFuWWNscHVaQ2R4K29kcGF2bTZ0dmZPMnlkb1ZldXhWMWdMUXRFbTl2b0dERU1Ea2E3L1dCL2thVWlKbHVQamtPMDRMRjN3MEw3TDRWbVNnY2gwR0R5VmNTa1RRVTgybGR3OHZxMlQzNzZYMlNyd3FML1FxbnRWaVFqY3VxOGJ0VHQ5ZDFCcVhjUnQxOHY3b09Fc2xxT2VjeTJVMTBOd2ZmUkRONWFKUXVtTVpmTnFpdkY4K2ovTTZneURmQ3hkQ2UvRTFhNCs1NWtDUi9IaDBDbCs2alNlMzM4VGdOQT09">
 
-<div class="d_root heightauto relpos modal_nde_figures_mode_hide  nderight_mode" id="r_d_root" style="overflow: hidden !important; height: 899px;" data-height="899" data-width="1367">
-     
-	<div id="modal_second_modal" class="modal_second_modal_container">
-	
-			<div id="modal_second_modal_confirm_accessories_mch_pn" class="modal-dialog modals    modal_second_modal_one" role="document"> 
-		<div class="modal-content">
-			<div class="modal-header">
-				<h4 class="modal-title modal_h">Закрыть расчет</h4>
-			</div>
-			<div class="modal-body">
-				<div class="row">
-					<div class="col-xs-12">
-						<p>Закрыть расчет?</p>
-					</div>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<div class="row">
-					<div class="col-xs-12">
-						<button type="button" class="btn btn-success" onclick="SimpleCad.Action({'type':'accessories_second_modal', 'btn_mode':'yes', 'calc_mode':'roof_accessories_mch_pn' });">Закрыть</button>
-						<button type="button" class="btn btn-default" onclick="SimpleCad.Action({'type':'accessories_second_modal', 'btn_mode':'no', 'calc_mode':'roof_accessories_mch_pn' });">Отмена</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+		<div class="d_root heightauto relpos modal_nde_figures_mode_hide  nderight_mode" id="r_d_root"
+			style="overflow: hidden !important; height: 899px;" data-height="899" data-width="1367">
 
-</div>
-	<div class="d_wrapper">
-		<div class="d_container">
-			
-			<div class="row" id="r_d_nav_1">
-	<div class="col-xs-12">
-		<div class="d_nav_1">
-			<ul class="d_nav_1_ul_left ">
-				<li class="">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Файл
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-							<li class="szndemode_hide"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_new'});">Новый</a></li>
-							<li class="szndemode_hide"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_open_modal'});">Открыть</a></li>
-							<li role="separator" class="divider szndemode_hide" style="display:block;"></li>
-							<li class="js_nav_li_dis disabled szndemode_hide" id="nav_li_file_save"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_save'});">Сохранить</a></li>
-							<li class="js_nav_li_dis disabled szndemode_hide" id="nav_li_file_save_as"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_save_as_modal'});">Сохранить как</a></li>
-							<li class="szndemode_vis"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'save_as_template'});">Сохранить как шаблон</a></li>
-							<li class="js_nav_li_dis szndemode_hide" id="nav_li_file_image"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'save'});">Изображение вкладки</a></li>										
-							<li class="js_nav_li_dis szndemode_vis"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'nde_as_modal_cropped_image'});">Изображение страницы</a></li>										
-							<li role="separator" class="divider szndemode_hide" style="display:block;"></li>
-							<li class="js_nav_li_dis disabled szndemode_hide" id="nav_li_file_settings"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_settings'});">Настройки проекта</a></li>
-							<li id="roof_files_in_nav" class="szndemode_hide">
-								<div class="loading_1 center-block"></div>
-							</li>
-						</ul>
-					</div>
-				</li>
-				<li class="szndemode_hide">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Правка
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-														<li class="cad-dropdown-submenu js_nav_li_dis disabled">
-								<a href="#">Вкладка</a>
-								<ul class="dropdown-menu ul_shadowed">
-									<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_copy"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_copy'});">Копировать</a></li>
-									<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_paste"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_paste'});">Вставить</a></li>
-									<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_mirror"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_mirror'});">Отразить по горизонтали</a></li>
-									<li class="              disabled" id="nav_li_edit_tab_rename"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_menu_edit_sheet_rename'});">Переименовать</a></li>
-									<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_remove"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'yes_no_roof_menu_edit_sheet_remove'});">Удалить</a></li>
-								</ul>
-							</li>
-							<li class="cad-dropdown-submenu js_nav_li_dis disabled">
-								<a href="#">Элемент</a>
-								<ul class="dropdown-menu ul_shadowed">
-									<li class="js_nav_li_dis disabled"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 90 });">Повернуть на 90°</a></li>
-									<li class="js_nav_li_dis disabled"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : -90 });">Повернуть на -90°</a></li>									
-									<li class="js_nav_li_dis disabled"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 180 });">Повернуть на 180°</a></li>
-									<li role="separator" class="divider" style="display:block;"></li>
-									<li class="js_nav_li_dis disabled"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'mirror_hor'});">Отразить по горизонтали</a></li>
-									<li role="separator" class="divider" style="display:block;"></li>
-									<li class="js_nav_li_dis disabled"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'trash', 'trash_subtype':'nav_menu'});">Удалить</a></li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</li>
-				<li class="szndemode_hide">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Вид
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-							<li class="js_nav_li_dis disabled" id="nav_li_view_grid"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_grid'});"><i class="fa cad_dropdown_menu_li_a_i js_i_view_grid fa-square-o" aria-hidden="true"></i>Показывать сетку</a></li>
-							<li class="js_nav_li_dis disabled" id="nav_li_view_columns_sheets"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});"><i class="fa cad_dropdown_menu_li_a_i js_i_view_columns_sheets fa-square-o" aria-hidden="true"></i>Показывать раскладку</a></li>
-							<li class="cad-dropdown-submenu js_nav_li_dis disabled">
-								<a href="#">Размеры листов</a>
-								<ul class="dropdown-menu ul_shadowed">
-									<li class="js_nav_li_dis disabled" id="nav_li_view_sheet_length_text_mode_center_hor"><a class="nav_ul_li_ul_li_a" href="#" onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_hor' });"><i class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true"></i>По центру горизонтально</a></li>
-									<li class="js_nav_li_dis disabled" id="nav_li_view_sheet_length_text_mode_center_vert"><a class="nav_ul_li_ul_li_a" href="#" onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_vert' });"><i class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true" style="display:none;"></i>По центру вертикально</a></li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</li>
-								<li class="szndemode_hide">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Расчет
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">							
-							<li class="js_nav_li_dis disabled">
-								<a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_specification_full_project' });">Спецификация, передача в заявку</a>
-							</li>
-							<li class="cad-dropdown-submenu js_nav_li_dis">
-								<a href="#" onclick="event.preventDefault();">Комплектующие</a>
-								<ul class="dropdown-menu ul_shadowed">
-									<li class="js_nav_li_dis">
-																				<a class="nav_ul_li_ul_li_a" href="#" onclick="event.preventDefault();SimpleCad.Action({'type' : 'ModalShow', 'target':'roof_accessories_mch_pn'});">Металлочерепица, профнастил</a>
-									</li>	
-																	
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</li>
-				<li class="szndemode_vis szndemode_vis_inline_block">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							НДЭ
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">									
-							<li class="">
-								<a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'nde_validate_description' });">Требования к элементам</a>
-							</li>
-						</ul>
-					</div>
-				</li>							
-				<li class="szndemode_hide">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Инструменты
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-							<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target' : 'calc_trigonom' });">Тригонометрический калькулятор</a></li>											
-						</ul>
-					</div>
-				</li> 
-				<li>
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Настройки
-						</button>
-						<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-							<li class="js_nav_li_dis" id="nav_li_file_settings_programm"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_settings_programm'});">Настройки программы</a></li>							
-						</ul>
-					</div>
-				</li> 
-																			</ul>						
-			<div class="d_nav_1_ul_right">
-							</div>
-		</div>
-		<div class="d_nav_notification" id="notifications_all">						
+			<div id="modal_second_modal" class="modal_second_modal_container">
+
+				<div id="modal_second_modal_confirm_accessories_mch_pn"
+					class="modal-dialog modals    modal_second_modal_one" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title modal_h">Закрыть расчет</h4>
+						</div>
+						<div class="modal-body">
+							<div class="row">
+								<div class="col-xs-12">
+									<p>Закрыть расчет?</p>
 								</div>
-	</div>
-</div>
-			<div class="row" id="r_d_nav_2">
-	<div class="col-xs-12">		
-		<div class="d_nav_2">			
-			<div class="nav_roof_root">				
-				<!-- длина ряда ДЛЯ ПН и ФАЛЬЦА -->
-									<div class="nav_roof_offset_y_arrows nav_roof_offset_y_arrows_ml0  js_roof_param  js_roof_param_type_pn szndemode_hide">
-						<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'plus', 'size':'1'});"></i>
-						<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'minus', 'size':'1'});"></i>
-					</div>
-					<div class="nav_roof_length_arrows js_roof_param  js_roof_param_type_pn szndemode_hide">
-						<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'plus', 'size':'10'});"></i>
-						<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'minus', 'size':'10'});"></i>
-					</div>
-					<div class="nav_roof_offset_y_input js_roof_param  js_roof_param_type_pn nav_roof_first_mr szndemode_hide">
-						<div class="nav_roof_offset_y_input_block">
-							<input id="roof_param_sheet_max_length_pn_input" class="form-control nav_roof_offset_y_input_block_input" value="0.00" oninput="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'keyup', 'eventObject':event });">
+							</div>
 						</div>
-						<div class="nav_roof_offset_y_input_confirm_block" id="nav_roof_sheet_max_length_pn_input_confirm_block">
-							<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'submit'});"></i>
-							<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'cancel'});"></i>
+						<div class="modal-footer">
+							<div class="row">
+								<div class="col-xs-12">
+									<button type="button" class="btn btn-success"
+										onclick="SimpleCad.Action({'type':'accessories_second_modal', 'btn_mode':'yes', 'calc_mode':'roof_accessories_mch_pn' });">Закрыть</button>
+									<button type="button" class="btn btn-default"
+										onclick="SimpleCad.Action({'type':'accessories_second_modal', 'btn_mode':'no', 'calc_mode':'roof_accessories_mch_pn' });">Отмена</button>
+								</div>
+							</div>
 						</div>
 					</div>
-									<div class="nav_roof_offset_y_arrows nav_roof_offset_y_arrows_ml0  js_roof_param  js_roof_param_type_falc szndemode_hide">
-						<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'plus', 'size':'1'});"></i>
-						<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'minus', 'size':'1'});"></i>
-					</div>
-					<div class="nav_roof_length_arrows js_roof_param  js_roof_param_type_falc szndemode_hide">
-						<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'plus', 'size':'10'});"></i>
-						<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'minus', 'size':'10'});"></i>
-					</div>
-					<div class="nav_roof_offset_y_input js_roof_param  js_roof_param_type_falc nav_roof_first_mr szndemode_hide">
-						<div class="nav_roof_offset_y_input_block">
-							<input id="roof_param_sheet_max_length_falc_input" class="form-control nav_roof_offset_y_input_block_input" value="0.00" oninput="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'keyup', 'eventObject':event });">
+				</div>
+
+			</div>
+			<div class="d_wrapper">
+				<div class="d_container">
+
+					<div class="row" id="r_d_nav_1">
+						<div class="col-xs-12">
+							<div class="d_nav_1">
+								<ul class="d_nav_1_ul_left ">
+									<li class="">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Файл
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="szndemode_hide"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_new'});">Новый</a>
+												</li>
+												<li class="szndemode_hide"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_open_modal'});">Открыть</a>
+												</li>
+												<li role="separator" class="divider szndemode_hide"
+													style="display:block;"></li>
+												<li class="js_nav_li_dis disabled szndemode_hide" id="nav_li_file_save">
+													<a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'roof_save'});">Сохранить</a>
+												</li>
+												<li class="js_nav_li_dis disabled szndemode_hide"
+													id="nav_li_file_save_as"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_save_as_modal'});">Сохранить
+														как</a></li>
+												<li class="szndemode_vis"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'save_as_template'});">Сохранить
+														как шаблон</a></li>
+												<li class="js_nav_li_dis szndemode_hide" id="nav_li_file_image"><a
+														href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'save'});">Изображение
+														вкладки</a></li>
+												<li class="js_nav_li_dis szndemode_vis"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'nde_as_modal_cropped_image'});">Изображение
+														страницы</a></li>
+												<li role="separator" class="divider szndemode_hide"
+													style="display:block;"></li>
+												<li class="js_nav_li_dis disabled szndemode_hide"
+													id="nav_li_file_settings"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_settings'});">Настройки
+														проекта</a></li>
+												<li id="roof_files_in_nav" class="szndemode_hide">
+													<div class="loading_1 center-block"></div>
+												</li>
+											</ul>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Правка
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="cad-dropdown-submenu js_nav_li_dis disabled">
+													<a href="#">Вкладка</a>
+													<ul class="dropdown-menu ul_shadowed">
+														<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_copy"><a
+																href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_copy'});">Копировать</a>
+														</li>
+														<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_paste"><a
+																href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_paste'});">Вставить</a>
+														</li>
+														<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_mirror">
+															<a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_mirror'});">Отразить
+																по горизонтали</a></li>
+														<li class="              disabled" id="nav_li_edit_tab_rename">
+															<a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_menu_edit_sheet_rename'});">Переименовать</a>
+														</li>
+														<li class="js_nav_li_dis disabled" id="nav_li_edit_tab_remove">
+															<a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'yes_no_roof_menu_edit_sheet_remove'});">Удалить</a>
+														</li>
+													</ul>
+												</li>
+												<li class="cad-dropdown-submenu js_nav_li_dis disabled">
+													<a href="#">Элемент</a>
+													<ul class="dropdown-menu ul_shadowed">
+														<li class="js_nav_li_dis disabled"><a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 90 });">Повернуть
+																на 90°</a></li>
+														<li class="js_nav_li_dis disabled"><a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : -90 });">Повернуть
+																на -90°</a></li>
+														<li class="js_nav_li_dis disabled"><a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 180 });">Повернуть
+																на 180°</a></li>
+														<li role="separator" class="divider" style="display:block;">
+														</li>
+														<li class="js_nav_li_dis disabled"><a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'mirror_hor'});">Отразить
+																по горизонтали</a></li>
+														<li role="separator" class="divider" style="display:block;">
+														</li>
+														<li class="js_nav_li_dis disabled"><a href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type':'trash', 'trash_subtype':'nav_menu'});">Удалить</a>
+														</li>
+													</ul>
+												</li>
+											</ul>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Вид
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="js_nav_li_dis disabled" id="nav_li_view_grid"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_grid'});"><i
+															class="fa cad_dropdown_menu_li_a_i js_i_view_grid fa-square-o"
+															aria-hidden="true"></i>Показывать сетку</a></li>
+												<li class="js_nav_li_dis disabled" id="nav_li_view_columns_sheets"><a
+														href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});"><i
+															class="fa cad_dropdown_menu_li_a_i js_i_view_columns_sheets fa-square-o"
+															aria-hidden="true"></i>Показывать раскладку</a></li>
+												<li class="cad-dropdown-submenu js_nav_li_dis disabled">
+													<a href="#">Размеры листов</a>
+													<ul class="dropdown-menu ul_shadowed">
+														<li class="js_nav_li_dis disabled"
+															id="nav_li_view_sheet_length_text_mode_center_hor"><a
+																class="nav_ul_li_ul_li_a" href="#"
+																onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_hor' });"><i
+																	class="fa fa-check nav_ul_li_ul_li_a_i"
+																	aria-hidden="true"></i>По центру горизонтально</a>
+														</li>
+														<li class="js_nav_li_dis disabled"
+															id="nav_li_view_sheet_length_text_mode_center_vert"><a
+																class="nav_ul_li_ul_li_a" href="#"
+																onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_vert' });"><i
+																	class="fa fa-check nav_ul_li_ul_li_a_i"
+																	aria-hidden="true" style="display:none;"></i>По
+																центру вертикально</a></li>
+													</ul>
+												</li>
+											</ul>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Расчет
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="js_nav_li_dis disabled">
+													<a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'roof_specification_full_project' });">Спецификация,
+														передача в заявку</a>
+												</li>
+												<li class="cad-dropdown-submenu js_nav_li_dis">
+													<a href="#" onclick="event.preventDefault();">Комплектующие</a>
+													<ul class="dropdown-menu ul_shadowed">
+														<li class="js_nav_li_dis">
+															<a class="nav_ul_li_ul_li_a" href="#"
+																onclick="event.preventDefault();SimpleCad.Action({'type' : 'ModalShow', 'target':'roof_accessories_mch_pn'});">Металлочерепица,
+																профнастил</a>
+														</li>
+
+													</ul>
+												</li>
+											</ul>
+										</div>
+									</li>
+									<li class="szndemode_vis szndemode_vis_inline_block">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												НДЭ
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="">
+													<a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'nde_validate_description' });">Требования
+														к элементам</a>
+												</li>
+											</ul>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Инструменты
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target' : 'calc_trigonom' });">Тригонометрический
+														калькулятор</a></li>
+											</ul>
+										</div>
+									</li>
+									<li>
+										<div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle d_nav1_btn-dd"
+												data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Настройки
+											</button>
+											<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+												<li class="js_nav_li_dis" id="nav_li_file_settings_programm"><a href="#"
+														onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_settings_programm'});">Настройки
+														программы</a></li>
+											</ul>
+										</div>
+									</li>
+								</ul>
+								<div class="d_nav_1_ul_right">
+								</div>
+							</div>
+							<div class="d_nav_notification" id="notifications_all">
+							</div>
 						</div>
-						<div class="nav_roof_offset_y_input_confirm_block" id="nav_roof_sheet_max_length_falc_input_confirm_block">
-							<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'submit'});"></i>
-							<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'cancel'});"></i>
+					</div>
+					<div class="row" id="r_d_nav_2">
+						<div class="col-xs-12">
+							<div class="d_nav_2">
+								<div class="nav_roof_root">
+									<!-- длина ряда ДЛЯ ПН и ФАЛЬЦА -->
+									<div
+										class="nav_roof_offset_y_arrows nav_roof_offset_y_arrows_ml0  js_roof_param  js_roof_param_type_pn szndemode_hide">
+										<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'plus', 'size':'1'});"></i>
+										<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'minus', 'size':'1'});"></i>
+									</div>
+									<div
+										class="nav_roof_length_arrows js_roof_param  js_roof_param_type_pn szndemode_hide">
+										<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'plus', 'size':'10'});"></i>
+										<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'minus', 'size':'10'});"></i>
+									</div>
+									<div
+										class="nav_roof_offset_y_input js_roof_param  js_roof_param_type_pn nav_roof_first_mr szndemode_hide">
+										<div class="nav_roof_offset_y_input_block">
+											<input id="roof_param_sheet_max_length_pn_input"
+												class="form-control nav_roof_offset_y_input_block_input" value="0.00"
+												oninput="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'input'});"
+												onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'keyup', 'eventObject':event });">
+										</div>
+										<div class="nav_roof_offset_y_input_confirm_block"
+											id="nav_roof_sheet_max_length_pn_input_confirm_block">
+											<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'submit'});"></i>
+											<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_pn', 'mode':'cancel'});"></i>
+										</div>
+									</div>
+									<div
+										class="nav_roof_offset_y_arrows nav_roof_offset_y_arrows_ml0  js_roof_param  js_roof_param_type_falc szndemode_hide">
+										<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'plus', 'size':'1'});"></i>
+										<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'minus', 'size':'1'});"></i>
+									</div>
+									<div
+										class="nav_roof_length_arrows js_roof_param  js_roof_param_type_falc szndemode_hide">
+										<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'plus', 'size':'10'});"></i>
+										<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'minus', 'size':'10'});"></i>
+									</div>
+									<div
+										class="nav_roof_offset_y_input js_roof_param  js_roof_param_type_falc nav_roof_first_mr szndemode_hide">
+										<div class="nav_roof_offset_y_input_block">
+											<input id="roof_param_sheet_max_length_falc_input"
+												class="form-control nav_roof_offset_y_input_block_input" value="0.00"
+												oninput="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'input'});"
+												onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'keyup', 'eventObject':event });">
+										</div>
+										<div class="nav_roof_offset_y_input_confirm_block"
+											id="nav_roof_sheet_max_length_falc_input_confirm_block">
+											<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'submit'});"></i>
+											<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length_falc', 'mode':'cancel'});"></i>
+										</div>
+									</div>
+									<!-- длина ряда ДЛЯ МЧ -->
+									<div
+										class="nav_roof_length_arrows js_roof_param  js_roof_param_type_mch szndemode_hide">
+										<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'plus'});"></i>
+										<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title=""
+											aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'minus'});"></i>
+									</div>
+									<div
+										class="nav_roof_length_select nav_roof_first_mr js_roof_param  js_roof_param_type_mch szndemode_hide">
+										<select id="roof_param_sheet_max_length_select"
+											class="form-control nav_roof_length_select_select"
+											onchange="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'set'});">
+										</select>
+									</div>
+									<!-- длина ряда ДЛЯ МЧ МОДУЛЬНОЙ -->
+									<div
+										class="nav_roof_offset_y_input nav_roof_first_mr js_roof_param  js_roof_param_type_mch_modul szndemode_hide">
+										<div class="nav_roof_offset_y_input_block">
+											<input readonly="readonly" id="roof_param_sheet_max_length_modul_input"
+												class="form-control nav_roof_offset_y_input_block_input" value="0.72">
+										</div>
+									</div>
+									<!-- смещение по X -->
+									<div class="nav_roof_offset_x_arrows szndemode_hide">
+										<i class="fa fa-angle-left nav_roof_offset_x_arrows_left" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'minus'});"></i>
+										<i class="fa fa-angle-right nav_roof_offset_x_arrows_right" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'plus'});"></i>
+									</div>
+									<div class="nav_roof_offset_x_input szndemode_hide">
+										<div class="nav_roof_offset_x_input_block">
+											<input id="roof_param_offset_x_input"
+												class="form-control nav_roof_offset_x_input_block_input" value="0.00"
+												oninput="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'input'});"
+												onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'keyup', 'eventObject':event });">
+										</div>
+										<div class="nav_roof_offset_x_input_step_block">
+											<span id="roof_param_offset_x_rect"
+												class="nav_roof_offset_x_input_step_block_span"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'step'});">1</span>
+										</div>
+										<div id="nav_roof_offset_x_input_confirm_block"
+											class="nav_roof_offset_x_input_confirm_block">
+											<i class="fa fa-check nav_roof_offset_x_input_confirm_block_yes"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'submit'});"></i>
+											<i class="fa fa-times nav_roof_offset_x_input_confirm_block_no"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'cancel'});"></i>
+										</div>
+									</div>
+									<!-- смещение по Y -->
+									<div class="nav_roof_offset_y_arrows szndemode_hide">
+										<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'plus'});"></i>
+										<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'minus'});"></i>
+									</div>
+									<div class="nav_roof_offset_y_input szndemode_hide">
+										<div class="nav_roof_offset_y_input_block">
+											<input id="roof_param_offset_y_input"
+												class="form-control nav_roof_offset_y_input_block_input" value="0.00"
+												oninput="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'input'});"
+												onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'keyup', 'eventObject':event });">
+										</div>
+										<div class="nav_roof_offset_y_input_step_block">
+											<span id="roof_param_offset_y_rect"
+												class="nav_roof_offset_y_input_step_block_span"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'step'});">1</span>
+										</div>
+										<div class="nav_roof_offset_y_input_confirm_block"
+											id="nav_roof_offset_y_input_confirm_block">
+											<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'submit'});"></i>
+											<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'cancel'});"></i>
+										</div>
+									</div>
+									<!-- карнизный свес  nav_roof_offset_y  nav_roof_cornice  cornice -->
+									<div
+										class="nav_roof_cornice_input js_roof_param js_roof_param_type_mch js_roof_param_type_mch_modul js_roof_param_type_pn js_roof_param_type_falc szndemode_hide">
+										<div class="nav_roof_cornice_input_icon" title="Карнизный свес">
+										</div>
+										<div class="nav_roof_cornice_input_block">
+											<input id="roof_param_cornice_input"
+												class="form-control nav_roof_cornice_input_block_input" value="0.00"
+												oninput="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'input'});"
+												onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'keyup', 'eventObject':event });">
+										</div>
+										<div class="nav_roof_cornice_input_confirm_block"
+											id="nav_roof_cornice_input_confirm_block">
+											<i class="fa fa-check nav_roof_cornice_input_confirm_block_yes"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'submit'});"></i>
+											<i class="fa fa-times nav_roof_cornice_input_confirm_block_no"
+												onclick="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'cancel'});"></i>
+										</div>
+									</div>
+									<!-- раскладка -->
+									<div
+										class="nav_roof_icon_direction_container js_roof_param js_roof_param_type_mch js_roof_param_type_mch_modul js_roof_param_type_pn js_roof_param_type_falc js_roof_param_type_siding_vert szndemode_hide">
+										<div title="Направление раскладки по X"
+											class="nav_roof_icon nav_roof_icon_direction_rl"
+											id="roof_param_direction_icon"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'direction'});">
+										</div>
+									</div>
+									<div
+										class="nav_roof_icon_direction_container_y js_roof_param js_roof_param_type_siding szndemode_hide">
+										<div title="Направление раскладки по Y"
+											class="nav_roof_icon nav_roof_icon_direction_du"
+											id="roof_param_direction_y_icon"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'direction_y'});">
+										</div>
+									</div>
+									<!-- разбежка -->
+									<div
+										class="nav_roof_icon_offset_run_type_container js_roof_param  js_roof_param_type_falc szndemode_hide">
+										<div title="Начало разбежки"
+											class="nav_roof_icon nav_roof_icon_offset_run_type_long_short"
+											id="roof_param_offset_run_type_icon"
+											onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_run_type'});">
+										</div>
+									</div>
+									<div
+										class="nav_roof_icon_remove_crossing_container js_roof_param js_roof_param_type_mch  js_roof_param_type_pn js_roof_param_type_falc js_roof_param_type_siding js_roof_param_type_siding_vert szndemode_hide">
+										<div title="Убрать лишние перекрытия листов"
+											class="nav_roof_icon nav_roof_icon_remove_crossing_icon"
+											id="nav_roof_icon_remove_crossing"
+											onclick="SimpleCad.Action({'type':'roof_crossing_remove'});"></div>
+									</div>
+									<!-- кнопка расчёта + анимашка -->
+									<div class="nav_roof_calc_process szndemode_hide" id="nav_roof_calc_process_btn">
+										<div class="nav_roof_calc_process_btn"
+											onclick="SimpleCad.Action({'type':'roof_calc'});" title="Рассчитать скат">
+										</div>
+										<div class="nav_roof_calc_process_text">обновление...</div>
+									</div>
+								</div>
+
+								<ul class="d_nav_2_left">
+								</ul>
+
+								<div id="btn_finish_cad_draw_close" class="finish_draw_a closed szndemode_hide"
+									style="display: none;"
+									onclick="SimpleCad.Action({'type':'finish_cad_draw_close'});">Замкнуть линию (Enter)
+								</div>
+
+								<div class="finish_draw_a szndemode_vis"
+									onclick="SimpleCad.Action({'type':'nde_check'});">
+									<p class="finish_draw_a_one_r">Проверить</p>
+								</div>
+
+								<!-- <div class="finish_draw_a szndemode_vis" onclick="SimpleCad.Action({'type':'nde_check_and_attach'});"><p class="finish_draw_a_one_r">Прикрепить</p></div> -->
+
+								<!-- <div id="btn_finish_cad_draw" class="finish_draw_a" style="" onclick="SimpleCad.Action({'type':'finish_cad_draw'});"><p class="finish_draw_a_one_r">Завершить (Esc)</p></div> -->
+								<ul class="d_nav_4_right">
+									<li class="szndemode_hide"> <a><i id="cad_history_i_prev"
+												class="fa fa-undo 		d_nav_4_right_i 	d_nav_4_right_undo 	"
+												aria-hidden="true"
+												onclick="SimpleCad.Action({'type':'cad_history', 'mode':'prev'});"></i></a>
+									</li>
+									<li class="szndemode_hide">
+										<a><i id="cad_history_i_next"
+												class="fa fa-repeat 		d_nav_4_right_i 	d_nav_4_right_repeat  "
+												aria-hidden="true"
+												onclick="SimpleCad.Action({'type':'cad_history', 'mode':'next'});"></i></a>
+									</li>
+									<li class="szndemode_hide">
+										<a><i class="fa fa-floppy-o 	d_nav_4_right_i 	d_nav_4_right_save"
+												aria-hidden="true"
+												onclick="SimpleCad.Action({'type':'roof_save'});"></i></a>
+									</li>
+									<li>
+										<a id="nav_2_btn_trash" class="nav_2_btn_trash_disabled"><i
+												class="fa fa-trash-o d_nav_4_right_i d_nav_4_right_trash"
+												aria-hidden="true"
+												onclick="SimpleCad.Action({'type':'trash','trash_subtype':'top_right'});"></i></a>
+									</li>
+									<li class="szndemode_hide">
+										<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
+											<div title="Направление текста размеров листов"
+												class="d_nav_4_right_d_img_bl 	nav_roof_icon_sheet_length_text_mode_center_hor"
+												id="roof_param_sheet_length_text_mode_icon"
+												onclick="SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'switch' });">
+											</div>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
+											<div title="Отображение сетки"
+												class="d_nav_4_right_d_img_bl nav_roof_icon_show_grid_mode_hide"
+												id="cad_toggle_show_grid_nav_right"
+												onclick="SimpleCad.Action({'type':'cad_toggle_show_grid'});"></div>
+										</div>
+									</li>
+									<li class="szndemode_hide">
+										<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
+											<div title="Отображение раскладки"
+												class="d_nav_4_right_d_img_bl nav_roof_icon_show_columns_sheets_mode_hide"
+												id="cad_toggle_show_columns_sheets_nav_right"
+												onclick="SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});">
+											</div>
+										</div>
+									</li>
+								</ul>
+
+							</div>
 						</div>
 					</div>
-								<!-- длина ряда ДЛЯ МЧ -->
-				<div class="nav_roof_length_arrows js_roof_param  js_roof_param_type_mch szndemode_hide">
-					<i class="fa fa-angle-double-up nav_roof_length_arrows_up" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'plus'});"></i>
-					<i class="fa fa-angle-double-down nav_roof_length_arrows_down" title="" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'minus'});"></i>
-				</div>
-				<div class="nav_roof_length_select nav_roof_first_mr js_roof_param  js_roof_param_type_mch szndemode_hide">
-					<select id="roof_param_sheet_max_length_select" class="form-control nav_roof_length_select_select" onchange="SimpleCad.Action({'type':'roof_params_change','param':'sheet_max_length', 'mode':'set'});">
-											</select>
-				</div>
-				<!-- длина ряда ДЛЯ МЧ МОДУЛЬНОЙ -->
-				<div class="nav_roof_offset_y_input nav_roof_first_mr js_roof_param  js_roof_param_type_mch_modul szndemode_hide">
-					<div class="nav_roof_offset_y_input_block">
-						<input readonly="readonly" id="roof_param_sheet_max_length_modul_input" class="form-control nav_roof_offset_y_input_block_input" value="0.72">
-					</div>
-				</div>
-				<!-- смещение по X -->
-				<div class="nav_roof_offset_x_arrows szndemode_hide">
-					<i class="fa fa-angle-left nav_roof_offset_x_arrows_left" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'minus'});"></i>
-					<i class="fa fa-angle-right nav_roof_offset_x_arrows_right" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'plus'});"></i>
-				</div>
-				<div class="nav_roof_offset_x_input szndemode_hide">
-					<div class="nav_roof_offset_x_input_block">
-						<input id="roof_param_offset_x_input" class="form-control nav_roof_offset_x_input_block_input" value="0.00" oninput="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'keyup', 'eventObject':event });">
-					</div>
-					<div class="nav_roof_offset_x_input_step_block">
-						<span id="roof_param_offset_x_rect" class="nav_roof_offset_x_input_step_block_span" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'step'});">1</span>
-					</div>
-					<div id="nav_roof_offset_x_input_confirm_block" class="nav_roof_offset_x_input_confirm_block">
-						<i class="fa fa-check nav_roof_offset_x_input_confirm_block_yes" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'submit'});"></i>
-						<i class="fa fa-times nav_roof_offset_x_input_confirm_block_no" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_x', 'mode':'cancel'});"></i>
-					</div>
-				</div>
-				<!-- смещение по Y -->
-				<div class="nav_roof_offset_y_arrows szndemode_hide">
-					<i class="fa fa-angle-up nav_roof_offset_y_arrows_up" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'plus'});"></i>
-					<i class="fa fa-angle-down nav_roof_offset_y_arrows_down" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'minus'});"></i>
-				</div>
-				<div class="nav_roof_offset_y_input szndemode_hide">
-					<div class="nav_roof_offset_y_input_block">
-						<input id="roof_param_offset_y_input" class="form-control nav_roof_offset_y_input_block_input" value="0.00" oninput="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'keyup', 'eventObject':event });">
-					</div>
-					<div class="nav_roof_offset_y_input_step_block">
-						<span id="roof_param_offset_y_rect" class="nav_roof_offset_y_input_step_block_span" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'step'});">1</span>
-					</div>
-					<div class="nav_roof_offset_y_input_confirm_block" id="nav_roof_offset_y_input_confirm_block">
-						<i class="fa fa-check nav_roof_offset_y_input_confirm_block_yes" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'submit'});"></i>
-						<i class="fa fa-times nav_roof_offset_y_input_confirm_block_no" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_y', 'mode':'cancel'});"></i>
-					</div>
-				</div>
-				<!-- карнизный свес  nav_roof_offset_y  nav_roof_cornice  cornice -->
-				<div class="nav_roof_cornice_input js_roof_param js_roof_param_type_mch js_roof_param_type_mch_modul js_roof_param_type_pn js_roof_param_type_falc szndemode_hide">
-					<div class="nav_roof_cornice_input_icon" title="Карнизный свес">
-					</div>
-					<div class="nav_roof_cornice_input_block">
-						<input id="roof_param_cornice_input" class="form-control nav_roof_cornice_input_block_input" value="0.00" oninput="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'keyup', 'eventObject':event });">
-					</div>
-					<div class="nav_roof_cornice_input_confirm_block" id="nav_roof_cornice_input_confirm_block">
-						<i class="fa fa-check nav_roof_cornice_input_confirm_block_yes" onclick="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'submit'});"></i>
-						<i class="fa fa-times nav_roof_cornice_input_confirm_block_no" onclick="SimpleCad.Action({'type':'roof_params_change','param':'cornice', 'mode':'cancel'});"></i>
-					</div>
-				</div>			
-								<!-- раскладка -->
-								<div class="nav_roof_icon_direction_container js_roof_param js_roof_param_type_mch js_roof_param_type_mch_modul js_roof_param_type_pn js_roof_param_type_falc js_roof_param_type_siding_vert szndemode_hide">
-					<div title="Направление раскладки по X" class="nav_roof_icon nav_roof_icon_direction_rl" id="roof_param_direction_icon" onclick="SimpleCad.Action({'type':'roof_params_change','param':'direction'});"></div>
-				</div>
-				<div class="nav_roof_icon_direction_container_y js_roof_param js_roof_param_type_siding szndemode_hide">
-					<div title="Направление раскладки по Y" class="nav_roof_icon nav_roof_icon_direction_du" id="roof_param_direction_y_icon" onclick="SimpleCad.Action({'type':'roof_params_change','param':'direction_y'});"></div>
-				</div>				
-				<!-- разбежка -->
-				<div class="nav_roof_icon_offset_run_type_container js_roof_param  js_roof_param_type_falc szndemode_hide">
-					<div title="Начало разбежки" class="nav_roof_icon nav_roof_icon_offset_run_type_long_short" id="roof_param_offset_run_type_icon" onclick="SimpleCad.Action({'type':'roof_params_change','param':'offset_run_type'});"></div>
-				</div>
-								<div class="nav_roof_icon_remove_crossing_container js_roof_param js_roof_param_type_mch  js_roof_param_type_pn js_roof_param_type_falc js_roof_param_type_siding js_roof_param_type_siding_vert szndemode_hide">
-					<div title="Убрать лишние перекрытия листов" class="nav_roof_icon nav_roof_icon_remove_crossing_icon" id="nav_roof_icon_remove_crossing" onclick="SimpleCad.Action({'type':'roof_crossing_remove'});"></div>
-				</div>				
-				<!-- кнопка расчёта + анимашка -->
-				<div class="nav_roof_calc_process szndemode_hide" id="nav_roof_calc_process_btn">
-					<div class="nav_roof_calc_process_btn" onclick="SimpleCad.Action({'type':'roof_calc'});" title="Рассчитать скат"></div>
-					<div class="nav_roof_calc_process_text">обновление...</div>
-				</div>
-			</div>			
-		
-			<ul class="d_nav_2_left">				
-			</ul>
 
-			<div id="btn_finish_cad_draw_close" class="finish_draw_a closed szndemode_hide" style="display: none;" onclick="SimpleCad.Action({'type':'finish_cad_draw_close'});">Замкнуть линию (Enter)</div>
-			
-			<div class="finish_draw_a szndemode_vis" onclick="SimpleCad.Action({'type':'nde_check'});"><p class="finish_draw_a_one_r">Проверить</p></div>
+					<div id="cad_block" class="d_cad" style="height: 799px; width: 1367px;">
+						<div style="position: relative; width: 1367px; height: 799px;" class="konvajs-content"
+							role="presentation"><canvas
+								style="padding: 0px; margin: 0px; border: 0px; background: transparent; position: absolute; top: 0px; left: 0px; width: 1367px; height: 799px; display: block;"
+								width="1367" height="799" id="canvas_0"></canvas></div>
+					</div>
 
-			<!-- <div class="finish_draw_a szndemode_vis" onclick="SimpleCad.Action({'type':'nde_check_and_attach'});"><p class="finish_draw_a_one_r">Прикрепить</p></div> -->
+					<div class="d_left_column_widgets">
 
-			<!-- <div id="btn_finish_cad_draw" class="finish_draw_a" style="" onclick="SimpleCad.Action({'type':'finish_cad_draw'});"><p class="finish_draw_a_one_r">Завершить (Esc)</p></div> -->
-			<ul class="d_nav_4_right">				
-				<li class="szndemode_hide"> 					<a><i id="cad_history_i_prev" class="fa fa-undo 		d_nav_4_right_i 	d_nav_4_right_undo 	" aria-hidden="true" onclick="SimpleCad.Action({'type':'cad_history', 'mode':'prev'});"></i></a>
-				</li>
-				<li class="szndemode_hide">
-					<a><i id="cad_history_i_next" class="fa fa-repeat 		d_nav_4_right_i 	d_nav_4_right_repeat  " aria-hidden="true" onclick="SimpleCad.Action({'type':'cad_history', 'mode':'next'});"></i></a>
-				</li>  
-				<li class="szndemode_hide">
-					<a><i class="fa fa-floppy-o 	d_nav_4_right_i 	d_nav_4_right_save" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_save'});"></i></a>
-				</li>
-				<li>
-					<a id="nav_2_btn_trash" class="nav_2_btn_trash_disabled"><i class="fa fa-trash-o d_nav_4_right_i d_nav_4_right_trash" aria-hidden="true" onclick="SimpleCad.Action({'type':'trash','trash_subtype':'top_right'});"></i></a>
-				</li>
-				<li class="szndemode_hide">
-					<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
-						<div title="Направление текста размеров листов" class="d_nav_4_right_d_img_bl 	nav_roof_icon_sheet_length_text_mode_center_hor" id="roof_param_sheet_length_text_mode_icon" onclick="SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'switch' });"></div>
+						<div class="d_coords_absolute">
+						</div>
+						<div class="d_elements">
+							<div class="panel-group panel-group-elements" id="d_elements_accordion" role="tablist"
+								aria-multiselectable="true">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading" role="tab" id="headingOne">
+										<h4 class="panel-title">
+											<a role="button" data-toggle="collapse"
+												data-parenttt="#d_elements_accordion" href="#collapseOne"
+												aria-expanded="true" aria-controls="collapseOne">
+											</a>
+										</h4>
+									</div>
+									<div id="collapseOne" class="panel-collapse collapse in" role="tabpanel"
+										aria-labelledby="headingOne">
+										<div class="panel-body">
+											<a title="Выбор элемента" class="d_e_title_a">
+												<div class="d_elements_button d_e_select" data-element="select"
+													id="d_elements_button_select"></div>
+											</a>
+											<a title="Текст" class="d_e_title_a szndemode_vis">
+												<div class="d_elements_button d_e_text" data-element="text"
+													id="d_elements_button_text"></div>
+											</a>
+											<a title="Полилиния" class="d_e_title_a">
+												<div class="d_elements_button d_e_pline" data-element="pline"></div>
+											</a>
+											<a title="Магнит угол 30°" class="d_e_title_a szndemode_vis">
+												<div class="support_btn d_e_magnet_30" data-element="magnet_30"></div>
+											</a>
+											<a title="Вращать" class="d_e_title_a szndemode_vis">
+												<div class="support_btn d_e_rotate" data-element="rotate"></div>
+											</a>
+											<a title="Шаблоны доборников" class="d_e_title_a szndemode_vis">
+												<div class="d_elements_button d_e_figure d_e_doborns"
+													data-element="figure_nde"></div>
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="d_move_point_controller" id="move_point_controller" style="display:none;">
+							<div class="d_controller_close"
+								onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'close' });">
+								<i class="fa fa-times" aria-hidden="true"></i>
+							</div>
+							<!-- шаг -->
+							<!-- координаты -->
+							<div class="rowcell ">
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text"><i class="fa fa-dot-circle-o"
+											aria-hidden="true"></i></span>
+									<i class="fa fa-angle-left d_move_point_controller_xy_one_regaring_point"
+										aria-hidden="true"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'regard_prev' });"></i>
+									<i class="fa fa-angle-right d_move_point_controller_xy_one_regaring_point"
+										aria-hidden="true"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'regard_next' });"></i>
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">X</span>
+									<input id="move_point_controller_xp" class="form-control" value="0"
+										oninput="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'input'});"
+										onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'keyup', 'eventObject':event });">
+									<div id="move_point_controller_submit_xp"
+										class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
+										<i class="fa fa-check d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'submit'});"></i>
+										<i class="fa fa-times d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'cancel'});"></i>
+									</div>
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">Y</span>
+									<input id="move_point_controller_yp" class="form-control" value="0"
+										oninput="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'input'});"
+										onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'keyup', 'eventObject':event });">
+									<div id="move_point_controller_submit_yp"
+										class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
+										<i class="fa fa-check d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'submit'});"></i>
+										<i class="fa fa-times d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'cancel'});"></i>
+									</div>
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">X<sub>0</sub></span>
+									<input id="move_point_controller_x" class="form-control" value="0"
+										oninput="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'input'});"
+										onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'keyup', 'eventObject':event });">
+									<div id="move_point_controller_submit_x"
+										class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
+										<i class="fa fa-check d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'submit'});"></i>
+										<i class="fa fa-times d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'cancel'});"></i>
+									</div>
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">Y<sub>0</sub></span>
+									<input id="move_point_controller_y" class="form-control" value="0"
+										oninput="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'input'});"
+										onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'keyup', 'eventObject':event });">
+									<div id="move_point_controller_submit_y"
+										class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
+										<i class="fa fa-check d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'submit'});"></i>
+										<i class="fa fa-times d_move_point_controller_xy_one_submit_i"
+											onclick="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'cancel'});"></i>
+									</div>
+								</div>
+							</div>
+							<!-- пульт -->
+							<div class="rowcell">
+								<div class="d_move_point_controller_pult">
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'up' });">
+										<i class="fa fa-angle-up" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'down' });">
+										<i class="fa fa-angle-down" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'left' });">
+										<i class="fa fa-angle-left" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'right' });">
+										<i class="fa fa-angle-right" aria-hidden="true"></i>
+									</div>
+									<div id="move_point_controller_step_btn"
+										class="d_move_point_controller_arrow_span_step"
+										onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'step' });">
+										1 мм</div>
+									<input type="text" class="hidden" id="move_point_controller_step" value="1">
+								</div>
+							</div>
+							<!-- кнопка/ки -->
+						</div>
+						<div class="d_move_point_controller d_figure_controller" id="figure_controller"
+							style="display:none;">
+							<div class="d_controller_close"
+								onclick="SimpleCad.Action({'type':'figure_controller', 'mode' : 'close' });">
+								<i class="fa fa-times" aria-hidden="true"></i>
+							</div>
+							<div class="rowcell ">
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">Кол-во</span>
+									<input id="figure_controller_count" class="form-control" value="1">
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">Отступ</span>
+									<input id="figure_controller_distance" class="form-control" value="0"
+										onkeyup="SimpleCad.Action({'type':'figure_controller','param':'distance', 'mode':'keyup', 'eventObject':event });">
+								</div>
+							</div>
+							<div class="rowcell mb5">
+								<div class="d_move_point_controller_pult">
+									<input type="text" class="hidden" id="figure_controller_direction" value="right">
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up"
+										onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'up'});">
+										<i class="fa fa-angle-up" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down"
+										onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'down'});">
+										<i class="fa fa-angle-down" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left"
+										onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'left'});">
+										<i class="fa fa-angle-left" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right active"
+										onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'right'});">
+										<i class="fa fa-angle-right" aria-hidden="true"></i>
+									</div>
+								</div>
+							</div>
+							<div
+								class="rowcell mb5 text-center d_move_point_controller_btns d_move_point_controller_btns_icon">
+								<button type="button" class="btn btn-success"
+									onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'copy'});"><i
+										class="fa fa-files-o" aria-hidden="true"></i></button>
+							</div>
+						</div>
+						<div class="d_move_point_controller" id="figure_move_controller" style="display: none;">
+							<div class="d_controller_close"
+								onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'close' });">
+								<i class="fa fa-times" aria-hidden="true"></i>
+							</div>
+							<div class="rowcell mb15">
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text"><i class="fa fa-dot-circle-o"
+											aria-hidden="true"></i></span>
+									<i class="fa fa-angle-left d_move_point_controller_xy_one_regaring_point"
+										aria-hidden="true"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'regard_prev' });"></i>
+									<i class="fa fa-angle-right d_move_point_controller_xy_one_regaring_point"
+										aria-hidden="true"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'regard_next' });"></i>
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">X<sub>0</sub></span>
+									<input id="figure_move_controller_xp" class="form-control" value="0"
+										onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });"
+										onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">Y<sub>0</sub></span>
+									<input id="figure_move_controller_yp" class="form-control" value="0"
+										onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });"
+										onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
+								</div>
+								<div
+									class="rowcell text-center d_move_point_controller_btns d_move_point_controller_btns_icon ">
+									<button type="button" class="btn btn-success"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode':'submit_point'});"><i
+											class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
+								</div>
+							</div>
+							<div class="rowcell mb10">
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">ΔX</span>
+									<input id="figure_move_controller_delta_x" class="form-control" value="0"
+										onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });"
+										onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
+								</div>
+								<div class="d_move_point_controller_xy_one">
+									<span class="d_move_point_controller_xy_one_text">ΔY</span>
+									<input id="figure_move_controller_delta_y" class="form-control" value="0"
+										onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });"
+										onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
+								</div>
+								<div
+									class="rowcell text-center d_move_point_controller_btns d_move_point_controller_btns_icon ">
+									<button type="button" class="btn btn-success"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode':'submit_delta'});"><i
+											class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
+								</div>
+							</div>
+							<div class="rowcell">
+								<div class="d_move_point_controller_pult">
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'up' });">
+										<i class="fa fa-angle-up" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'down' });">
+										<i class="fa fa-angle-down" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'left' });">
+										<i class="fa fa-angle-left" aria-hidden="true"></i>
+									</div>
+									<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'right' });">
+										<i class="fa fa-angle-right" aria-hidden="true"></i>
+									</div>
+									<div id="figure_move_controller_step_btn"
+										class="d_move_point_controller_arrow_span_step"
+										onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'step' });">
+										1 мм</div>
+									<input type="text" class="hidden" id="figure_move_controller_step" value="1">
+								</div>
+							</div>
+						</div>
 					</div>
-				</li>
-				<li class="szndemode_hide">
-					<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
-						<div title="Отображение сетки" class="d_nav_4_right_d_img_bl nav_roof_icon_show_grid_mode_hide" id="cad_toggle_show_grid_nav_right" onclick="SimpleCad.Action({'type':'cad_toggle_show_grid'});"></div>
+
+					<div class="d_right_column_widgets">
+
+
+
+						<div id="d_sheet_move_block" class="d_elements" style="display:none;">
+							<div class="panel-group panel-group-elements">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading relpos">
+										<h4 class="panel-title">Изменение листа</h4>
+										<i class="fa fa-times pabel_d_close" aria-hidden="true"
+											onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'close'});"></i>
+									</div>
+									<div class="panel-body">
+										<div class="rowcell_50">
+											<div
+												class="rowcell sheet_move_h sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert">
+												<p>Верхний край</p>
+											</div>
+											<div class="rowcell sheet_move_h sheet_btn sheet_btn_siding ">
+												<p>Левый край</p>
+											</div>
+											<div class="rowcell sheet_move_arrows">
+												<i class="fa fa-angle-up sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value': 10 });">1</i>
+												<i class="fa fa-angle-up sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value': 100 });">10</i>
+												<i class="fa fa-angle-up sheet_btn sheet_btn_mch" aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value':'wave_length'});">35</i>
+												<i class="fa fa-angle-left sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_left', 'value': 10 });">1</i>
+												<i class="fa fa-angle-left sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_left', 'value': 100 });">10</i>
+											</div>
+											<div class="rowcell sheet_move_arrows">
+												<i class="fa fa-angle-down sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value': 10 });">1</i>
+												<i class="fa fa-angle-down sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value': 100 });">10</i>
+												<i class="fa fa-angle-down sheet_btn sheet_btn_mch" aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value':'wave_length' });">35</i>
+												<i class="fa fa-angle-right sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_right', 'value': 10 });">1</i>
+												<i class="fa fa-angle-right sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_right', 'value': 100 });">10</i>
+											</div>
+										</div>
+										<div class="rowcell_50">
+											<div
+												class="rowcell sheet_move_h sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert">
+												<p>Нижний край</p>
+											</div>
+											<div class="rowcell sheet_move_h sheet_btn sheet_btn_siding ">
+												<p>Правый край</p>
+											</div>
+											<div class="rowcell sheet_move_arrows">
+												<i class="fa fa-angle-up sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value': 10 });">1</i>
+												<i class="fa fa-angle-up sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value': 100 });">10</i>
+												<i class="fa fa-angle-up sheet_btn sheet_btn_mch" aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value':'wave_length'});">35</i>
+												<i class="fa fa-angle-left sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_left', 'value': 10 });">1</i>
+												<i class="fa fa-angle-left sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_left', 'value': 100 });">10</i>
+											</div>
+											<div class="rowcell sheet_move_arrows">
+												<i class="fa fa-angle-down sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'bottom_row_down', 'value': 10 });">1</i>
+												<i class="fa fa-angle-down sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert"
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'bottom_row_down', 'value': 100 });">10</i>
+												<i class="fa fa-angle-down sheet_btn sheet_btn_mch" aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_down', 'value':'wave_length'});">35</i>
+												<i class="fa fa-angle-right sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_right', 'value': 10 });">1</i>
+												<i class="fa fa-angle-right sheet_btn sheet_btn_siding "
+													aria-hidden="true"
+													onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_right', 'value': 100 });">10</i>
+											</div>
+										</div>
+										<div class="rowcell sheet_move_buttons">
+											<button id="roof_columns_sheet_btn_delete" type="button"
+												class="btn btn-danger btn-xs "
+												onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'delete'});"><i
+													class="fa fa-trash-o" aria-hidden="true"></i></button>
+											<button id="roof_columns_sheet_btn_add" type="button"
+												class="btn btn-success btn-xs sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding sheet_btn_siding_vert"
+												onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add'});"><i
+													class="fa fa-scissors" aria-hidden="true"></i></button>
+											<button id="roof_columns_sheet_btn_add_3" type="button"
+												class="btn btn-success btn-xs sheet_btn sheet_btn_mch_modul"
+												onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add', 'side':'left'});"><i
+													class="fa fa-chevron-left" aria-hidden="true"
+													style="margin-right:3px;"></i><i class="fa fa-plus"
+													aria-hidden="true"></i></button>
+											<button id="roof_columns_sheet_btn_add_2" type="button"
+												class="btn btn-success btn-xs sheet_btn sheet_btn_mch_modul"
+												onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add', 'side':'right'});"><i
+													class="fa fa-plus" aria-hidden="true"></i><i
+													class="fa fa-chevron-right" aria-hidden="true"
+													style="margin-left:3px;"></i></button>
+
+											<button id="roof_columns_sheet_btn_merge" type="button"
+												class="btn btn-info btn-xs sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding sheet_btn_siding_vert"
+												onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'merge'});"><i
+													class="fa fa-caret-right" aria-hidden="true"></i>&nbsp;<i
+													class="fa fa-caret-left" aria-hidden="true"></i></button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="d_elements szndemode_vis">
+							<div class="panel-group panel-group-elements" id="d_nderight_accordion" role="tablist"
+								aria-multiselectable="true">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading" role="tab" id="headingOneNderight">
+										<h4 class="panel-title">
+											<a role="button" data-toggle="collapse"
+												data-parenttt="#d_nderight_accordion" href="#collapseOneNderight"
+												aria-expanded="true" aria-controls="collapseOneNderight">
+												Доборный элемент
+											</a>
+										</h4>
+									</div>
+									<div id="collapseOneNderight" class="panel-collapse collapse in" role="tabpanel"
+										aria-labelledby="headingOneNderight">
+										<div class="panel-body panel-body_nde" id="nderight_accordion_body"
+											style="max-height: 719px;">
+											<div class="nde_tbl_row_size_ang_list" id="nde_tbl_row_size_ang_list">
+											</div>
+											<div class="nde_tbl_row_other_list" id="nde_tbl_row_other_list">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="d_elements ">
+							<div class="panel-group panel-group-elements" id="d_objects_accordion" role="tablist"
+								aria-multiselectable="true">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading" role="tab" id="headingOneObjects">
+										<h4 class="panel-title">
+											<a role="button" data-toggle="collapse" data-parenttt="#d_objects_accordion"
+												href="#collapseOneObjects" aria-expanded="true"
+												aria-controls="collapseOneObjects">
+												Элементы чертежа
+											</a>
+										</h4>
+									</div>
+									<div id="collapseOneObjects" class="panel-collapse collapse in" role="tabpanel"
+										aria-labelledby="headingOneObjects">
+										<div class="panel-body left_min_1" id="add_object_layer_row">
+											<div class="d_object d_object___pline active"
+												data-current_layer_name="layer_0">
+												<div class="d_object_visible"> <i class="fa fa-eye"
+														onclick="SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})"></i>
+												</div>
+												<div class="d_object_name" data-obj-id="pline__100088"
+													data-obj-element="pline"
+													onclick="SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})">
+													Элемент 1</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="d_elements ">
+							<div class="panel-group panel-group-elements" id="d_properties_accordion" role="tablist"
+								aria-multiselectable="true">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading" role="tab" id="headingOneProperties">
+										<h4 class="panel-title">
+											<a role="button" data-toggle="collapse"
+												data-parenttt="#d_properties_accordion" href="#collapseOneProperties"
+												aria-expanded="true" aria-controls="collapseOneProperties">
+												Свойства элемента
+											</a>
+										</h4>
+									</div>
+									<div id="collapseOneProperties" class="panel-collapse collapse in" role="tabpanel"
+										aria-labelledby="headingOneProperties">
+										<div class="panel-body" id="add_object_table"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="d_elements szndemode_hide">
+							<div class="panel-group panel-group-elements" id="d_roofstat_accordion" role="tablist"
+								aria-multiselectable="true">
+								<div class="panel panel-default panel_d_elements">
+									<div class="panel-heading" role="tab" id="headingOneRoofstat">
+										<h4 class="panel-title">
+											<a role="button" data-toggle="collapse"
+												data-parenttt="#d_roofstat_accordion" href="#collapseOneRoofstat"
+												aria-expanded="true" aria-controls="collapseOneRoofstat">
+												Статистика раскладки
+											</a>
+										</h4>
+									</div>
+									<div id="collapseOneRoofstat" class="panel-collapse collapse in" role="tabpanel"
+										aria-labelledby="headingOneRoofstat">
+										<div class="panel-body" id="add_roofstat_table">
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Длина ската, м</div>
+												<div class="d_prop_val" id="roofstat_slope_length">-</div>
+											</div>
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Площадь <span
+														id="roofstat_table_roofstat_s_slope">ската</span>, м²<i
+														id="roofstat_s_slope_d_prop_name_text_info"
+														onclick="SimpleCad.Action({'type':'ModalShow', 'target':'roofstat_error_cuts_exist_points_out_polygon'});"
+														class="fa fa-info-circle d_prop_name_text_info"
+														style="display:none;" aria-hidden="true"></i></div>
+												<div class="d_prop_val" id="roofstat_s_slope">-</div>
+											</div>
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Площадь фигуры, м²</div>
+												<div class="d_prop_val" id="roofstat_s_slope_figure">-</div>
+											</div>
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Полная площ. листов, м²</div>
+												<div class="d_prop_val" id="roofstat_s_sheets_full">-</div>
+											</div>
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Полезная площ. листов, м²
+												</div>
+												<div class="d_prop_val" id="roofstat_s_sheets_useful">-</div>
+											</div>
+											<div class="d_prop">
+												<div class="d_prop_name d_prop_name_text">Процент отходов, %</div>
+												<div class="d_prop_val" id="roofstat_procent_waste">-</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 					</div>
-				</li>
-				<li class="szndemode_hide">
-					<div class="d_nav_4_right_d      d_nav_4_right_text_mode">
-						<div title="Отображение раскладки" class="d_nav_4_right_d_img_bl nav_roof_icon_show_columns_sheets_mode_hide" id="cad_toggle_show_columns_sheets_nav_right" onclick="SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});"></div>
-					</div>
-				</li>
-			</ul>
-			
-					</div>
-	</div>
-</div>			
-			
-			<div id="cad_block" class="d_cad" style="height: 799px; width: 1367px;"><div style="position: relative; width: 1367px; height: 799px;" class="konvajs-content" role="presentation"><canvas style="padding: 0px; margin: 0px; border: 0px; background: transparent; position: absolute; top: 0px; left: 0px; width: 1367px; height: 799px; display: block;" width="1367" height="799" id="canvas_0"></canvas></div></div>
-			
-			<div class="d_left_column_widgets">
-				
-				<div class="d_coords_absolute">
-</div>
-				<div class="d_elements">
-	<div class="panel-group panel-group-elements" id="d_elements_accordion" role="tablist" aria-multiselectable="true"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading" role="tab" id="headingOne">
-				<h4 class="panel-title">
-					<a role="button" data-toggle="collapse" data-parenttt="#d_elements_accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-					</a>
-				</h4>
-			</div>
-			<div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-				<div class="panel-body">
-					<a title="Выбор элемента" class="d_e_title_a">
-						<div class="d_elements_button d_e_select" data-element="select" id="d_elements_button_select"></div>
-					</a>
-					<a title="Текст" class="d_e_title_a szndemode_vis">
-						<div class="d_elements_button d_e_text" data-element="text" id="d_elements_button_text"></div>
-					</a>
-					<a title="Полилиния" class="d_e_title_a">
-						<div class="d_elements_button d_e_pline" data-element="pline"></div>
-					</a>
-					<a title="Магнит угол 30°" class="d_e_title_a szndemode_vis">
-						<div class="support_btn d_e_magnet_30" data-element="magnet_30"></div>
-					</a>
-					<a title="Вращать" class="d_e_title_a szndemode_vis">
-						<div class="support_btn d_e_rotate" data-element="rotate"></div>
-					</a>
+
 				</div>
-			</div>
-		</div>
-	</div>
-</div>				
-				<div class="d_move_point_controller" id="move_point_controller" style="display:none;">
-	<div class="d_controller_close" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'close' });">
-		<i class="fa fa-times" aria-hidden="true"></i>
-	</div>
-	<!-- шаг -->
-		<!-- координаты -->
-	<div class="rowcell ">
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text"><i class="fa fa-dot-circle-o" aria-hidden="true"></i></span>
-			<i class="fa fa-angle-left d_move_point_controller_xy_one_regaring_point" aria-hidden="true" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'regard_prev' });"></i>
-			<i class="fa fa-angle-right d_move_point_controller_xy_one_regaring_point" aria-hidden="true" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'regard_next' });"></i>
-		</div>
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">X</span>
-			<input id="move_point_controller_xp" class="form-control" value="0" oninput="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'keyup', 'eventObject':event });"> 
-			<div id="move_point_controller_submit_xp" class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
-				<i class="fa fa-check d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'submit'});"></i>
-				<i class="fa fa-times d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'xp', 'mode':'cancel'});"></i>
-			</div>
-		</div>
-		<div class="d_move_point_controller_xy_one">
-			<span class="d_move_point_controller_xy_one_text">Y</span>
-			<input id="move_point_controller_yp" class="form-control" value="0" oninput="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'keyup', 'eventObject':event });">
-			<div id="move_point_controller_submit_yp" class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
-				<i class="fa fa-check d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'submit'});"></i>
-				<i class="fa fa-times d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'yp', 'mode':'cancel'});"></i>
-			</div>
-		</div>
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">X<sub>0</sub></span>
-			<input id="move_point_controller_x" class="form-control" value="0" oninput="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'keyup', 'eventObject':event });"> 
-			<div id="move_point_controller_submit_x" class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
-				<i class="fa fa-check d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'submit'});"></i>
-				<i class="fa fa-times d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'x', 'mode':'cancel'});"></i>
-			</div>
-		</div>
-		<div class="d_move_point_controller_xy_one">
-			<span class="d_move_point_controller_xy_one_text">Y<sub>0</sub></span>
-			<input id="move_point_controller_y" class="form-control" value="0" oninput="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'input'});" onkeyup="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'keyup', 'eventObject':event });">
-			<div id="move_point_controller_submit_y" class="d_move_point_controller_xy_one_submit js_one_submit_yes_no">
-				<i class="fa fa-check d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'submit'});"></i>
-				<i class="fa fa-times d_move_point_controller_xy_one_submit_i" onclick="SimpleCad.Action({'type':'move_point_controller','param':'y', 'mode':'cancel'});"></i>
-			</div>
-		</div>
-	</div>
-	<!-- пульт -->
-	<div class="rowcell">
-		<div class="d_move_point_controller_pult">
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'up' });">
-				<i class="fa fa-angle-up" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'down' });">
-				<i class="fa fa-angle-down" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'left' });">
-				<i class="fa fa-angle-left" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'right' });">
-				<i class="fa fa-angle-right" aria-hidden="true"></i>
-			</div>
-			<div id="move_point_controller_step_btn" class="d_move_point_controller_arrow_span_step" onclick="SimpleCad.Action({'type':'move_point_controller', 'mode' : 'step' });">1 мм</div>
-			<input type="text" class="hidden" id="move_point_controller_step" value="1">
-		</div>
-	</div>
-	<!-- кнопка/ки -->
-	</div>
-				<div class="d_move_point_controller d_figure_controller" id="figure_controller" style="display:none;">
-	<div class="d_controller_close" onclick="SimpleCad.Action({'type':'figure_controller', 'mode' : 'close' });">
-		<i class="fa fa-times" aria-hidden="true"></i>
-	</div>
-	<div class="rowcell ">
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">Кол-во</span>
-			<input id="figure_controller_count" class="form-control" value="1"> 
-		</div>
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">Отступ</span>
-			<input id="figure_controller_distance" class="form-control" value="0" onkeyup="SimpleCad.Action({'type':'figure_controller','param':'distance', 'mode':'keyup', 'eventObject':event });"> 
-		</div>
-	</div>
-	<div class="rowcell mb5">
-		<div class="d_move_point_controller_pult">
-			<input type="text" class="hidden" id="figure_controller_direction" value="right">
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up" onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'up'});">
-				<i class="fa fa-angle-up" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down" onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'down'});">
-				<i class="fa fa-angle-down" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left" onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'left'});">
-				<i class="fa fa-angle-left" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right active" onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'right'});">
-				<i class="fa fa-angle-right" aria-hidden="true"></i>
-			</div>
-		</div>
-	</div>
-	<div class="rowcell mb5 text-center d_move_point_controller_btns d_move_point_controller_btns_icon">
-		<button type="button" class="btn btn-success" onclick="SimpleCad.Action({'type':'figure_controller', 'mode':'copy'});"><i class="fa fa-files-o" aria-hidden="true"></i></button>
-	</div>
-</div>
-				<div class="d_move_point_controller" id="figure_move_controller" style="display: none;">
-	<div class="d_controller_close" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'close' });">
-		<i class="fa fa-times" aria-hidden="true"></i>
-	</div>
-	<div class="rowcell mb15">
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text"><i class="fa fa-dot-circle-o" aria-hidden="true"></i></span>
-			<i class="fa fa-angle-left d_move_point_controller_xy_one_regaring_point" aria-hidden="true" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'regard_prev' });"></i>
-			<i class="fa fa-angle-right d_move_point_controller_xy_one_regaring_point" aria-hidden="true" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'regard_next' });"></i>
-		</div>
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">X<sub>0</sub></span>
-			<input id="figure_move_controller_xp" class="form-control" value="0" onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });" onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });"> 
-		</div>
-		<div class="d_move_point_controller_xy_one">
-			<span class="d_move_point_controller_xy_one_text">Y<sub>0</sub></span>
-			<input id="figure_move_controller_yp" class="form-control" value="0" onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });" onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
-		</div>
-		<div class="rowcell text-center d_move_point_controller_btns d_move_point_controller_btns_icon ">
-			<button type="button" class="btn btn-success" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode':'submit_point'});"><i class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
-		</div>
-	</div>
-	<div class="rowcell mb10">
-		<div class="d_move_point_controller_xy_one">  
-			<span class="d_move_point_controller_xy_one_text">ΔX</span>
-			<input id="figure_move_controller_delta_x" class="form-control" value="0" onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });" onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });"> 
-		</div>
-		<div class="d_move_point_controller_xy_one">
-			<span class="d_move_point_controller_xy_one_text">ΔY</span>
-			<input id="figure_move_controller_delta_y" class="form-control" value="0" onfocus="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'focus', 'thisObject':$(this) });" onblur="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'blur', 'thisObject':$(this) });">
-		</div>
-		<div class="rowcell text-center d_move_point_controller_btns d_move_point_controller_btns_icon ">
-			<button type="button" class="btn btn-success" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode':'submit_delta'});"><i class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
-		</div>
-	</div>
-	<div class="rowcell">
-		<div class="d_move_point_controller_pult">
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_up" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'up' });">
-				<i class="fa fa-angle-up" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_down" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'down' });">
-				<i class="fa fa-angle-down" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_left" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'left' });">
-				<i class="fa fa-angle-left" aria-hidden="true"></i>
-			</div>
-			<div class="d_move_point_controller_arrow d_move_point_controller_arrow_right" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'right' });">
-				<i class="fa fa-angle-right" aria-hidden="true"></i>
-			</div>
-			<div id="figure_move_controller_step_btn" class="d_move_point_controller_arrow_span_step" onclick="SimpleCad.Action({'type':'figure_move_controller', 'mode' : 'step' });">1 мм</div>
-			<input type="text" class="hidden" id="figure_move_controller_step" value="1">
-		</div>
-	</div>
-</div>				
 			</div>
 
-			<div class="d_right_column_widgets">
-				
-				
-								
-				<div id="d_sheet_move_block" class="d_elements" style="display:none;">
-	<div class="panel-group panel-group-elements"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading relpos">
-				<h4 class="panel-title">Изменение листа</h4>
-				<i class="fa fa-times pabel_d_close" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'close'});"></i>
-			</div>
-			<div class="panel-body">
-				<div class="rowcell_50">
-					<div class="rowcell sheet_move_h sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert">
-						<p>Верхний край</p>
-					</div>
-					<div class="rowcell sheet_move_h sheet_btn sheet_btn_siding ">
-						<p>Левый край</p>
-					</div>
-					<div class="rowcell sheet_move_arrows">
-						<i class="fa fa-angle-up sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value': 10 });">1</i>
-						<i class="fa fa-angle-up sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value': 100 });">10</i>
-						<i class="fa fa-angle-up sheet_btn sheet_btn_mch" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'top_row_up', 'value':'wave_length'});">35</i>
-						<i class="fa fa-angle-left sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_left', 'value': 10 });">1</i>
-						<i class="fa fa-angle-left sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_left', 'value': 100 });">10</i>
-					</div>
-					<div class="rowcell sheet_move_arrows">
-						<i class="fa fa-angle-down sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value': 10 });">1</i>
-						<i class="fa fa-angle-down sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value': 100 });">10</i>
-						<i class="fa fa-angle-down sheet_btn sheet_btn_mch" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'top_row_down', 'value':'wave_length' });">35</i>
-						<i class="fa fa-angle-right sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_right', 'value': 10 });">1</i>
-						<i class="fa fa-angle-right sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'left_row_right', 'value': 100 });">10</i>
-					</div>
+			<div class="proektor_z_modal" id="proektor_z_modal" style="display:none;">
+				<div class="proektor_z_modal_title" id="proektor_z_modal_title"></div>
+				<div class="proektor_z_modal_close" onclick="SimpleCad.Action({ 'type':'proektor_z_modal_hide' });">
 				</div>
-				<div class="rowcell_50">
-					<div class="rowcell sheet_move_h sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert">
-						<p>Нижний край</p>
-					</div>
-					<div class="rowcell sheet_move_h sheet_btn sheet_btn_siding ">
-						<p>Правый край</p>
-					</div>
-					<div class="rowcell sheet_move_arrows">
-						<i class="fa fa-angle-up sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value': 10 });">1</i>
-						<i class="fa fa-angle-up sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value': 100 });">10</i>
-						<i class="fa fa-angle-up sheet_btn sheet_btn_mch" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_up', 'value':'wave_length'});">35</i>
-						<i class="fa fa-angle-left sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_left', 'value': 10 });">1</i>
-						<i class="fa fa-angle-left sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_left', 'value': 100 });">10</i>
-					</div>
-					<div class="rowcell sheet_move_arrows">
-						<i class="fa fa-angle-down sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'bottom_row_down', 'value': 10 });">1</i>
-						<i class="fa fa-angle-down sheet_btn sheet_btn_pn sheet_btn_falc sheet_btn_siding_vert" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change','param':'bottom_row_down', 'value': 100 });">10</i>
-						<i class="fa fa-angle-down sheet_btn sheet_btn_mch" aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'bottom_row_down', 'value':'wave_length'});">35</i>
-						<i class="fa fa-angle-right sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_right', 'value': 10 });">1</i>
-						<i class="fa fa-angle-right sheet_btn sheet_btn_siding " aria-hidden="true" onclick="SimpleCad.Action({'type':'roof_one_sheet_change', 'param':'right_row_right', 'value': 100 });">10</i>
-					</div>
-				</div>
-				<div class="rowcell sheet_move_buttons">
-										<button id="roof_columns_sheet_btn_delete" type="button" class="btn btn-danger btn-xs " onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'delete'});"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
-					<button id="roof_columns_sheet_btn_add" type="button" class="btn btn-success btn-xs sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding sheet_btn_siding_vert" onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add'});"><i class="fa fa-scissors" aria-hidden="true"></i></button> 					
-										<button id="roof_columns_sheet_btn_add_3" type="button" class="btn btn-success btn-xs sheet_btn sheet_btn_mch_modul" onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add', 'side':'left'});"><i class="fa fa-chevron-left" aria-hidden="true" style="margin-right:3px;"></i><i class="fa fa-plus" aria-hidden="true"></i></button> 
-										<button id="roof_columns_sheet_btn_add_2" type="button" class="btn btn-success btn-xs sheet_btn sheet_btn_mch_modul" onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'add', 'side':'right'});"><i class="fa fa-plus" aria-hidden="true"></i><i class="fa fa-chevron-right" aria-hidden="true" style="margin-left:3px;"></i></button> 
-															
-					<button id="roof_columns_sheet_btn_merge" type="button" class="btn btn-info btn-xs sheet_btn sheet_btn_mch sheet_btn_pn sheet_btn_falc sheet_btn_siding sheet_btn_siding_vert" onclick="SimpleCad.Action({'type':'roof_columns_sheet_btn','mode':'merge'});"><i class="fa fa-caret-right" aria-hidden="true"></i>&nbsp;<i class="fa fa-caret-left" aria-hidden="true"></i></button> 
-																			</div>
-			</div>
-		</div>
-	</div>
-</div>
-				<div class="d_elements szndemode_vis">
-	<div class="panel-group panel-group-elements" id="d_nderight_accordion" role="tablist" aria-multiselectable="true"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading" role="tab" id="headingOneNderight">
-				<h4 class="panel-title">
-					<a role="button" data-toggle="collapse" data-parenttt="#d_nderight_accordion" href="#collapseOneNderight" aria-expanded="true" aria-controls="collapseOneNderight">
-						Доборный элемент
-					</a>
-				</h4>
-			</div>
-			<div id="collapseOneNderight" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOneNderight">
-				<div class="panel-body panel-body_nde" id="nderight_accordion_body" style="max-height: 719px;"> 					<div class="nde_tbl_row_size_ang_list" id="nde_tbl_row_size_ang_list">						
-					</div>
-					<div class="nde_tbl_row_other_list" id="nde_tbl_row_other_list">						
-					</div>
-				</div>                                    
-			</div>
-		</div>
-	</div>
-</div>				
-				<div class="d_elements ">	<div class="panel-group panel-group-elements" id="d_objects_accordion" role="tablist" aria-multiselectable="true"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading" role="tab" id="headingOneObjects">
-				<h4 class="panel-title">
-					<a role="button" data-toggle="collapse" data-parenttt="#d_objects_accordion" href="#collapseOneObjects" aria-expanded="true" aria-controls="collapseOneObjects">
-						Элементы чертежа
-					</a>
-				</h4>
-			</div>
-			<div id="collapseOneObjects" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOneObjects">
-				<div class="panel-body left_min_1" id="add_object_layer_row">																											
-				<div class="d_object d_object___pline active" data-current_layer_name="layer_0">	<div class="d_object_visible">	<i class="fa fa-eye" onclick="SimpleCad.Action({'type':'Element_Click_OnObjectLayer_Vsisble','thisObject':$(this)})"></i></div>	<div class="d_object_name" data-obj-id="pline__100088" data-obj-element="pline" onclick="SimpleCad.Action({'type' : 'Element_Click_OnObjectLayer','thisObject': $(this)})">Элемент 1</div></div></div>								
-			</div>
-		</div>
-	</div>
-</div>				
-				<div class="d_elements "> 	<div class="panel-group panel-group-elements" id="d_properties_accordion" role="tablist" aria-multiselectable="true"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading" role="tab" id="headingOneProperties">
-				<h4 class="panel-title">
-					<a role="button" data-toggle="collapse" data-parenttt="#d_properties_accordion" href="#collapseOneProperties" aria-expanded="true" aria-controls="collapseOneProperties">
-						Свойства элемента
-					</a>
-				</h4>
-			</div>
-			<div id="collapseOneProperties" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOneProperties">
-				<div class="panel-body" id="add_object_table"></div>
-			</div>
-		</div>
-	</div>
-</div>
-				<div class="d_elements szndemode_hide">
-	<div class="panel-group panel-group-elements" id="d_roofstat_accordion" role="tablist" aria-multiselectable="true"> 
-		<div class="panel panel-default panel_d_elements">
-			<div class="panel-heading" role="tab" id="headingOneRoofstat">
-				<h4 class="panel-title">
-					<a role="button" data-toggle="collapse" data-parenttt="#d_roofstat_accordion" href="#collapseOneRoofstat" aria-expanded="true" aria-controls="collapseOneRoofstat">
-						Статистика раскладки
-					</a>
-				</h4>
-			</div>
-			<div id="collapseOneRoofstat" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOneRoofstat">
-				<div class="panel-body" id="add_roofstat_table">					
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Длина ската, м</div>
-						<div class="d_prop_val" id="roofstat_slope_length">-</div>
-					</div>
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Площадь <span id="roofstat_table_roofstat_s_slope">ската</span>, м²<i id="roofstat_s_slope_d_prop_name_text_info" onclick="SimpleCad.Action({'type':'ModalShow', 'target':'roofstat_error_cuts_exist_points_out_polygon'});" class="fa fa-info-circle d_prop_name_text_info" style="display:none;" aria-hidden="true"></i></div>
-						<div class="d_prop_val" id="roofstat_s_slope">-</div>
-					</div>
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Площадь фигуры, м²</div> 
-						<div class="d_prop_val" id="roofstat_s_slope_figure">-</div>
-					</div>
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Полная площ. листов, м²</div>
-						<div class="d_prop_val" id="roofstat_s_sheets_full">-</div>
-					</div>
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Полезная площ. листов, м²</div>
-						<div class="d_prop_val" id="roofstat_s_sheets_useful">-</div>
-					</div>
-					<div class="d_prop">
-						<div class="d_prop_name d_prop_name_text">Процент отходов, %</div>
-						<div class="d_prop_val" id="roofstat_procent_waste">-</div>
-					</div>					
+				<div class="rowcell" id="proektor_z_modal_content">
 				</div>
 			</div>
-		</div>
-	</div>
-</div>				
-				
-			</div>
-				
-		</div>
-	</div>
-
-	<div class="proektor_z_modal" id="proektor_z_modal" style="display:none;"> 
-	<div class="proektor_z_modal_title" id="proektor_z_modal_title"></div>
-	<div class="proektor_z_modal_close" onclick="SimpleCad.Action({ 'type':'proektor_z_modal_hide' });"></div>
-	<div class="rowcell" id="proektor_z_modal_content">
-	</div>
-</div>
-	<div class="roof_welcome" id="roof_welcome" style="display: none;">
-	<div class="row">
-		<div class="col-xs-12 col-md-6">
-			<div class="rowcell rowcellpadd">
-				<h2 class="welcome_h2">Расчёт</h2>
-				<ul class="welcome_ul">
-					<li><a href="#" class="btn btn-link" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_new'});">Новый</a></li>
-					<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_open_modal'});" class="btn btn-link">Открыть</a></li>
-				</ul>
-			</div>				
-			<div class="rowcell rowcellpadd">
-				<h2 class="welcome_h2">Последние расчёты</h2>
-				<div id="roof_files_in_welcome">
-					<div class="loading_1"></div>
+			<div class="roof_welcome" id="roof_welcome" style="display: none;">
+				<div class="row">
+					<div class="col-xs-12 col-md-6">
+						<div class="rowcell rowcellpadd">
+							<h2 class="welcome_h2">Расчёт</h2>
+							<ul class="welcome_ul">
+								<li><a href="#" class="btn btn-link"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_new'});">Новый</a>
+								</li>
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_open_modal'});"
+										class="btn btn-link">Открыть</a></li>
+							</ul>
+						</div>
+						<div class="rowcell rowcellpadd">
+							<h2 class="welcome_h2">Последние расчёты</h2>
+							<div id="roof_files_in_welcome">
+								<div class="loading_1"></div>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-12 col-md-6">
+						<div class="rowcell rowcellpadd">
+							<h2 class="welcome_h2">Изменения</h2>
+							<div class="rowcell mt10" id="releasenotes_list">
+								<div class="rowcell loading_1"></div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="col-xs-12 col-md-6">
-			<div class="rowcell rowcellpadd">
-				<h2 class="welcome_h2">Изменения</h2>
-				<div class="rowcell mt10" id="releasenotes_list">
-					<div class="rowcell loading_1"></div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>		
-	<div class="d_nav_bot_lists szndemode_hide" id="r_d_nav_bot_lists">
-	<div class="row">
-		<div class="col-xs-12">
-			<div class="sheet_tabs" id="add_sheet_tab">
-			<div class="d_bottom_tab active" data-layer-num="0" onclick="SimpleCad.Action({'type':'SheetClick','thisObject':$(this)})">1</div></div>
-			<!--	<div class="d_bottom_tab">Стена 1</div>
+			<div class="d_nav_bot_lists szndemode_hide" id="r_d_nav_bot_lists">
+				<div class="row">
+					<div class="col-xs-12">
+						<div class="sheet_tabs" id="add_sheet_tab">
+							<div class="d_bottom_tab active" data-layer-num="0"
+								onclick="SimpleCad.Action({'type':'SheetClick','thisObject':$(this)})">1</div>
+						</div>
+						<!--	<div class="d_bottom_tab">Стена 1</div>
 			<div class="d_bottom_tab active">Стена 2</div>-->
-			<div class="d_bottom_tab" onclick="SimpleCad.Action({'type':'SheetAdd','target':''});"><i class="fa fa-plus" aria-hidden="true"></i></div> 		</div>
-	</div>
-</div>	
-	<div class="d_nav_bot" id="r_d_nav_bot">
-	<div class="row">
-		<div class="col-xs-12" id="r_d_nav_bot_file">&nbsp;</div>
-	</div>
-</div>	
-	<div id="modal_html" class="modal " tabindex="-1" role="dialog"> 
-		<div id="modal_save" class="modal-dialog modals modal-full-width" role="document"> 	<div class="modal-content">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-			<h4 class="modal-title modal_h">Сохранение чертежа</h4>
-		</div>
-		<div class="modal-body">			
-			<div class="row">
-				<div class="col-xs-12">
-					<p><b>Кликните правой кнопкой мыши и выберите "Сохранить изображение".</b></p>
+						<div class="d_bottom_tab" onclick="SimpleCad.Action({'type':'SheetAdd','target':''});"><i
+								class="fa fa-plus" aria-hidden="true"></i></div>
+					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-xs-12 with-img-responsive-block" id="modal_save_appendblock" style="background-color: #f0f0f0; padding-top: 30px; padding-bottom: 30px;">					
-				</div>
-			</div>			
-		</div>
-		<div class="modal-footer">			
-		</div>
-	</div>
-</div>
-		<div id="modal_info" class="modal-dialog modals modal-lg" role="document"> <!-- modal-dialog -->
-	<div class="modal-content">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-			<h4 class="modal-title modal_h" id="modal_info_h"></h4>
-		</div>
-		<div class="modal-body">						
-			<div class="row">
-				<div class="col-xs-12" id="modal_info_contents">										
-				</div>
-			</div>			
-		</div>
-		<div class="modal-footer">
-			<div class="row">
-				<div class="col-xs-12" id="modal_info_footer">					
+			<div class="d_nav_bot" id="r_d_nav_bot">
+				<div class="row">
+					<div class="col-xs-12" id="r_d_nav_bot_file">&nbsp;</div>
 				</div>
 			</div>
+			<div id="modal_html" class="modal " tabindex="-1" role="dialog">
+				<div id="modal_save" class="modal-dialog modals modal-full-width" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+									aria-hidden="true">×</span></button>
+							<h4 class="modal-title modal_h">Сохранение чертежа</h4>
+						</div>
+						<div class="modal-body">
+							<div class="row">
+								<div class="col-xs-12">
+									<p><b>Кликните правой кнопкой мыши и выберите "Сохранить изображение".</b></p>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-12 with-img-responsive-block" id="modal_save_appendblock"
+									style="background-color: #f0f0f0; padding-top: 30px; padding-bottom: 30px;">
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+						</div>
+					</div>
+				</div>
+				<div id="modal_info" class="modal-dialog modals modal-lg" role="document"> <!-- modal-dialog -->
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+									aria-hidden="true">×</span></button>
+							<h4 class="modal-title modal_h" id="modal_info_h"></h4>
+						</div>
+						<div class="modal-body">
+							<div class="row">
+								<div class="col-xs-12" id="modal_info_contents">
+									<div id="figures_all" class="row">
+										<div class="col-xs-12">
+											<div class="doborn_right" id="figures_nde_doborn_right"
+												style="height: 674px;">
+												<div class="doborn_right_elements">
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/1.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [20,30,390,30,20], 'angles' : [45,0,90,180,135], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_out', 'pline_start_val' : 10, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/2.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [20,30,205,205,30,20], 'angles' : [45,0,70,110,180,135], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_out', 'pline_start_val' : 10, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/3.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [20,150,30], 'angles' : [180,90,160], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/4.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [20,100,80,20], 'angles' : [30,90,180,150], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_out', 'pline_start_val' : 10, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/5.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [100,70], 'angles' : [90,155], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/14.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [150,20,30,20,150], 'angles' : [60,0,90,180,120], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_in', 'pline_start_val' : 10, 'pline_end' :'zavalc_out', 'pline_end_val' : 10, 'side_okras' : 'bottom_up', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/6.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [115,20,30,20,115], 'angles' : [60,0,90,180,120], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_out', 'pline_start_val' : 10, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/7.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [110,110], 'angles' : [90,180], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_out', 'pline_start_val' : 10, 'pline_end' :'zavalc_in', 'pline_end_val' : 10, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/8.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [30,30], 'angles' : [90,180], 'angles_mode' : 'y_line', 'pline_start' : 'zavalc_in', 'pline_start_val' : 10, 'pline_end' :'zavalc_out', 'pline_end_val' : 10, 'side_okras' : 'bottom_up', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/9.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [60,50,30,150,150,30,50,60], 'angles' : [90,180,-90,90,0,180,-90,0], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'bottom_up', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/10.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [60,50,30,150,150,30,50,60], 'angles' : [135,45,-45,135,45,-135,135,45], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/17.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [20,20,50,20,20], 'angles' : [90,180,90,0,90], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'bottom_up', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/11.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [60,50,30,150,30,50,60], 'angles' : [90,0,-90,90,-90,180,90], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/12.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [60,50,30,80,150], 'angles' : [90,0,-90,90,180], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+													<div class="doborn_element_one" data-nde-template-id="0">
+														<img class="img-responsive"
+															src="https://cad2.grandline.ru/theme/image/doborn_templates/13.png"
+															onclick="SimpleCad.Action({'type':'figures_add_doborn', 'pline_params' : { 'lengths' : [150,60,30,20], 'angles' : [0,90,180,-45], 'angles_mode' : 'y_line', 'pline_start' : '', 'pline_start_val' : 0, 'pline_end' :'', 'pline_end_val' : 0, 'side_okras' : 'top_down', 'color' : '', 'cover' : '', 'thickness' : '', 'size' : '',  'amount' : '', 'pline_breaks' : {}, 'texts' : [] } });">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<div class="row">
+								<div class="col-xs-12" id="modal_info_footer">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="d_context_menu" id="context_menu">
+
+				<div class="rowcell d_context_menu_one d_context_menu_one_canvas" id="context_menu_canvas">
+					<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+						<li class="dropdown-header szndemode_vis">Файл</li>
+						<li class="szndemode_vis"><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'save_as_template'});">Сохранить
+								как шаблон</a></li>
+						<li class="szndemode_vis"><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'nde_as_modal_cropped_image'});">Изображение
+								страницы</a></li>
+						<li role="separator" class="divider divider_context szndemode_vis"></li>
+						<li class="dropdown-header">Правка</li>
+						<li class="cad-dropdown-submenu szndemode_hide">
+							<a href="#">Вкладка</a>
+							<ul class="dropdown-menu ul_shadowed">
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_copy'});">Копировать</a>
+								</li>
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_paste'});">Вставить</a>
+								</li>
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_mirror'});">Отразить
+										по горизонтали</a></li>
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_menu_edit_sheet_rename'});">Переименовать</a>
+								</li>
+								<li><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'yes_no_roof_menu_edit_sheet_remove'});">Удалить</a>
+								</li>
+							</ul>
+						</li>
+						<li class="cad-dropdown-submenu ">
+							<a href="#">Элемент</a>
+							<ul class="dropdown-menu ul_shadowed">
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 90 });">Повернуть
+										на 90°</a></li>
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : -90 });">Повернуть
+										на -90°</a></li>
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 180});">Повернуть
+										на 180°</a></li>
+								<li role="separator" class="divider divider_context "></li>
+								<li class="szndemode_hide"><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'mirror_hor'});">Отразить
+										по горизонтали</a></li>
+								<li role="separator" class="divider divider_context szndemode_hide"></li>
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type':'trash', 'trash_subtype':'context_canvas'});">Удалить</a>
+								</li>
+							</ul>
+						</li>
+						<li role="separator" class="divider divider_context"></li>
+						<li class="dropdown-header">Вид</li>
+						<li id="nav_li_view_grid_context"><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_grid'});"><i
+									class="fa cad_dropdown_menu_li_a_i js_i_view_grid fa-square-o"
+									aria-hidden="true"></i>Показывать сетку</a></li>
+						<li id="nav_li_view_columns_sheets_context" class="szndemode_hide"><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});"><i
+									class="fa cad_dropdown_menu_li_a_i js_i_view_columns_sheets fa-square-o"
+									aria-hidden="true"></i>Показывать раскладку</a></li>
+						<li class="cad-dropdown-submenu szndemode_hide">
+							<a href="#">Размеры листов</a>
+							<ul class="dropdown-menu ul_shadowed">
+								<li id="nav_li_view_sheet_length_text_mode_center_hor_context"><a
+										class="nav_ul_li_ul_li_a" href="#"
+										onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_hor' });"><i
+											class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true"
+											style="display: block;"></i>По центру горизонтально</a></li>
+								<li id="nav_li_view_sheet_length_text_mode_center_vert_context"><a
+										class="nav_ul_li_ul_li_a" href="#"
+										onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_vert' });"><i
+											class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true"
+											style="display: none;"></i>По центру вертикально</a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<div class="rowcell d_context_menu_one d_context_menu_one_canvas" id="context_menu_pline">
+					<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
+						<li class="dropdown-header">Элемент</li>
+						<li><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'add_context_click' });">Добавить</a>
+						</li>
+						<li><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'copy_context_click' });">Копировать</a>
+						</li>
+						<li><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'move_context_click' });">Переместить</a>
+						</li>
+						<li class="cad-dropdown-submenu ">
+							<a href="#">Повернуть</a>
+							<ul class="dropdown-menu ul_shadowed">
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : 90   });">90°</a>
+								</li>
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : -90  });">-90°</a>
+								</li>
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : 180  });">180°</a>
+								</li>
+							</ul>
+						</li>
+						<li class="cad-dropdown-submenu ">
+							<a href="#">Отразить</a>
+							<ul class="dropdown-menu ul_shadowed">
+								<li class=""><a href="#"
+										onclick="event.preventDefault();SimpleCad.Action({ 'type':'mirror_hor' });">По
+										горизонтали</a></li>
+							</ul>
+						</li>
+						<li><a href="#"
+								onclick="event.preventDefault();SimpleCad.Action({ 'type':'trash', 'trash_subtype':'context_pline' });">Удалить</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+
 		</div>
-	</div>
-</div>
-	</div>
-	
-	<div class="d_context_menu" id="context_menu">
 
-		<div class="rowcell d_context_menu_one d_context_menu_one_canvas" id="context_menu_canvas">
-	<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-		<li class="dropdown-header szndemode_vis">Файл</li>		
-		<li class="szndemode_vis"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'save_as_template'});">Сохранить как шаблон</a></li>
-		<li class="szndemode_vis"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'nde_as_modal_cropped_image'});">Изображение страницы</a></li>			
-		<li role="separator" class="divider divider_context szndemode_vis"></li>
-		<li class="dropdown-header">Правка</li>
-		<li class="cad-dropdown-submenu szndemode_hide">
-			<a href="#">Вкладка</a>
-			<ul class="dropdown-menu ul_shadowed">
-				<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_copy'});">Копировать</a></li>
-				<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_paste'});">Вставить</a></li>
-				<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'roof_menu_edit_sheet_mirror'});">Отразить по горизонтали</a></li>
-				<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'roof_menu_edit_sheet_rename'});">Переименовать</a></li>
-				<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'ModalShow', 'target':'yes_no_roof_menu_edit_sheet_remove'});">Удалить</a></li>
-			</ul>
-		</li>
-		<li class="cad-dropdown-submenu ">
-			<a href="#">Элемент</a>
-			<ul class="dropdown-menu ul_shadowed">
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 90 });">Повернуть на 90°</a></li>
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : -90 });">Повернуть на -90°</a></li>
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'rotate', 'angle' : 180});">Повернуть на 180°</a></li>
-				<li role="separator" class="divider divider_context "></li>
-				<li class="szndemode_hide"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'mirror_hor'});">Отразить по горизонтали</a></li>
-				<li role="separator" class="divider divider_context szndemode_hide"></li>
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'trash', 'trash_subtype':'context_canvas'});">Удалить</a></li>
-			</ul>
-		</li>
-		<li role="separator" class="divider divider_context"></li>
-		<li class="dropdown-header">Вид</li>
-		<li id="nav_li_view_grid_context"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_grid'});"><i class="fa cad_dropdown_menu_li_a_i js_i_view_grid fa-square-o" aria-hidden="true"></i>Показывать сетку</a></li>
-		<li id="nav_li_view_columns_sheets_context" class="szndemode_hide"><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'cad_toggle_show_columns_sheets'});"><i class="fa cad_dropdown_menu_li_a_i js_i_view_columns_sheets fa-square-o" aria-hidden="true"></i>Показывать раскладку</a></li>
-		<li class="cad-dropdown-submenu szndemode_hide">
-			<a href="#">Размеры листов</a>
-			<ul class="dropdown-menu ul_shadowed">
-				<li id="nav_li_view_sheet_length_text_mode_center_hor_context"><a class="nav_ul_li_ul_li_a" href="#" onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_hor' });"><i class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true" style="display: block;"></i>По центру горизонтально</a></li>
-				<li id="nav_li_view_sheet_length_text_mode_center_vert_context"><a class="nav_ul_li_ul_li_a" href="#" onclick="event.preventDefault(); SimpleCad.Action({'type':'roof_params_change', 'param' : 'sheet_length_text_mode', 'mode' : 'set', 'value' : 'center_vert' });"><i class="fa fa-check nav_ul_li_ul_li_a_i" aria-hidden="true" style="display: none;"></i>По центру вертикально</a></li>
-			</ul>
-		</li>
-	</ul>
-</div>
-		<div class="rowcell d_context_menu_one d_context_menu_one_canvas" id="context_menu_pline">
-	<ul class="dropdown-menu ul_shadowed cad_dropdown_menu">
-		<li class="dropdown-header">Элемент</li>
-		<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'add_context_click' });">Добавить</a></li>
-		<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'copy_context_click' });">Копировать</a></li>
-		<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type':'figure_controller', 'mode':'move_context_click' });">Переместить</a></li>
-		<li class="cad-dropdown-submenu ">
-			<a href="#">Повернуть</a>
-			<ul class="dropdown-menu ul_shadowed">
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : 90   });">90°</a></li>
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : -90  });">-90°</a></li>
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({'type': 'rotate', 'angle' : 180  });">180°</a></li>
-			</ul>
-		</li>
-		<li class="cad-dropdown-submenu ">
-			<a href="#">Отразить</a>
-			<ul class="dropdown-menu ul_shadowed">
-				<li class=""><a href="#" onclick="event.preventDefault();SimpleCad.Action({ 'type':'mirror_hor' });">По горизонтали</a></li>
-			</ul>
-		</li>
-		<li><a href="#" onclick="event.preventDefault();SimpleCad.Action({ 'type':'trash', 'trash_subtype':'context_pline' });">Удалить</a></li>
-			</ul>
-</div>
 	</div>
-	
-</div>
+</body>
 
-</div></body></html>
+</html>
