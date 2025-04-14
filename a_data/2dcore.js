@@ -3844,6 +3844,111 @@ function SimpleCad() {
         return angle;
     }
 
+    /**
+     * Извлекает данные из текущего слоя и формирует объект для создания фигуры
+     * @returns {Object} Объект с данными для создания фигуры
+     */
+    function extractFigureDataFromCurrentLayer() {
+        // Проверка доступности слоя
+        if (!to || !to[vo] || !to[vo].children || !to[vo].children.length) {
+            console.error("Недоступен объект to[vo] или его дочерние элементы");
+            return null;
+        }
+        
+        // Поиск полилинии с атрибутом side_okras
+        var polylineElement = null;
+        $.each(to[vo].children, function(_, element) {
+            if (element.className === "Line" && 
+                typeof element.attrs.side_okras !== "undefined") {
+                polylineElement = element;
+                return false; // прерываем цикл
+            }
+        });
+        
+        if (!polylineElement) {
+            console.error("В текущем слое не найден элемент типа Line с атрибутом side_okras");
+            return null;
+        }
+        
+        // Формирование результата
+        var result = {
+            type: 'figures_add_doborn',
+            pline_params: {
+                lengths: JSON.copy(polylineElement.attrs.pline_lengths_ish || []),
+                angles: [],
+                angles_mode: 'y_line',
+                pline_start: polylineElement.attrs.pline_start || 'empty',
+                pline_start_val: polylineElement.attrs.pline_start_val || 0,
+                pline_end: polylineElement.attrs.pline_end || 'empty',
+                pline_end_val: polylineElement.attrs.pline_end_val || 0,
+                side_okras: polylineElement.attrs.side_okras || 'empty',
+                color: polylineElement.attrs.prod_color || '',
+                cover: polylineElement.attrs.prod_cover || '',
+                thickness: polylineElement.attrs.prod_thickness || '',
+                size: polylineElement.attrs.prod_size || '',
+                amount: polylineElement.attrs.prod_amount || '',
+                pline_breaks: JSON.copy(polylineElement.attrs.pline_breaks || {}),
+                texts: []
+            }
+        };
+        
+        // Вычисление углов между сегментами
+        var points = polylineElement.points();
+        var pointsCount = points.length;
+        
+        // Мы можем рассчитать углы только если есть хотя бы 3 точки (2 сегмента)
+        if (pointsCount >= 6) { // 6 значений в массиве = 3 точки (x1,y1,x2,y2,x3,y3)
+            for (var i = 0; i < (pointsCount - 4) / 2; i++) {
+            // Индексы трёх последовательных точек для расчета угла между сегментами
+            var idx1 = 2 * i;
+            var idx2 = 2 * i + 2;
+            var idx3 = 2 * i + 4;
+            
+            // Вычисляем угол между двумя смежными сегментами
+            var angle = calculateAngle(
+                points[idx1], points[idx1 + 1],     // Первая точка (начало первого сегмента)
+                points[idx2], points[idx2 + 1],     // Вторая точка (конец первого и начало второго сегмента)
+                points[idx3], points[idx3 + 1],     // Третья точка (конец второго сегмента)
+                true, true, false                   // Параметры для расчета угла
+            );
+            
+            // Проверка на NaN и добавление угла в результат
+            if (isNaN(angle)) {
+                angle = 0;
+            }
+            
+            result.pline_params.angles.push(parseFloat(angle.toFixed(2)));
+            }
+        }
+        
+        // Если это замкнутая полилиния, добавим угол между последним и первым сегментом
+        if (isPolylineClosed(points) && pointsCount >= 8) { // Не менее 4 точек для замкнутой полилинии
+            var lastAngle = calculateAngle(
+            points[pointsCount - 4], points[pointsCount - 3], // Предпоследняя точка
+            points[pointsCount - 2], points[pointsCount - 1], // Последняя точка
+            points[0], points[1],                            // Первая точка
+            true, true, false
+            );
+            
+            if (!isNaN(lastAngle)) {
+            result.pline_params.angles.push(parseFloat(lastAngle.toFixed(2)));
+            }
+        }
+        
+        // Преобразование пустых значений в пустые строки
+        if (result.pline_params.pline_start === "empty") {
+            result.pline_params.pline_start = "";
+        }
+        if (result.pline_params.pline_end === "empty") {
+            result.pline_params.pline_end = "";
+        }
+        if (result.pline_params.side_okras === "empty") {
+            result.pline_params.side_okras = "";
+        }
+        
+        return result;
+    }
+
     function Ge(e, t, _, a) {
         var r = "";
         return (0 > t || 0 > a) && (r = "stop"), e = +e.toFixed(3), _ = +_.toFixed(3), t = +t.toFixed(3), a = +a.toFixed(3), e < _ && t > a ? r = "1" : e < _ && t < a ? r = "2" : e > _ && t < a ? r = "3" : e > _ && t > a ? r = "4" : e == _ && t > a ? r = "up" : e == _ && t < a ? r = "down" : e > _ && t == a ? r = "left" : e < _ && t == a && (r = "right"), r
@@ -3862,9 +3967,9 @@ function SimpleCad() {
     }
 
     function Ke(e, t, _, a) {        
-        Ee(vo, !1, !1, !1, !1);
+        calculateBoundingBox(vo, !1, !1, !1, !1);
         Ve(e, t);
-        var r = Ee(vo, !1, !1, !1, !1),
+        var r = calculateBoundingBox(vo, !1, !1, !1, !1),
             n = 0,
             s = 0;
         n = r.x_min - Fo[vo], s = r.y_max - Ao[vo];
@@ -3937,46 +4042,128 @@ function SimpleCad() {
         })
     }
 
-    function Ee(e, t, _, a, r) {
-        var n = 1e5,
-            s = -1e5,
-            o = 1e5,
-            l = -1e5;
-        $.each(to[e].children, function(t, c) {
-            if (("undefined" != typeof c.attrs.name || "undefined" != typeof c.attrs.is_table_cad_block && a) && c.isVisible()) switch (c.className) {
-                case "Line":
-                case "Arrow":
-                    if ("Line" == c.className || "Arrow" == c.className && _) {
-                        var d = c.points(),
-                            p = d.length,
-                            m = {
-                                x: 0,
-                                y: 0
+    /**
+     * Вычисляет границы (bounding box) всех элементов на указанном слое.
+     * 
+     * @param {string|number} layerId - Идентификатор слоя, для которого вычисляются границы
+     * @param {boolean} includeSheets - Включать ли элементы листов (Bs) в расчет
+     * @param {boolean} includeArrows - Включать ли стрелки в расчет
+     * @param {boolean} includeTableElements - Включать ли элементы таблицы
+     * @param {boolean} includeTextElements - Включать ли текстовые элементы
+     * @returns {Object} Объект с границами: x_min, x_max, y_min, y_max, width, height
+     */
+    function calculateBoundingBox(layerId, includeSheets, includeArrows, includeTableElements, includeTextElements) {
+        var minX = 1e5,       // Начальное значение для минимальной X-координаты
+            maxX = -1e5,      // Начальное значение для максимальной X-координаты
+            minY = 1e5,       // Начальное значение для минимальной Y-координаты
+            maxY = -1e5;      // Начальное значение для максимальной Y-координаты
+        
+        // Обходим все дочерние элементы слоя
+        $.each(to[layerId].children, function(index, element) {
+            // Проверяем, что элемент удовлетворяет критериям видимости и имеет имя или является элементом таблицы
+            if ((typeof element.attrs.name !== "undefined" || 
+                typeof element.attrs.is_table_cad_block !== "undefined" && includeTableElements) && 
+                element.isVisible()) {
+                
+                switch (element.className) {
+                    case "Line":
+                    case "Arrow":
+                        // Обрабатываем линии и стрелки (если стрелки включены в расчет)
+                        if (element.className == "Line" || element.className == "Arrow" && includeArrows) {
+                            var pointsArray = element.points(),
+                                pointsCount = pointsArray.length,
+                                originOffset = {
+                                    x: 0,
+                                    y: 0
+                                };
+                            
+                            // Проверка наличия смещения начала координат (не используется, но проверяется)
+                            "undefined" != typeof element.attrs.offset_origin;
+                            
+                            // Применяем масштаб к смещению
+                            var scaledOriginOffset = {
+                                x: originOffset.x * Go.g_scale[layerId] / 100,
+                                y: originOffset.y * Go.g_scale[layerId] / 100
                             };
-                        "undefined" != typeof c.attrs.offset_origin;
-                        for (var h = {
-                                x: m.x * Go.g_scale[e] / 100,
-                                y: m.y * Go.g_scale[e] / 100
-                            }, u = 0; u < p; u++) u % 2 ? (d[u] < o && (o = d[u]), d[u] + h.y > l && (l = d[u] + h.y)) : (d[u] - h.x < n && (n = d[u] - h.x), d[u] > s && (s = d[u]))
-                    }
-                    break;
-                case "Text":
-                    r && (c.y() < o && (o = c.y()), c.y() > l && (l = c.y()), c.x() < n && (n = c.x()), c.x() > s && (s = c.x()));
-                    break;
-                default:
+                            
+                            // Обход всех точек и обновление границ
+                            for (var i = 0; i < pointsCount; i++) {
+                                if (i % 2) { // Нечетные индексы - координаты Y
+                                    if (pointsArray[i] < minY) {
+                                        minY = pointsArray[i];
+                                    }
+                                    if (pointsArray[i] + scaledOriginOffset.y > maxY) {
+                                        maxY = pointsArray[i] + scaledOriginOffset.y;
+                                    }
+                                } else {     // Четные индексы - координаты X
+                                    if (pointsArray[i] - scaledOriginOffset.x < minX) {
+                                        minX = pointsArray[i] - scaledOriginOffset.x;
+                                    }
+                                    if (pointsArray[i] > maxX) {
+                                        maxX = pointsArray[i];
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                        
+                    case "Text":
+                        // Обрабатываем текстовые элементы, если они включены в расчет
+                        if (includeTextElements) {
+                            // Обновляем границы по координатам текста
+                            if (element.y() < minY) {
+                                minY = element.y();
+                            }
+                            if (element.y() > maxY) {
+                                maxY = element.y();
+                            }
+                            if (element.x() < minX) {
+                                minX = element.x();
+                            }
+                            if (element.x() > maxX) {
+                                maxX = element.x();
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        // Для других типов элементов ничего не делаем
+                }
             }
-        }), t && $.each(Bs[e].children, function(e, t) {
-            "undefined" != typeof t.attrs.sheet_i && (t.y() + t.height() < o && (o = t.y() + t.height()), t.y() > l && (l = t.y()), t.x() < n && (n = t.x()), t.x() + t.width() > s && (s = t.x() + t.width()))
         });
-        var c = {
-            x_min: n,
-            x_max: s,
-            y_min: o,
-            y_max: l,
-            width: s - n,
-            height: l - o
+        
+        // Если требуется, включаем в расчет границы листов
+        if (includeSheets) {
+            $.each(Bs[layerId].children, function(index, sheet) {
+                if (typeof sheet.attrs.sheet_i !== "undefined") {
+                    // Обновляем границы по координатам и размерам листа
+                    if (sheet.y() + sheet.height() < minY) {
+                        minY = sheet.y() + sheet.height();
+                    }
+                    if (sheet.y() > maxY) {
+                        maxY = sheet.y();
+                    }
+                    if (sheet.x() < minX) {
+                        minX = sheet.x();
+                    }
+                    if (sheet.x() + sheet.width() > maxX) {
+                        maxX = sheet.x() + sheet.width();
+                    }
+                }
+            });
+        }
+        
+        // Формируем и возвращаем результат с границами и размерами
+        var result = {
+            x_min: minX,
+            x_max: maxX,
+            y_min: minY,
+            y_max: maxY,
+            width: maxX - minX,
+            height: maxY - minY
         };
-        return c
+        
+        return result;
     }
 
     function Me(e, t) {
@@ -7590,7 +7777,7 @@ function SimpleCad() {
                     c_("btn_finish_cad_draw");
                     c_("btn_finish_cad_draw_close");
                     En();
-                    if (b_() === 1) {
+                    if (countValidChildren() === 1) {
                         fitContentToView();
                     }
                 }
@@ -7675,7 +7862,7 @@ function SimpleCad() {
                     c_("btn_finish_cad_draw_close");
                     da();
 
-                    if (b_() === 1) {
+                    if (countValidChildren() === 1) {
                         fitContentToView();
                     }
 
@@ -7881,15 +8068,42 @@ function SimpleCad() {
         return _i[e][ei.type]
     }
 
-    function b_() {
-        var e = 0,
-            t = !1,
-            _ = "",
-            a = "";
-        return $.each(to[vo].children, function(r, n) {
-            t = !1, _ = n.attrs.name, a = n.className, "undefined" != typeof _ && -1 === $.inArray(_, ["side_okras_arrow"]) && "undefined" != typeof a && -1 === $.inArray(a, ["Text"]) && (t = !0), t && e++
-        }), e
-    }
+    /**
+     * Функция подсчитывает количество подходящих дочерних элементов.
+     * Элемент считается подходящим, если:
+     * - его атрибут name определен и не равен "side_okras_arrow"
+     * - его класс определен и не равен "Text"
+     * 
+     * @returns {number} Количество подходящих дочерних элементов
+     */
+    function countValidChildren() {
+        var validChildCount = 0;         // Счетчик подходящих дочерних элементов
+        var isValidElement = false;      // Флаг действительности элемента
+        var elementName = "";            // Имя элемента
+        var elementClassName = "";       // Имя класса элемента
+        
+        // Перебираем все дочерние элементы
+        $.each(to[vo].children, function(index, child) {
+            isValidElement = false;
+            elementName = child.attrs.name;
+            elementClassName = child.className;
+            
+            // Проверяем, соответствует ли элемент критериям
+            if (typeof elementName !== "undefined" && 
+                $.inArray(elementName, ["side_okras_arrow"]) === -1 && 
+                typeof elementClassName !== "undefined" && 
+                $.inArray(elementClassName, ["Text"]) === -1) {
+                isValidElement = true;
+            }
+            
+            // Если элемент подходящий, увеличиваем счетчик
+            if (isValidElement) {
+                validChildCount++;
+            }
+        });
+        
+        return validChildCount;
+}
 
     /**
      * Центрирует и масштабирует отображаемый контент в рабочей области
@@ -7912,7 +8126,7 @@ function SimpleCad() {
         };
         
         // Получаем оригинальные размеры объекта для текущего вида
-        var originalViewSize = Ee(vo, false, false, false, false);
+        var originalViewSize = calculateBoundingBox(vo, false, false, false, false);
         
         // Рассчитываем коэффициенты масштабирования для сохранения пропорций
         var widthRatio = availableSpace.width / originalViewSize.width;
@@ -7926,7 +8140,7 @@ function SimpleCad() {
         Ke("=", Go.g_scale[vo] * scaleFactor, true, true);
         
         // Получаем размеры после масштабирования
-        var scaledViewSize = Ee(vo, false, false, false, false);
+        var scaledViewSize = calculateBoundingBox(vo, false, false, false, false);
         
         // Вычисляем необходимое смещение для центрирования
         var offsetX = scaledViewSize.x_min - Fo[vo];
@@ -9949,7 +10163,7 @@ function SimpleCad() {
         }, An({
             mode: "add",
             element: di
-        }), processPolylineElement(r), 1 == b_() && fitContentToView(), to[vo].draw(), $("#modal_html").modal("hide"))
+        }), processPolylineElement(r), 1 == countValidChildren() && fitContentToView(), to[vo].draw(), $("#modal_html").modal("hide"))
     }
 
     /**
@@ -11727,7 +11941,7 @@ function SimpleCad() {
             to["layer_" + r.tab_num].show(), to["layer_" + r.tab_num].draw();
             to["layer_" + r.tab_num].toImage({
                 callback: function(n) {
-                    ni.roof_data_full.sheet_tabs[a].tab_img_src = n.src, ni.roof_data_full.sheet_tabs[a].tab_region = Ee("layer_" + r.tab_num, !0, !0, !0, !0), to["layer_" + r.tab_num].hide(), to["layer_" + r.tab_num].draw(), _++, _ == t && (to[e].show(), to[e].draw())
+                    ni.roof_data_full.sheet_tabs[a].tab_img_src = n.src, ni.roof_data_full.sheet_tabs[a].tab_region = calculateBoundingBox("layer_" + r.tab_num, !0, !0, !0, !0), to["layer_" + r.tab_num].hide(), to["layer_" + r.tab_num].draw(), _++, _ == t && (to[e].show(), to[e].draw())
                 }
             })
         })
@@ -14681,7 +14895,7 @@ function SimpleCad() {
                 });
                 
                 // Обновление отображения элемента
-                fs(r);
+                adjustPolylineBreaks(r);
                 ds(e.element_id);
                 updateElementParametersDisplay(r);
                 refreshCurrentLayer();
@@ -14723,7 +14937,7 @@ function SimpleCad() {
                 var t = Bi.findOne("#" + e.element_id),
                     _ = t.attrs.pline_lengths_ish,
                     a = _[e.num];
-                0 == e.thisObject.val() ? (adjustElementAngle(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (fs(t), refreshCurrentLayer());
+                0 == e.thisObject.val() ? (adjustElementAngle(e.element_id, e.num, a, !0), refreshCurrentLayer()) : (adjustPolylineBreaks(t), refreshCurrentLayer());
                 break;
             default:
         }
@@ -14759,7 +14973,7 @@ function SimpleCad() {
         if ("sznde" == ei.type)
             if ("empty" == e.attrs.side_okras) co.arrow[vo].hide();
             else {
-                var t = Ee(vo, !1, !1, !1, !1);
+                var t = calculateBoundingBox(vo, !1, !1, !1, !1);
                 t.x_mid = t.x_max - (t.x_max - t.x_min) / 2;
                 var _ = [];
                 switch (e.attrs.side_okras) {
@@ -14796,7 +15010,7 @@ function SimpleCad() {
             "bottom_up" == e.attrs.side_okras && (o = 35);
             var i = 8,
                 l = 8,
-                c = Ee(vo, !1, !0, !1, !1),
+                c = calculateBoundingBox(vo, !1, !0, !1, !1),
                 d = 8 * t.length + 20,
                 p = 80;
             d < p && (d = p);
@@ -14889,12 +15103,44 @@ function SimpleCad() {
     }
 
 
-    function fs(e) {
-        if (0 < Object.keys(e.attrs.pline_breaks).length) {
-            for (var t = e.points(), _ = t.length, a = JSON.copy(e.attrs.pline_breaks), r = 0, n = e.attrs.pline_lengths_ish, s = 0, o = 0, l = 0; l < (_ - 2) / 2; l++) "undefined" != typeof a["l" + l] && -1 !== $.inArray(parseInt(a["l" + l]), Ei) && (r = parseInt(a["l" + l]), s = n[l], o = parseFloat((s / 100 * r).toFixed(3)), adjustElementAngle(e.id(), l, o, !0), is_changed = !0);
-            is_changed && refreshCurrentLayer()
+    /**
+     * Регулирует углы элемента на основе разрывов полилинии.
+     * 
+     * @param {Object} element - Элемент для регулировки.
+     * @returns {void}
+     */
+    function adjustPolylineBreaks(element) {
+        // Проверяем, есть ли разрывы в полилинии
+        if (0 < Object.keys(element.attrs.pline_breaks).length) {
+            var points = element.points();
+            var pointsCount = points.length;
+            var breaks = JSON.copy(element.attrs.pline_breaks);
+            var breakValue = 0;
+            var lengths = element.attrs.pline_lengths_ish;
+            var lengthForPoint = 0;
+            var angleAdjustment = 0;
+            
+            // Перебираем точки полилинии
+            for (var pointIndex = 0; pointIndex < (pointsCount - 2) / 2; pointIndex++) {
+                // Проверяем, есть ли разрыв для текущей точки и входит ли он в допустимые значения
+                if ("undefined" != typeof breaks["l" + pointIndex] && -1 !== $.inArray(parseInt(breaks["l" + pointIndex]), Ei)) {
+                    breakValue = parseInt(breaks["l" + pointIndex]);
+                    lengthForPoint = lengths[pointIndex];
+                    
+                    // Вычисляем регулировку угла на основе длины и значения разрыва
+                    angleAdjustment = parseFloat((lengthForPoint / 100 * breakValue).toFixed(3));
+                    
+                    // Применяем регулировку угла к элементу
+                    adjustElementAngle(element.id(), pointIndex, angleAdjustment, true);
+                    
+                    is_changed = true;  // Отмечаем, что были внесены изменения
+                }
+            }
+            
+            // Обновляем текущий слой, если были изменения
+            is_changed && refreshCurrentLayer();
         }
-    }
+}
 
     function gs() {
         $.each(to[vo].children, function(e, t) {
@@ -14955,7 +15201,7 @@ function SimpleCad() {
             uo = {};
             to[vo].toImage({
                 callback: function(e) {
-                    uo.tab_img_src = e.src, uo.tab_region = Ee(vo, !1, !0, !0, !0), K("nde_check_and_attach_crop_image", {
+                    uo.tab_img_src = e.src, uo.tab_region = calculateBoundingBox(vo, !1, !0, !0, !0), K("nde_check_and_attach_crop_image", {
                         image: uo
                     })
                 }
@@ -15264,21 +15510,42 @@ function SimpleCad() {
         }), t
     }
 
-    function js() {
-        if (0 == b_()) var e = to[vo].toImage({
-            callback: function(e) {
-                $("#modal_save_appendblock").html(e), showModalWindow("save", {})
-            }
-        });
-        else {
-            uo = {};
-            var e = to[vo].toImage({
-                callback: function(e) {
-                    uo.tab_img_src = e.src, uo.tab_region = Ee(vo, !1, !0, !0, !0), K("nde_as_modal_cropped_image", {
-                        image: uo
-                    })
+    /**
+     * Обрабатывает создание изображения из контента и последующее отображение в модальном окне
+     * или передачу данных для дальнейшей обработки.
+     * 
+     * @returns {void}
+     */
+    function handleImageCreation() {
+        console.log(countValidChildren())
+        if (0 == countValidChildren()) {
+            // Если countValidChildren() возвращает 0, создаем изображение для отображения в модальном окне
+            var imageResult = to[vo].toImage({
+                callback: function(imageResult) {
+                    // Вставляем изображение в модальное окно
+                    $("#modal_save_appendblock").html(imageResult);
+                    // Отображаем модальное окно сохранения
+                    showModalWindow("save", {});
                 }
-            })
+            });
+        } else {
+            // Создаем объект для хранения данных об изображении
+            uo = {};
+            
+            var imageResult = to[vo].toImage({
+                callback: function(imageResult) {
+                    // Сохраняем источник изображения
+                    uo.tab_img_src = imageResult.src;
+                    // Определяем область изображения
+                    uo.tab_region = calculateBoundingBox(vo, false, true, true, true);
+                    // Отправляем данные изображения для дальнейшей обработки
+                    K("nde_as_modal_cropped_image", {
+                        image: uo
+                    });
+                }
+            });
+
+            console.log(imageResult);
         }
     }
 
@@ -15306,7 +15573,7 @@ function SimpleCad() {
             }), elementsCount == 1) {
             // Если найден ровно один нужный элемент
             createAndShowTemporaryNotification({
-                text: "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u0430...",
+                text: "Сохранение шаблона...",
                 type: "wait"
             });
             
@@ -15349,14 +15616,14 @@ function SimpleCad() {
                     
                     to[vo].draw();
                     uo.tab_img_src = imageData.src;
-                    uo.tab_region = Ee(vo, false, false, false, false);
+                    uo.tab_region = calculateBoundingBox(vo, false, false, false, false);
                     templateParams = zs(elementId);
                     
                     // Сохраняем шаблон
-                    K("nde_save_as_template", {
-                        image: uo,
-                        nde_params: templateParams
-                    });
+                    // K("nde_save_as_template", {
+                    //     image: uo,
+                    //     nde_params: templateParams
+                    // });
                 }
             });
         } else if (elementsCount == 0) {
@@ -17232,7 +17499,7 @@ function SimpleCad() {
                         mode: "length_one",
                         num: hi.segment_num,
                         val: h
-                    }), processPolylineParameters(hi.parent[0]), fs(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
+                    }), processPolylineParameters(hi.parent[0]), adjustPolylineBreaks(hi.parent[0]), updateElementParametersDisplay(hi.parent[0]), refreshCurrentLayer()
                 } else Zr(hi.parent[0], hi.nearest_point_num_in_pline, hi.farthest_point_num_in_pline, b), refreshCurrentLayer();
                 $("#modal_html").modal("hide");
                 break;
@@ -17718,10 +17985,12 @@ function SimpleCad() {
                 $("#nav_li_file_image").hasClass("disabled") || ft();
                 break;
             case "save_as_template":
-                saveLineAsTemplate();
+                // console.log("save_as_template");
+                // saveLineAsTemplate();
+                console.log(extractFigureDataFromCurrentLayer());
                 break;
             case "nde_as_modal_cropped_image":
-                js();
+                handleImageCreation();
                 break;
             case "figures_add_doborn":
                 // Проверяем корректность параметров полилинии
@@ -17751,7 +18020,7 @@ function SimpleCad() {
                     processPolylineParameters(polylineElement);
                     
                     // Применяем дополнительную обработку элемента
-                    fs(polylineElement);
+                    adjustPolylineBreaks(polylineElement);
                     
                     // Обновляем отображение параметров элемента
                     updateElementParametersDisplay(polylineElement);
