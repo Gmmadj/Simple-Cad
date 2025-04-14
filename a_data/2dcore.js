@@ -993,12 +993,14 @@ function SimpleCad() {
         setCurrentElement()
         var polylineId, polyline;
 
-        if ("undefined" != typeof Zi && "undefined" !== Zi) {
+        var is_Zi = "undefined" != typeof Zi && "undefined" !== Zi;
+
+        if (is_Zi) {
             polylineId = Zi.id();
             polyline = Bi.findOne("#" + polylineId);
         }
-        
-        if (Oo.mode == 'add_element' && Oo["data-element"] == "pline") {
+
+        if (Oo.mode == 'add_element' && Oo["data-element"] == "pline" && is_Zi) {
             let points = Zi.points();
             points = points.slice(0, points.length - 2);
     
@@ -1008,6 +1010,7 @@ function SimpleCad() {
             processElementAndAddMovePoints(Zi, false);
             En();
         }
+        
         
         if ("undefined" != typeof Zi && "undefined" !== Zi) {
             ms();
@@ -3679,7 +3682,7 @@ function SimpleCad() {
         var deltaY = y - prevY;
 
         // Если зажата клавиша Shift, корректируем координаты
-        if (checkMagnet30(event.evt)) {
+        if (event && event.evt && checkMagnet30(event.evt)) {
             const angle = Math.atan2(deltaY, deltaX);
             const step = Math.PI / 6; // 30 градусов в радианах
             const snappedAngle = Math.round(angle / step) * step;
@@ -3895,46 +3898,39 @@ function SimpleCad() {
         // Вычисление углов между сегментами
         var points = polylineElement.points();
         var pointsCount = points.length;
+        var segmentIndex = 0;
         
-        // Мы можем рассчитать углы только если есть хотя бы 3 точки (2 сегмента)
-        if (pointsCount >= 6) { // 6 значений в массиве = 3 точки (x1,y1,x2,y2,x3,y3)
-            for (var i = 0; i < (pointsCount - 4) / 2; i++) {
-            // Индексы трёх последовательных точек для расчета угла между сегментами
-            var idx1 = 2 * i;
-            var idx2 = 2 * i + 2;
-            var idx3 = 2 * i + 4;
-            
-            // Вычисляем угол между двумя смежными сегментами
+        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+            // Вычисляем угол между вертикальной линией и текущим сегментом
             var angle = calculateAngle(
-                points[idx1], points[idx1 + 1],     // Первая точка (начало первого сегмента)
-                points[idx2], points[idx2 + 1],     // Вторая точка (конец первого и начало второго сегмента)
-                points[idx3], points[idx3 + 1],     // Третья точка (конец второго сегмента)
-                true, true, false                   // Параметры для расчета угла
+                points[2 * segmentIndex + 0], -1000,  // Точка вертикальной линии вверх
+                points[2 * segmentIndex + 0], points[2 * segmentIndex + 1],  // Начальная точка сегмента
+                points[2 * segmentIndex + 2], points[2 * segmentIndex + 3],  // Конечная точка сегмента
+                true, true, false  // Параметры для расчета угла
             );
             
-            // Проверка на NaN и добавление угла в результат
             if (isNaN(angle)) {
                 angle = 0;
             }
             
             result.pline_params.angles.push(parseFloat(angle.toFixed(2)));
-            }
+            segmentIndex++;
         }
         
-        // Если это замкнутая полилиния, добавим угол между последним и первым сегментом
-        if (isPolylineClosed(points) && pointsCount >= 8) { // Не менее 4 точек для замкнутой полилинии
-            var lastAngle = calculateAngle(
-            points[pointsCount - 4], points[pointsCount - 3], // Предпоследняя точка
-            points[pointsCount - 2], points[pointsCount - 1], // Последняя точка
-            points[0], points[1],                            // Первая точка
-            true, true, false
-            );
+        // Поиск и добавление текстовых элементов
+        $.each(to[vo].children, function(_, element) {
+            if (element.className === "Text" && element.textHeight === 18) {
+                console.log(element);
+                result.pline_params.texts.push({
+                    name: element.attrs.name || '',
+                    text: element.attrs.text || '',
+                    is_visible: element.isVisible() ? 1 : 0,
+                    x: (element.attrs.x - Fo[vo]) * 100 / Go.g_scale[vo],
+                    y: (Ao[vo] - element.attrs.y) * 100 / Go.g_scale[vo]
+                });
+            }
+        });
             
-            if (!isNaN(lastAngle)) {
-            result.pline_params.angles.push(parseFloat(lastAngle.toFixed(2)));
-            }
-        }
-        
         // Преобразование пустых значений в пустые строки
         if (result.pline_params.pline_start === "empty") {
             result.pline_params.pline_start = "";
@@ -3947,6 +3943,45 @@ function SimpleCad() {
         }
         
         return result;
+    }
+
+    function add_doborn_element(pline_params) {
+        // Создаем данные для полилинии и сам элемент полилинии
+        var polylineData = buildPolyline(pline_params),
+        polylineElement = createPolyline(polylineData);
+        
+        // Обрабатываем созданный элемент полилинии
+        processPolylineElement(polylineElement);
+        
+        // Подгоняем содержимое к области просмотра
+        fitContentToView();
+        
+        // Отрисовываем текстовые элементы
+        renderTextElements(pline_params);
+        
+        // Обновляем длины сегментов полилинии
+        updatePolylineSegmentLengths(polylineElement.id(), {
+            mode: "lengths_all",
+            lengths: pline_params.lengths
+        });
+        
+        // Обрабатываем параметры полилинии
+        processPolylineParameters(polylineElement);
+        
+        // Применяем дополнительную обработку элемента
+        adjustPolylineBreaks(polylineElement);
+        
+        // Обновляем отображение параметров элемента
+        updateElementParametersDisplay(polylineElement);
+        
+        // Если у полилинии есть разрывы, подгоняем содержимое к области просмотра,
+        // иначе обновляем текущий слой
+        if (0 < Object.keys(polylineElement.attrs.pline_breaks).length) {
+            fitContentToView();
+        } else {
+            refreshCurrentLayer();
+        }
+    
     }
 
     function Ge(e, t, _, a) {
@@ -17987,7 +18022,46 @@ function SimpleCad() {
             case "save_as_template":
                 // console.log("save_as_template");
                 // saveLineAsTemplate();
-                console.log(extractFigureDataFromCurrentLayer());
+
+                var $figures = {
+                    "type": "figures_add_doborn",
+                    "pline_params": {
+                        "lengths": [
+                            105,
+                            127,
+                            66
+                        ],
+                        "angles": [
+                            155,
+                            58,
+                            -49
+                        ],
+                        "angles_mode": "y_line",
+                        "pline_start": "",
+                        "pline_start_val": 0,
+                        "pline_end": "",
+                        "pline_end_val": 0,
+                        "side_okras": "",
+                        "color": "",
+                        "cover": "",
+                        "thickness": "",
+                        "size": "",
+                        "amount": "",
+                        "pline_breaks": {},
+                        "texts": [
+                            {
+                                "name": "Текст 1",
+                                "text": "Текст",
+                                "is_visible": 1,
+                                "x": 137.2,
+                                "y": 196.8
+                            }
+                        ]
+                    }
+                }
+                
+                add_doborn_element($figures.pline_params);
+                // console.log(extractFigureDataFromCurrentLayer());
                 break;
             case "nde_as_modal_cropped_image":
                 handleImageCreation();
