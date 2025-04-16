@@ -8684,7 +8684,7 @@ function SimpleCad() {
         
         // Получаем оригинальные размеры объекта для текущего вида
         var originalViewSize = calculateBoundingBox(vo, false, false, false, false);
-        
+
         // Рассчитываем коэффициенты масштабирования для сохранения пропорций
         var widthRatio = availableSpace.width / originalViewSize.width;
         var heightRatio = availableSpace.height / originalViewSize.height;
@@ -8698,7 +8698,7 @@ function SimpleCad() {
         
         // Получаем размеры после масштабирования
         var scaledViewSize = calculateBoundingBox(vo, false, false, false, false);
-        
+
         // Вычисляем необходимое смещение для центрирования
         var offsetX = scaledViewSize.x_min - Fo[vo];
         var offsetY = scaledViewSize.y_max - Ao[vo];
@@ -16189,9 +16189,15 @@ function SimpleCad() {
         if (index > 0) {
             pdf.addPage();
         }
-        
+
+        const cropDimensions = calculateBoundingBox(vo, false, false, false, false);
+
         // Преобразуем в изображение
         to[vo].toImage({
+            x: cropDimensions.x_min - 50,
+            y: cropDimensions.y_min - 50,
+            width: cropDimensions.x_max + 100,
+            height: cropDimensions.y_max + 200,
             callback: function(imageResult) {
                 var img = new Image();
                 img.src = imageResult.src;
@@ -16211,9 +16217,10 @@ function SimpleCad() {
                     var imgWidth = img.width * ratio;
                     var imgHeight = img.height * ratio;
                     
-                    // Позиционируем изображение по центру страницы
+                    // Позиционируем изображение по центру по горизонтали
+                    // и с отступом 200 единиц сверху
                     var x = (pdfWidth - imgWidth) / 2;
-                    var y = (pdfHeight - imgHeight) / 2;
+                    var y = 10; // Фиксированный отступ сверху
                     
                     // Добавляем изображение в PDF
                     pdf.addImage(
