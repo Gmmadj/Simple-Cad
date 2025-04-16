@@ -25,6 +25,7 @@
 	<script src="a_data/bootstrap.min.js" type="text/javascript"></script>
 	<script src="a_data/konva.min.js" type="text/javascript"></script>
 	<script src="a_data/jquery.inputmask.min.js" type="text/javascript"></script>
+	<script src="a_data/jspdf.umd.min.js" type="text/javascript"></script>
 	<script src="a_data/2dcore.js" type="text/javascript"></script>
 	<script src="a_data/app_nde.js" type="text/javascript"></script>
 </head>
@@ -1167,9 +1168,32 @@
 					</div>
 				</div>
 			</div>
+
 			<div class="d_nav_bot" id="r_d_nav_bot">
 				<div class="row">
-					<div class="col-xs-12" id="r_d_nav_bot_file">&nbsp;</div>
+					<div class="col-xs-12" id="r_d_nav_bot_file">
+						<div class="template-tabs-container">
+							<div class="template-tabs-block">
+								<div class="template-tab-scroll-btn template-tab-scroll-btn-left">
+									<i class="fa fa-chevron-left" aria-hidden="true"></i>
+								</div>
+								<div class="template-tabs-wrapper">
+									<div class="template-tabs">
+										<div class="template-tab active" data-template-id="1">
+											<span class="template-tab-name">Шаблон 1</span>
+										</div>										
+									</div>
+								</div>
+								<div class="template-tab-scroll-btn template-tab-scroll-btn-right">
+									<i class="fa fa-chevron-right" aria-hidden="true"></i>
+								</div>
+							</div>
+							<div class="template-tab-add" onclick="SimpleCad.Action({'type':'template_add'});">
+								<span class="template-tab-name">Добавить шаблон</span>
+								<i class="fa fa-plus" aria-hidden="true"></i>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div id="modal_html" class="modal " tabindex="-1" role="dialog">

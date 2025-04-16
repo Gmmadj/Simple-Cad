@@ -3901,3 +3901,38 @@ h2.modal_z_h2 {
         text-align: center;
     }
 }
+
+.template-tabs-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.template-tabs, .template-tabs-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.scroll-btn-active {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.template-tab {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 2px;
+}
+.template-tab.active {
+    background: white;
+}
+.template-tab-scroll-btn {
+    display: none;
+}
+.template-tab-add {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    padding: 5px 20px;
+    background: #7096b9;
+    color: #fff;
+}

@@ -1475,7 +1475,7 @@ function SimpleCad() {
         var t = e[0].attributes["data-obj-element"].value;
         if ("sznde" != ei.type || "pline" != t) {
             var _ = e[0].attributes["data-obj-id"].value;
-            T(_, {})
+            selectAndDisplayElement(_, {})
         }
     }
 
@@ -1500,7 +1500,7 @@ function SimpleCad() {
             case "default":
                 // В режиме по умолчанию выбираем элемент
                 var elementId = event.target.attrs.id;
-                T(elementId, {}); // Выбор элемента
+                selectAndDisplayElement(elementId, {}); // Выбор элемента
                 break;
 
             case "add_element":
@@ -1608,10 +1608,40 @@ function SimpleCad() {
         }
     }
 
-    function T(e, t) {
-        "undefined" == typeof t.is_move_show && (t.is_move_show = !0), resetCADState(), setDefaultMode(), S(e, {
-            is_move_show: t.is_move_show
-        }), P(e), D(), j_()
+    /**
+     * Функция выбирает и отображает элемент CAD в интерфейсе.
+     * Устанавливает элемент как активный, показывает его в списке объектов
+     * и обновляет связанные элементы управления.
+     *
+     * @param {string} elementId - Идентификатор элемента для выбора
+     * @param {Object} options - Параметры выбора элемента
+     * @param {boolean} [options.is_move_show=true] - Флаг отображения элементов перемещения
+     */
+    function selectAndDisplayElement(elementId, options) {
+        // Установка параметра отображения элементов перемещения по умолчанию, если не задан
+        if (typeof options.is_move_show == "undefined") {
+            options.is_move_show = true;
+        }
+        
+        // Сброс текущего состояния CAD (очистка выделения и вспомогательных элементов)
+        resetCADState();
+        
+        // Установка режима по умолчанию (выбор элементов)
+        setDefaultMode();
+        
+        // Выделение элемента с указанным ID и настройкой отображения маркеров перемещения
+        S(elementId, {
+            is_move_show: options.is_move_show
+        });
+        
+        // Отмечаем элемент как активный в списке объектов интерфейса
+        P(elementId);
+        
+        // Обновляем таблицу свойств объекта
+        D();
+        
+        // Обновляем доступность кнопки удаления (делаем её активной)
+        j_();
     }
 
     function S(e, t) {
@@ -3759,7 +3789,7 @@ function SimpleCad() {
         $(".d_elements_button").removeClass('active');
 
         if (Oo.mode == 'add_element') {
-            gs();
+            hideLineWithSideColor();
             polylineId = Zi.id();
             let points = Zi.points();
             
@@ -3773,7 +3803,7 @@ function SimpleCad() {
             En();
         }
 
-        gs();
+        hideLineWithSideColor();
 
 
         if ($rotate.hasClass('active')) {
@@ -5580,7 +5610,7 @@ function SimpleCad() {
         // Добавляем обработчики событий для линии подсветки
         dimensionText.on("mouseenter", function(e) {
             if ("undefined" === Zi) {
-                gs()
+                hideLineWithSideColor()
             }
             
             highlightPolylineSegment(
@@ -10733,7 +10763,7 @@ function SimpleCad() {
 
     function ja(e) {
         var t = e.substr(0, e.indexOf("__"));
-        switch (T(e, {}), za(t), t) {
+        switch (selectAndDisplayElement(e, {}), za(t), t) {
             case "pline":
                 st(Zi), Ji = "temp";
                 break;
@@ -13932,7 +13962,7 @@ function SimpleCad() {
                     case "h_pline_add_paste_figure":
                         switch (_) {
                             case "before":
-                                T(t.pline_data.id, {
+                                selectAndDisplayElement(t.pline_data.id, {
                                     is_move_show: !1
                                 }), SimpleCad.Action({
                                     type: "trash",
@@ -13952,12 +13982,12 @@ function SimpleCad() {
                         });
                         break;
                     case "h_mirror_hor_element_pline":
-                        T(t.element_id, {
+                        selectAndDisplayElement(t.element_id, {
                             is_move_show: !1
                         }), Nr(Zi, !1), se(), oe(), ce(), Zi.stroke(mainColors.default_element_color), Zi = "undefined", to[vo].draw(), zi = "";
                         break;
                     case "h_rotate_element_pline":
-                        switch (T(t.element_id, {
+                        switch (selectAndDisplayElement(t.element_id, {
                                 is_move_show: !1
                             }), _) {
                             case "before":
@@ -13977,7 +14007,7 @@ function SimpleCad() {
                                 processPolylineElement(p), N_(p), da(), to[vo].draw();
                                 break;
                             case "after":
-                                T(t.pline_data.id, {
+                                selectAndDisplayElement(t.pline_data.id, {
                                     is_move_show: !1
                                 }), SimpleCad.Action({
                                     type: "trash",
@@ -14012,7 +14042,7 @@ function SimpleCad() {
                         switch (_) {
                             case "before":
                                 $.each(t.plines_data, function(e, t) {
-                                    T(t.id, {
+                                    selectAndDisplayElement(t.id, {
                                         is_move_show: !1
                                     }), SimpleCad.Action({
                                         type: "trash",
@@ -15440,14 +15470,25 @@ function SimpleCad() {
             // Обновляем текущий слой, если были изменения
             is_changed && refreshCurrentLayer();
         }
-}
+    }
 
-    function gs() {
-        $.each(to[vo].children, function(e, t) {
-            if ("Line" == t.className && "undefined" != typeof t.attrs.side_okras) return T(t.id(), {
-                is_move_show: !1
-            }), !1
-        })
+    /**
+     * Скрывает отображение перемещения для линий, имеющих атрибут side_okras
+     * @returns {undefined}
+     */
+    function hideLineWithSideColor() {
+        // Перебираем дочерние элементы объекта to[vo]
+        $.each(to[vo].children, function(index, element) {
+            // Проверяем, является ли элемент линией и имеет ли атрибут side_okras
+            if ("Line" == element.className && "undefined" != typeof element.attrs.side_okras) {
+                // Вызываем функцию T для скрытия перемещения элемента
+                selectAndDisplayElement(element.id(), {
+                    is_move_show: !1
+                });
+                // Прерываем итерацию, так как нашли нужный элемент
+                return !1;
+            }
+        });
     }
 
     function setCurrentElement() {
@@ -15808,7 +15849,10 @@ function SimpleCad() {
                 y: _.y0_length
             })
         }), t
-    }
+    }    
+
+    // Получаем ключи всех шаблонов
+    var pdf, templateKeys, processedTemplates, totalTemplates;
 
     /**
      * Обрабатывает создание изображения из контента и последующее отображение в модальном окне
@@ -15817,37 +15861,111 @@ function SimpleCad() {
      * @returns {void}
      */
     function handleImageCreation() {
-        console.log(countValidChildren())
-        if (0 == countValidChildren()) {
-            // Если countValidChildren() возвращает 0, создаем изображение для отображения в модальном окне
-            var imageResult = to[vo].toImage({
-                callback: function(imageResult) {
-                    // Вставляем изображение в модальное окно
-                    $("#modal_save_appendblock").html(imageResult);
-                    // Отображаем модальное окно сохранения
-                    showModalWindow("save", {});
-                }
-            });
-        } else {
-            // Создаем объект для хранения данных об изображении
-            uo = {};
-            
-            var imageResult = to[vo].toImage({
-                callback: function(imageResult) {
-                    // Сохраняем источник изображения
-                    uo.tab_img_src = imageResult.src;
-                    // Определяем область изображения
-                    uo.tab_region = calculateBoundingBox(vo, false, true, true, true);
-                    // Отправляем данные изображения для дальнейшей обработки
-                    sendServerRequest("nde_as_modal_cropped_image", {
-                        image: uo
-                    });
-                }
-            });
+        // Создаем объект для хранения данных об изображении
+        uo = {};
+        
+        // Создаем PDF документ
+        pdf = new window.jspdf.jsPDF({
+            orientation: 'landscape',
+            unit: 'mm'
+        });
 
-            console.log(imageResult);
+        // Получаем ключи всех шаблонов
+        templateKeys = Object.keys(templateStorage);
+        processedTemplates = 0;
+        totalTemplates = templateKeys.length;
+
+        // Начинаем обработку шаблонов
+        if (totalTemplates > 0) {
+            saveTemplateState(currentTemplateId);
+            processTemplate(templateKeys[0], 0);
+        } else {
+            createAndShowTemporaryNotification({
+                text: "Нет шаблонов для экспорта",
+                type: "warning"
+            });
         }
+
     }
+
+    // Функция для обработки каждого шаблона
+    function processTemplate(templateKey, index) {        
+        loadTemplateState(templateKey)
+
+        // Добавляем новую страницу для шаблонов после первого
+        if (index > 0) {
+            pdf.addPage();
+        }
+        
+        // Конвертируем шаблон в изображение
+        to[vo].toImage({
+            callback: function(imageResult) {
+                // Создаем изображение для получения размеров
+                var img = new Image();
+                img.src = imageResult.src;
+                
+                img.onload = function() {
+                    // Определяем оптимальные размеры для PDF страницы
+                    var pdfWidth = pdf.internal.pageSize.getWidth();
+                    var pdfHeight = pdf.internal.pageSize.getHeight();
+                    
+                    // Вычисляем пропорции для сохранения соотношения сторон
+                    var ratio = Math.min(
+                        pdfWidth / img.width,
+                        pdfHeight / img.height
+                    );
+                    
+                    // Вычисляем размеры изображения на PDF
+                    var imgWidth = img.width * ratio;
+                    var imgHeight = img.height * ratio;
+                    
+                    // Позиционируем изображение по центру страницы
+                    var x = (pdfWidth - imgWidth) / 2;
+                    var y = (pdfHeight - imgHeight) / 2;
+                    
+                    // Добавляем изображение в PDF
+                    pdf.addImage(
+                        imageResult.src,
+                        'PNG',
+                        x, y,
+                        imgWidth, imgHeight
+                    );
+                
+                    // Обновляем счетчик обработанных шаблонов
+                    processedTemplates++;
+                    
+                    // Обрабатываем следующий шаблон или сохраняем PDF если все шаблоны обработаны
+                    if (processedTemplates < totalTemplates) {
+                        processTemplate(templateKeys[processedTemplates], processedTemplates);
+                    } else {
+                        savePDF();
+                        loadTemplateState(currentTemplateId);
+                    }
+                };
+            }
+        });
+    }
+
+    // Функция для сохранения PDF
+    function savePDF() {
+        // Генерируем имя файла с текущей датой и временем
+        var now = new Date();
+        var fileName = 'simplecad_all_templates_' + now.getFullYear() + 
+                    ('0' + (now.getMonth() + 1)).slice(-2) + 
+                    ('0' + now.getDate()).slice(-2) + '_' + 
+                    ('0' + now.getHours()).slice(-2) + 
+                    ('0' + now.getMinutes()).slice(-2) + '.pdf';
+        
+        // Сохраняем PDF файл
+        pdf.save(fileName);
+        
+        // Показываем уведомление пользователю
+        createAndShowTemporaryNotification({
+            text: "PDF файл со всеми шаблонами успешно сохранен: " + fileName,
+            type: "success"
+        });
+    }
+
 
     function Cs(e) {
         $("#modal_save_appendblock").html("<img src=\"" + e.base64_croped + "\">"), showModalWindow("save", {})
@@ -15940,6 +16058,152 @@ function SimpleCad() {
             });
         }
     }
+
+    /**
+     * Обрабатывает удаление выбранного элемента из CAD-проекта
+     * 
+     * Функция проверяет тип текущего контекста (ei.type) и состояние выбранного элемента (Zi),
+     * выполняет удаление и связанные с ним операции (очистка дочерних элементов, обновление холста и т.д.),
+     * а также отображает сообщения об ошибках, если элемент не может быть удален.
+     * 
+     * @param {Object} options - Параметры для обработки удаления
+     * @param {boolean} [options.is_history=true] - Флаг, указывающий, нужно ли сохранять действие в истории
+     */
+    function handleElementDeletion(options) {
+        // Проверяем тип текущего контекста и выполняем соответствующие действия
+        switch (ei.type) {
+            case "sznde":
+                // Если нет выбранного элемента Zi, вызываем функцию hideLineWithSideColor()
+                if (typeof Zi === "undefined" || Zi === "undefined") {
+                    hideLineWithSideColor();
+                }
+                break;
+            case "roof":
+                // Если есть контекстный элемент zi, отключаем его показ
+                if (zi !== "") {
+                    selectAndDisplayElement(zi, {
+                        is_move_show: false
+                    });
+                }
+                break;
+            default:
+                // Для других типов ничего не делаем
+        }
+        
+        // Проверяем, есть ли выбранный элемент и доступно ли удаление (Uo === false)
+        if (typeof Zi !== "undefined" && Zi !== "undefined" /* && Uo === false */) {
+            // Устанавливаем флаг сохранения в истории, если он не был задан
+            if (typeof options.is_history === "undefined") {
+                options.is_history = true;
+            }
+            
+            // Получаем идентификатор элемента и его тип
+            var elementId = Zi.id();
+            var elementType = elementId.substr(0, elementId.indexOf("__"));
+            var parentElementId = "";
+            
+            // Для полилинии (pline) в режиме крыши (roof) сохраняем действие в истории
+            if (elementType === "pline" && options.is_history && ei.type === "roof") {
+                di = {
+                    type: "h_trash_pline",
+                    need_layer_num: yo,
+                    need_tab_scale: Go.g_scale[vo],
+                    need_axis: {
+                        g_x: Fo[vo],
+                        g_y: Ao[vo],
+                        current_layer_name: vo
+                    },
+                    pline_data: {
+                        id: Zi.attrs.id,
+                        name: Zi.attrs.name,
+                        points: JSON.copy(Zi.attrs.points),
+                        offset_origin: JSON.copy(Zi.attrs.offset_origin),
+                        columns_sheets: typeof Zi.attrs.columns_sheets === "undefined" ? [] : JSON.copy(Zi.attrs.columns_sheets),
+                        is_offset_origin_add: false
+                    }
+                };
+                
+                // Добавляем запись в историю
+                An({
+                    mode: "add",
+                    element: di
+                });
+            }
+            
+            // Если это блок линий, сохраняем его родительский ID
+            if (elementType === "lineblock") {
+                parentElementId = Zi.attrs.parent_id;
+            }
+            
+            // Удаляем элемент, если это полилиния или линия
+            if (elementType === "pline" || elementType === "line") {
+                q(Zi.id());
+            }
+            
+            // Для полилинии удаляем все дочерние элементы
+            if (elementType === "pline") {
+                removeChildElementsByParentId(Zi.id());
+            }
+            
+            // Для полилинии в режимах крыши или эскизов вызываем функцию $_
+            if (elementType === "pline" && $.inArray(ei.type, ["roof", "sznde"]) !== -1) {
+                $_(Zi.id());
+            }
+            
+            // Сбрасываем активный элемент
+            resetActiveElement();
+            
+            // Если был сохранен родительский ID, обрабатываем этот элемент
+            if (parentElementId !== "") {
+                processElementById(parentElementId);
+                to[vo].draw();
+            }
+            
+            // Вызываем функцию обновления интерфейса
+            k_();
+            
+            // Для полилинии в режиме крыши обновляем данные
+            if (elementType === "pline" && ei.type === "roof") {
+                da();
+            }
+            
+            // Делаем кнопку удаления неактивной
+            C_();
+            
+            // Скрываем контекстное меню, если оно было видимо
+            if (zi !== "") {
+                kl.hide();
+                zi = "";
+            }
+            
+            // Для полилинии в режиме эскиза очищаем интерфейс
+            if (elementType === "pline" && ei.type === "sznde") {
+                ys();
+            }
+        } else {
+            // Если нет выбранного элемента или удаление недоступно, показываем сообщение об ошибке
+            switch (ei.type) {
+                case "sznde":
+                    // Показываем уведомление о том, что элементы не найдены
+                    createAndShowTemporaryNotification({
+                        text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
+                        type: "error"
+                    });
+                    break;
+                case "roof":
+                    // Логируем сообщение и показываем модальное окно с ошибкой
+                    console.log("roof");
+                    SimpleCad.Action({
+                        type: "ModalShow",
+                        target: "trash_btn_click_error"
+                    });
+                    break;
+                default:
+                    // Для других типов ничего не делаем
+            }
+        }
+    }
+
 
     function Os(e) {
         createAndShowTemporaryNotification({
@@ -16051,6 +16315,263 @@ function SimpleCad() {
         
         return result;
     }
+
+    /**
+     * Хранилище для шаблонов
+     * Структура: { id: { data: {...}, name: "Шаблон X" } }
+     */
+    var templateStorage = {};
+
+    /**
+     * Текущий активный шаблон
+     */
+    var currentTemplateId = 1;
+
+    /**
+     * Счетчик для генерации ID шаблонов
+     */
+    var templateIdCounter = 1;
+
+
+    // extractFigureDataFromCurrentLayer();
+    // addDobornElement(_.pline_params);
+    /**
+     * Сохраняет текущее состояние как шаблон с указанным ID
+     * 
+     * @param {number} templateId - ID шаблона для сохранения
+     * @param {string} templateName - Название шаблона
+     * @returns {Object} - Сохраненный шаблон
+     */
+    function saveTemplateState(templateId, templateName) {
+        // Ищем элемент с side_okras для сохранения в шаблон
+        var templateData = extractFigureDataFromCurrentLayer();
+
+        // Если нет данных, создаем пустой шаблон
+        if (!templateData) {
+            templateData = {
+                lengths: [],
+                angles: [],
+                pline_start: "",
+                pline_start_val: 0,
+                pline_end: "",
+                pline_end_val: 0,
+                side_okras: "",
+                pline_breaks: {},
+                texts: []
+            };
+        }
+        
+        // Сохраняем шаблон в хранилище
+        templateStorage[templateId] = {
+            data: templateData.pline_params || templateData,
+            name: templateName || "Шаблон " + templateId
+        };
+        
+        return templateStorage[templateId];
+    }
+
+    /**
+     * Загружает шаблон с указанным ID
+     * 
+     * @param {number} templateId - ID шаблона для загрузки
+     * @returns {boolean} - true если загрузка успешна, иначе false
+     */
+    function loadTemplateState(templateId) {
+        // Проверяем существование шаблона
+        if (!templateStorage[templateId]) {
+            createAndShowTemporaryNotification({
+                text: "Шаблон не найден",
+                type: "error"
+            });
+            return false;
+        }
+        
+        // Очищаем текущий холст
+        handleElementDeletion({'type':'trash','trash_subtype':'top_right'})
+        
+        // Получаем данные шаблона
+        var template = templateStorage[templateId];
+        
+        addDobornElement(template.data);
+        
+        // Обновляем активную вкладку в интерфейсе
+        updateActiveTemplateTab(templateId);
+        
+        // Устанавливаем текущий шаблон
+        currentTemplateId = templateId;
+        
+        return true;
+    }
+
+    /**
+     * Создает новый шаблон на основе текущего состояния
+     * 
+     * @returns {number} - ID нового шаблона
+     */
+    function addNewTemplate() {
+        // Сохраняем текущий шаблон, если он существует
+        if (currentTemplateId) {
+            saveTemplateState(currentTemplateId);
+        }
+        
+        // Генерируем новый ID для шаблона
+        templateIdCounter++;
+        var newTemplateId = templateIdCounter;
+        
+        // Создаем новый шаблон (пустой или копию текущего)
+        var newTemplateName = "Шаблон " + newTemplateId;
+        
+        // Определяем, создавать ли пустой шаблон или копию текущего
+        var createEmptyTemplate = true; // Можно сделать опцией пользователя
+        
+        if (!createEmptyTemplate && currentTemplateId && templateStorage[currentTemplateId]) {
+            // Копируем данные текущего шаблона
+            var currentTemplate = templateStorage[currentTemplateId];
+            templateStorage[newTemplateId] = {
+                data: JSON.copy(currentTemplate.data),
+                name: newTemplateName
+            };
+        } else {
+            // Создаем пустой шаблон
+            templateStorage[newTemplateId] = {
+                data: {
+                    lengths: [],
+                    angles: [],
+                    pline_start: "",
+                    pline_start_val: 0,
+                    pline_end: "",
+                    pline_end_val: 0,
+                    side_okras: "",
+                    pline_breaks: {},
+                    texts: []
+                },
+                name: newTemplateName
+            };
+            
+            // Очищаем холст для нового шаблона
+            handleElementDeletion({'type':'trash','trash_subtype':'top_right'})            
+        }
+        
+        // Добавляем вкладку в интерфейс
+        addTemplateTab(newTemplateId, newTemplateName);
+        
+        // Устанавливаем новый шаблон как текущий
+        currentTemplateId = newTemplateId;
+        
+        // Уведомляем пользователя
+        createAndShowTemporaryNotification({
+            text: "Создан новый шаблон",
+            type: "success"
+        });
+        
+        return newTemplateId;
+    }
+
+    /**
+     * Добавляет новую вкладку шаблона в интерфейс
+     * 
+     * @param {number} templateId - ID шаблона
+     * @param {string} templateName - Название шаблона
+     */
+    function addTemplateTab(templateId, templateName) {
+        // Создаем HTML для новой вкладки
+        var tabHtml = '<div class="template-tab" data-template-id="' + templateId + '">' +
+                    '<span class="template-tab-name">' + (templateName || "Шаблон " + templateId) + '</span>' +
+                    '</div>';
+        
+        // Добавляем вкладку в контейнер
+        $('.template-tabs').append(tabHtml);
+        
+        // Обновляем активную вкладку
+        updateActiveTemplateTab(templateId);
+        
+        // Прокручиваем к новой вкладке
+        scrollToTemplateTab(templateId);
+    }
+
+    /**
+     * Обновляет активную вкладку в интерфейсе
+     * 
+     * @param {number} templateId - ID активного шаблона
+     */
+    function updateActiveTemplateTab(templateId) {
+        // Удаляем класс active со всех вкладок
+        $('.template-tab').removeClass('active');
+        
+        // Добавляем класс active нужной вкладке
+        $('.template-tab[data-template-id="' + templateId + '"]').addClass('active');
+    }
+
+    /**
+     * Прокручивает список вкладок к указанной вкладке
+     * 
+     * @param {number} templateId - ID шаблона, к которому нужно прокрутить
+     */
+    function scrollToTemplateTab(templateId) {
+        var $tab = $('.template-tab[data-template-id="' + templateId + '"]');
+        var $wrapper = $('.template-tabs-wrapper');
+        
+        if ($tab.length) {
+            var tabOffset = $tab.position().left;
+            var wrapperWidth = $wrapper.width();
+            
+            // Вычисляем позицию прокрутки, чтобы показать вкладку посередине
+            var scrollPosition = tabOffset - (wrapperWidth / 2) + ($tab.width() / 2);
+            
+            // Прокручиваем плавно
+            $('.template-tabs').animate({
+                scrollLeft: scrollPosition
+            }, 300);
+        }
+    }
+
+    /**
+     * Инициализирует обработчики событий для работы с шаблонами
+     */
+    function initializeTemplateHandlers() {
+        // Обработчик клика на вкладку шаблона
+        $(document).on('click', '.template-tab', function() {
+            var templateId = parseInt($(this).attr('data-template-id'));
+            
+            // Сохраняем текущий шаблон перед переключением
+            if (currentTemplateId) {
+                saveTemplateState(currentTemplateId);
+            }
+            
+            // Загружаем выбранный шаблон
+            loadTemplateState(templateId);
+        });
+        
+        // Обработчики для кнопок прокрутки
+        $(document).on('click', '.template-tab-scroll-btn-left', function() {
+            var scrollPosition = $('.template-tabs').scrollLeft();
+            $('.template-tabs').animate({
+                scrollLeft: scrollPosition - 150
+            }, 300);
+        });
+        
+        $(document).on('click', '.template-tab-scroll-btn-right', function() {
+            var scrollPosition = $('.template-tabs').scrollLeft();
+            $('.template-tabs').animate({
+                scrollLeft: scrollPosition + 150
+            }, 300);
+        });
+        
+        // Создаем первый шаблон, если его нет
+        if (!templateStorage[1]) {
+            saveTemplateState(1, "Шаблон 1");
+            
+            // Если нет вкладок в интерфейсе, добавляем первую
+            if ($('.template-tab').length === 0) {
+                addTemplateTab(1, "Шаблон 1");
+            }
+        }
+    }
+
+    // Вызываем инициализацию обработчиков после загрузки страницы
+    $(document).ready(function() {
+        initializeTemplateHandlers();
+    });
 
     function qs(e, t) {
         var _ = !1;
@@ -17740,11 +18261,11 @@ function SimpleCad() {
                 if ("" == zi) {
                     // Проверяем, есть ли тип `ei.type` в массиве ["sznde"]
                     if (-1 !== $.inArray(ei.type, ["sznde"])) {
-                        gs(); // Выполняем функцию `gs`, если условие выполнено
+                        hideLineWithSideColor(); // Выполняем функцию `gs`, если условие выполнено
                     }
                 } else {
                     // Если `zi` не пустая, вызываем функцию `T` с параметрами
-                    // T(zi, {
+                    // selectAndDisplayElement(zi, {
                     //     is_move_show: !1 // Устанавливаем флаг `is_move_show` в false
                     // });
                 }
@@ -17781,7 +18302,7 @@ function SimpleCad() {
                 }
                 break;
             case "mirror_hor":
-                "" != zi && T(zi, {
+                "" != zi && selectAndDisplayElement(zi, {
                     is_move_show: !1
                 }), "undefined" != typeof Zi && "undefined" !== Zi ? (Nr(Zi, !0), "" != zi && (se(), oe(), ce(), Zi.stroke("#ff8223"), Zi = "undefined")) : SimpleCad.Action({
                     type: "ModalShow",
@@ -18225,58 +18746,7 @@ function SimpleCad() {
                 o_();
                 break;
             case "trash":
-                switch (ei.type) {
-                    case "sznde":
-                        "undefined" != typeof Zi && "undefined" !== Zi || gs();
-                        break;
-                    case "roof":
-                        "" != zi && T(zi, {
-                            is_move_show: !1
-                        });
-                        break;
-                    default:
-                }
-                if ("undefined" != typeof Zi && "undefined" !== Zi && !1 == Uo) {
-                    "undefined" == typeof _.is_history && (_.is_history = !0);
-                    var be = Zi.id(),
-                        ve = be.substr(0, be.indexOf("__")),
-                        xe = "";
-                    "pline" == ve && _.is_history && "roof" == ei.type && (di = {
-                        type: "h_trash_pline",
-                        need_layer_num: yo,
-                        need_tab_scale: Go.g_scale[vo],
-                        need_axis: {
-                            g_x: Fo[vo],
-                            g_y: Ao[vo],
-                            current_layer_name: vo
-                        },
-                        pline_data: {
-                            id: Zi.attrs.id,
-                            name: Zi.attrs.name,
-                            points: JSON.copy(Zi.attrs.points),
-                            offset_origin: JSON.copy(Zi.attrs.offset_origin),
-                            columns_sheets: "undefined" == typeof Zi.attrs.columns_sheets ? [] : JSON.copy(Zi.attrs.columns_sheets),
-                            is_offset_origin_add: !1
-                        }
-                    }, An({
-                        mode: "add",
-                        element: di
-                    })), "lineblock" == ve && (xe = Zi.attrs.parent_id), ("pline" == ve || "line" == ve) && q(Zi.id()), "pline" == ve && removeChildElementsByParentId(Zi.id()), "pline" == ve && -1 !== $.inArray(ei.type, ["roof", "sznde"]) && $_(Zi.id()), resetActiveElement(), "" != xe && (processElementById(xe), to[vo].draw()), k_(), "pline" == ve && "roof" == ei.type && da(), C_(), "" != zi && kl.hide(), zi = "", "pline" == ve && "sznde" == ei.type && ys()
-                } else switch (ei.type) {
-                    case "sznde":
-                        createAndShowTemporaryNotification({
-                            text: "\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
-                            type: "error"
-                        });
-                        break;
-                    case "roof":
-                        SimpleCad.Action({
-                            type: "ModalShow",
-                            target: "trash_btn_click_error"
-                        });
-                        break;
-                    default:
-                }
+                handleElementDeletion(_)
                 break;
             case "scale":
                 Ke(_.param, "", !0, !0);
@@ -18296,6 +18766,7 @@ function SimpleCad() {
                 
                 if (isValidParameters) {
                     // Создаем данные для полилинии и сам элемент полилинии
+                    handleElementDeletion({'type':'trash','trash_subtype':'top_right'})
                     addDobornElement(_.pline_params);
                     
                     // Скрываем модальное окно
@@ -18485,6 +18956,9 @@ function SimpleCad() {
                 break;
             case "nde_template_remove":
                 Os(_);
+                break;
+            case 'template_add':
+                addNewTemplate();
                 break;
             default:
         }
