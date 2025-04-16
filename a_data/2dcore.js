@@ -4162,69 +4162,71 @@ function SimpleCad() {
                 return false; // прерываем цикл
             }
         });
-        
-        if (!polylineElement) {
-            console.error("В текущем слое не найден элемент типа Line с атрибутом side_okras");
+        if (!polylineElement) {           
             return null;
         }
         
+      
         // Формирование результата
         var result = {
             type: 'figures_doborn',
             pline_params: {
-                lengths: JSON.copy(polylineElement.attrs.pline_lengths_ish || []),
+                lengths: JSON.copy((polylineElement && polylineElement.attrs.pline_lengths_ish) || []),
                 angles: [],
                 angles_mode: 'y_line',
-                pline_start: polylineElement.attrs.pline_start || 'empty',
-                pline_start_val: polylineElement.attrs.pline_start_val || 0,
-                pline_end: polylineElement.attrs.pline_end || 'empty',
-                pline_end_val: polylineElement.attrs.pline_end_val || 0,
-                side_okras: polylineElement.attrs.side_okras || 'empty',
-                color: polylineElement.attrs.prod_color || '',
-                cover: polylineElement.attrs.prod_cover || '',
-                thickness: polylineElement.attrs.prod_thickness || '',
-                size: polylineElement.attrs.prod_size || '',
-                amount: polylineElement.attrs.prod_amount || '',
-                pline_breaks: JSON.copy(polylineElement.attrs.pline_breaks || {}),
+                pline_start: (polylineElement && polylineElement.attrs.pline_start) || 'empty',
+                pline_start_val: (polylineElement && polylineElement.attrs.pline_start_val) || 0,
+                pline_end: (polylineElement && polylineElement.attrs.pline_end) || 'empty',
+                pline_end_val: (polylineElement && polylineElement.attrs.pline_end_val) || 0,
+                side_okras: (polylineElement && polylineElement.attrs.side_okras) || 'empty',
+                color: (polylineElement && polylineElement.attrs.prod_color) || '',
+                cover: (polylineElement && polylineElement.attrs.prod_cover) || '',
+                thickness: (polylineElement && polylineElement.attrs.prod_thickness) || '',
+                size: (polylineElement && polylineElement.attrs.prod_size) || '',
+                amount: (polylineElement && polylineElement.attrs.prod_amount) || '',
+                pline_breaks: JSON.copy((polylineElement && polylineElement.attrs.pline_breaks) || {}),
                 texts: []
             }
         };
         
-        // Вычисление углов между сегментами
-        var points = polylineElement.points();
-        var pointsCount = points.length;
-        var segmentIndex = 0;
-        
-        for (var i = 0; i < (pointsCount - 2) / 2; i++) {
-            // Вычисляем угол между вертикальной линией и текущим сегментом
-            var angle = calculateAngle(
-                points[2 * segmentIndex + 0], -1000,  // Точка вертикальной линии вверх
-                points[2 * segmentIndex + 0], points[2 * segmentIndex + 1],  // Начальная точка сегмента
-                points[2 * segmentIndex + 2], points[2 * segmentIndex + 3],  // Конечная точка сегмента
-                true, true, false  // Параметры для расчета угла
-            );
+
+        if (polylineElement) {
+            // Вычисление углов между сегментами
+            var points = polylineElement.points();
+            var pointsCount = points.length;
+            var segmentIndex = 0;
             
-            if (isNaN(angle)) {
-                angle = 0;
+            for (var i = 0; i < (pointsCount - 2) / 2; i++) {
+                // Вычисляем угол между вертикальной линией и текущим сегментом
+                var angle = calculateAngle(
+                    points[2 * segmentIndex + 0], -1000,  // Точка вертикальной линии вверх
+                    points[2 * segmentIndex + 0], points[2 * segmentIndex + 1],  // Начальная точка сегмента
+                    points[2 * segmentIndex + 2], points[2 * segmentIndex + 3],  // Конечная точка сегмента
+                    true, true, false  // Параметры для расчета угла
+                );
+                
+                if (isNaN(angle)) {
+                    angle = 0;
+                }
+                
+                result.pline_params.angles.push(parseFloat(angle.toFixed(2)));
+                segmentIndex++;
             }
             
-            result.pline_params.angles.push(parseFloat(angle.toFixed(2)));
-            segmentIndex++;
+            // Поиск и добавление текстовых элементов
+            $.each(to[vo].children, function(_, element) {
+                if (element.className === "Text" && element.textHeight === 18) {
+                    console.log(element);
+                    result.pline_params.texts.push({
+                        name: element.attrs.name || '',
+                        text: element.attrs.text || '',
+                        is_visible: element.isVisible() ? 1 : 0,
+                        x: (element.attrs.x - Fo[vo]) * 100 / Go.g_scale[vo],
+                        y: (Ao[vo] - element.attrs.y) * 100 / Go.g_scale[vo]
+                    });
+                }
+            });
         }
-        
-        // Поиск и добавление текстовых элементов
-        $.each(to[vo].children, function(_, element) {
-            if (element.className === "Text" && element.textHeight === 18) {
-                console.log(element);
-                result.pline_params.texts.push({
-                    name: element.attrs.name || '',
-                    text: element.attrs.text || '',
-                    is_visible: element.isVisible() ? 1 : 0,
-                    x: (element.attrs.x - Fo[vo]) * 100 / Go.g_scale[vo],
-                    y: (Ao[vo] - element.attrs.y) * 100 / Go.g_scale[vo]
-                });
-            }
-        });
             
         // Преобразование пустых значений в пустые строки
         if (result.pline_params.pline_start === "empty") {
@@ -4236,7 +4238,7 @@ function SimpleCad() {
         if (result.pline_params.side_okras === "empty") {
             result.pline_params.side_okras = "";
         }
-        
+
         return result;
     }
 
@@ -4276,8 +4278,233 @@ function SimpleCad() {
         } else {
             refreshCurrentLayer();
         }
-    
     }
+
+    // Создаем глобальную переменную для отслеживания занятых областей холста
+    let occupiedAreas = [];
+
+    /**
+     * Добавляет доборный элемент на холст с учетом уже размещенных элементов
+     * 
+     * @param {Object} pline_params - Параметры полилинии
+     * @param {Object} options - Дополнительные опции размещения (необязательно)
+     * @param {number} options.padding - Отступ между элементами (по умолчанию 50)
+     * @returns {Konva.Line} - Созданный элемент полилинии
+     */
+    function addDobornElementWithSpacing(pline_params, options = {}) {
+        // Установка отступа по умолчанию
+        const padding = options.padding || 50;
+        
+        // Создаем копию параметров, чтобы не изменять оригинал
+        const params = JSON.copy(pline_params);
+        
+        // Создаем данные для полилинии
+        const polylineData = buildPolyline(params);
+        
+        // Вычисляем границы нового элемента
+        const elementBounds = calculateElementBoundsFromData(polylineData);
+        
+        // Находим свободное место для размещения
+        const position = findFreePosition(elementBounds, padding);
+        
+        // Применяем смещение к координатам полилинии
+        applyOffsetToPolylineData(polylineData, position);
+        
+        // Создаем элемент полилинии с обновленными координатами
+        const polylineElement = createPolyline(polylineData);
+        
+        // Регистрируем занятую область
+        registerOccupiedArea(elementBounds, position);
+        
+        // Стандартная обработка из исходной функции
+        processPolylineElement(polylineElement);
+        renderTextElements(params);
+        
+        updatePolylineSegmentLengths(polylineElement.id(), {
+            mode: "lengths_all",
+            lengths: params.lengths
+        });
+        
+        processPolylineParameters(polylineElement);
+        adjustPolylineBreaks(polylineElement);
+        updateElementParametersDisplay(polylineElement);
+        
+        if (0 < Object.keys(polylineElement.attrs.pline_breaks).length) {
+            fitContentToView();
+        } else {
+            refreshCurrentLayer();
+        }
+        
+        return polylineElement;
+    }
+
+    /**
+     * Вычисляет границы элемента на основе данных полилинии
+     * 
+     * @param {Object} polylineData - Данные полилинии
+     * @returns {Object} - Объект с координатами и размерами
+     */
+    function calculateElementBoundsFromData(polylineData) {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        
+        // Извлекаем массив точек из данных полилинии
+        const points = polylineData.points;
+        
+        // Находим граничные значения
+        for (let i = 0; i < points.length; i += 2) {
+            const x = points[i];
+            const y = points[i + 1];
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+        
+        return {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+        };
+    }
+
+    /**
+     * Находит свободную позицию для размещения элемента на холсте
+     * 
+     * @param {Object} bounds - Размеры элемента
+     * @param {number} padding - Отступ между элементами
+     * @returns {Object} - Координаты для размещения {x, y}
+     */
+    function findFreePosition(bounds, padding) {
+        // Если нет занятых областей, размещаем вначале с отступом
+        if (occupiedAreas.length === 0) {
+            return { x: padding, y: padding };
+        }
+        
+        // Получаем размеры холста
+        const canvasWidth = Ui.width() - padding; // Оставляем отступ справа
+        const canvasHeight = Ui.height() - padding; // Оставляем отступ снизу
+        
+        // Стратегия "следующая строка": размещаем элементы в ряд
+        // Когда ряд заканчивается, переходим на следующую строку
+        
+        // Находим максимальную высоту для всех элементов в текущем ряду
+        let maxRowY = 0;
+        let currentRowY = padding;
+        let nextX = padding;
+        
+        // Сортировка областей по y-координате для определения рядов
+        const sortedAreas = [...occupiedAreas].sort((a, b) => a.y - b.y);
+        
+        // Группируем области по рядам
+        const rows = [];
+        let currentRow = [];
+        
+        sortedAreas.forEach(area => {
+            // Если область начинается ниже текущего ряда + некоторый порог, считаем её в новом ряду
+            if (area.y > maxRowY + padding / 2) {
+                if (currentRow.length > 0) {
+                    rows.push(currentRow);
+                    currentRow = [];
+                }
+                maxRowY = area.y + area.height;
+            }
+            
+            currentRow.push(area);
+            maxRowY = Math.max(maxRowY, area.y + area.height);
+        });
+        
+        if (currentRow.length > 0) {
+            rows.push(currentRow);
+        }
+        
+        // Если есть ряды, проверяем последний ряд
+        if (rows.length > 0) {
+            const lastRow = rows[rows.length - 1];
+            
+            // Сортируем области в последнем ряду по x-координате
+            lastRow.sort((a, b) => a.x - b.x);
+            
+            // Находим правый край последней области
+            if (lastRow.length > 0) {
+                const lastArea = lastRow[lastRow.length - 1];
+                nextX = lastArea.x + lastArea.width + padding;
+                currentRowY = lastRow[0].y;
+                
+                // Если новый элемент не помещается в текущий ряд,
+                // начинаем новый ряд
+                if (nextX + bounds.width > canvasWidth) {
+                    nextX = padding;
+                    currentRowY = maxRowY + padding;
+                }
+            }
+        }
+        
+        // Проверяем, не выходит ли элемент за границы холста по высоте
+        if (currentRowY + bounds.height > canvasHeight) {
+            // Если выходит, можно увеличить размер холста или прокрутить его
+            // В данном случае просто уведомляем в консоли
+            console.warn("Element exceeds canvas height, consider scrolling or resizing");
+        }
+        
+        return { x: nextX, y: currentRowY };
+    }
+
+    /**
+     * Применяет смещение ко всем точкам полилинии
+     * 
+     * @param {Object} polylineData - Данные полилинии
+     * @param {Object} offset - Смещение {x, y}
+     */
+    function applyOffsetToPolylineData(polylineData, offset) {
+        const points = polylineData.points;
+        
+        // Определяем текущую позицию (минимальные координаты)
+        let minX = Infinity;
+        let minY = Infinity;
+        
+        for (let i = 0; i < points.length; i += 2) {
+            minX = Math.min(minX, points[i]);
+            minY = Math.min(minY, points[i + 1]);
+        }
+        
+        // Вычисляем смещение от текущей минимальной позиции к целевой
+        const deltaX = offset.x - minX;
+        const deltaY = offset.y - minY;
+        
+        // Применяем смещение ко всем точкам
+        for (let i = 0; i < points.length; i += 2) {
+            points[i] += deltaX;
+            points[i + 1] += deltaY;
+        }
+    }
+
+    /**
+     * Регистрирует занятую область на холсте
+     * 
+     * @param {Object} bounds - Размеры элемента
+     * @param {Object} position - Координаты размещения
+     */
+    function registerOccupiedArea(bounds, position) {
+        occupiedAreas.push({
+            x: position.x,
+            y: position.y,
+            width: bounds.width,
+            height: bounds.height
+        });
+    }
+
+    /**
+     * Очищает информацию о занятых областях
+     */
+    function clearOccupiedAreas() {
+        occupiedAreas = [];
+    }
+
 
     function Ge(e, t, _, a) {
         var r = "";
@@ -15855,57 +16082,122 @@ function SimpleCad() {
     var pdf, templateKeys, processedTemplates, totalTemplates;
 
     /**
+     * Группирует шаблоны из templateStorage по общим характеристикам
+     * @returns {Array} Массив сгруппированных шаблонов
+     */
+    function groupTemplatesByCharacteristics() {
+        // Объект для хранения сгруппированных шаблонов
+        const groupedTemplates = {};
+        
+        // Проходим по каждому шаблону в templateStorage
+        Object.entries(templateStorage).forEach(([templateId, template]) => {
+            const templateData = template.data;
+            // Создаем ключ на основе характеристик
+            const characteristics = `${templateData.color}_${templateData.cover}_${templateData.side_okras}_${templateData.thickness}_${templateData.size}`;
+
+            // Инициализируем группу, если она не существует
+            if (!groupedTemplates[characteristics]) {
+                groupedTemplates[characteristics] = {
+                    characteristics: {
+                        color: template.color,
+                        cover: template.cover,
+                        side_okras: template.side_okras,
+                        thickness: template.thickness,
+                        size: template.size
+                    },
+                    templates: []
+                };
+            }
+            
+            // Добавляем шаблон в соответствующую группу
+            groupedTemplates[characteristics].templates.push({
+                id: templateId,
+                data: template.data
+            });
+        });
+        
+        // Преобразуем объект в массив
+        return Object.values(groupedTemplates);
+    }
+
+    /**
      * Обрабатывает создание изображения из контента и последующее отображение в модальном окне
      * или передачу данных для дальнейшей обработки.
      * 
      * @returns {void}
      */
     function handleImageCreation() {
-        // Создаем объект для хранения данных об изображении
-        uo = {};
-        
+        // При необходимости подгоняем холст, чтобы видеть все элементы
+        fitContentToView();
+
         // Создаем PDF документ
         pdf = new window.jspdf.jsPDF({
-            orientation: 'landscape',
             unit: 'mm'
         });
 
-        // Получаем ключи всех шаблонов
-        templateKeys = Object.keys(templateStorage);
-        processedTemplates = 0;
-        totalTemplates = templateKeys.length;
-
-        // Начинаем обработку шаблонов
-        if (totalTemplates > 0) {
+        // Группируем шаблоны по характеристикам        
+        if (Object.keys(templateStorage).length > 0) {
+            // Сохраняем текущее состояние шаблона
             saveTemplateState(currentTemplateId);
-            processTemplate(templateKeys[0], 0);
+            const groupedTemplates = groupTemplatesByCharacteristics();
+
+            SimpleCad.Action({'type':'cad_toggle_show_grid'});
+            // Очищаем информацию о занятых областях и текущий холст
+            clearOccupiedAreas();
+            handleElementDeletion({'type':'trash','trash_subtype':'top_right'});
+            
+            // Начинаем обработку групп
+            processTemplateGroups(groupedTemplates, 0);
         } else {
             createAndShowTemporaryNotification({
                 text: "Нет шаблонов для экспорта",
                 type: "warning"
             });
         }
-
     }
 
-    // Функция для обработки каждого шаблона
-    function processTemplate(templateKey, index) {        
-        loadTemplateState(templateKey)
-
-        // Добавляем новую страницу для шаблонов после первого
+    /**
+     * Обрабатывает группы шаблонов одну за другой
+     * @param {Array} groups - Массив сгруппированных шаблонов
+     * @param {number} index - Индекс текущей группы
+     */
+    function processTemplateGroups(groups, index) {
+        if (index >= groups.length) {
+            savePDF();
+             // Очищаем холст для новой группы
+            handleElementDeletion({'type':'trash','trash_subtype':'top_right'});
+            loadTemplateState(currentTemplateId);
+            SimpleCad.Action({'type':'cad_toggle_show_grid'});
+            return;
+        }
+        
+        const group = groups[index];
+        
+        for (let i = 0; i < occupiedAreas.length; i++) {
+            handleElementDeletion({'type':'trash','trash_subtype':'top_right'});
+        }
+        
+        // Очищаем холст для новой группы    
+        clearOccupiedAreas();
+        
+        // Добавляем все шаблоны из группы с автоматическим размещением
+        for (const template of group.templates) {
+            addDobornElementWithSpacing(template.data, { padding: 100 });
+        }
+        fitContentToView();
+        // Добавляем новую страницу для групп после первой
         if (index > 0) {
             pdf.addPage();
         }
         
-        // Конвертируем шаблон в изображение
+        // Преобразуем в изображение
         to[vo].toImage({
             callback: function(imageResult) {
-                // Создаем изображение для получения размеров
                 var img = new Image();
                 img.src = imageResult.src;
                 
                 img.onload = function() {
-                    // Определяем оптимальные размеры для PDF страницы
+                    // Вычисляем оптимальные размеры для PDF
                     var pdfWidth = pdf.internal.pageSize.getWidth();
                     var pdfHeight = pdf.internal.pageSize.getHeight();
                     
@@ -15930,17 +16222,9 @@ function SimpleCad() {
                         x, y,
                         imgWidth, imgHeight
                     );
-                
-                    // Обновляем счетчик обработанных шаблонов
-                    processedTemplates++;
                     
-                    // Обрабатываем следующий шаблон или сохраняем PDF если все шаблоны обработаны
-                    if (processedTemplates < totalTemplates) {
-                        processTemplate(templateKeys[processedTemplates], processedTemplates);
-                    } else {
-                        savePDF();
-                        loadTemplateState(currentTemplateId);
-                    }
+                    // Обрабатываем следующую группу
+                    processTemplateGroups(groups, index + 1);
                 };
             }
         });
@@ -16332,9 +16616,6 @@ function SimpleCad() {
      */
     var templateIdCounter = 1;
 
-
-    // extractFigureDataFromCurrentLayer();
-    // addDobornElement(_.pline_params);
     /**
      * Сохраняет текущее состояние как шаблон с указанным ID
      * 
@@ -16343,7 +16624,6 @@ function SimpleCad() {
      * @returns {Object} - Сохраненный шаблон
      */
     function saveTemplateState(templateId, templateName) {
-        // Ищем элемент с side_okras для сохранения в шаблон
         var templateData = extractFigureDataFromCurrentLayer();
 
         // Если нет данных, создаем пустой шаблон
@@ -16378,13 +16658,13 @@ function SimpleCad() {
      */
     function loadTemplateState(templateId) {
         // Проверяем существование шаблона
-        if (!templateStorage[templateId]) {
-            createAndShowTemporaryNotification({
-                text: "Шаблон не найден",
-                type: "error"
-            });
-            return false;
-        }
+        // if (!templateStorage[templateId]) {
+        //     // createAndShowTemporaryNotification({
+        //     //     text: "Шаблон не найден",
+        //     //     type: "error"
+        //     // });
+        //     return false;
+        // }
         
         // Очищаем текущий холст
         handleElementDeletion({'type':'trash','trash_subtype':'top_right'})
@@ -16392,7 +16672,9 @@ function SimpleCad() {
         // Получаем данные шаблона
         var template = templateStorage[templateId];
         
-        addDobornElement(template.data);
+        if (template.data.lengths.length > 0) {
+            addDobornElement(template.data);
+        }
         
         // Обновляем активную вкладку в интерфейсе
         updateActiveTemplateTab(templateId);
