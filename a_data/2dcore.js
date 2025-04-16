@@ -15555,6 +15555,8 @@ function SimpleCad() {
      * @param {Object} e - Элемент, для которого нужно обновить отображение информации.
      */
     function updateElementParametersDisplay(e) {
+
+        return;
         if ("sznde" == ei.type && ! isRotateClick) {
             var t = e.attrs.prod_color,
                 _ = e.attrs.prod_cover,
@@ -16164,8 +16166,13 @@ function SimpleCad() {
     function processTemplateGroups(groups, index) {
         if (index >= groups.length) {
             savePDF();
-             // Очищаем холст для новой группы
-            handleElementDeletion({'type':'trash','trash_subtype':'top_right'});
+
+            // Очищаем холст для новой группы
+                
+            for (let i = 0; i < occupiedAreas.length; i++) {
+                handleElementDeletion({'type':'trash','trash_subtype':'top_right'});
+            }
+            
             loadTemplateState(currentTemplateId);
             SimpleCad.Action({'type':'cad_toggle_show_grid'});
             return;
@@ -16183,21 +16190,20 @@ function SimpleCad() {
         // Добавляем все шаблоны из группы с автоматическим размещением
         for (const template of group.templates) {
             addDobornElementWithSpacing(template.data, { padding: 100 });
-        }
-        fitContentToView();
+        }        
         // Добавляем новую страницу для групп после первой
         if (index > 0) {
             pdf.addPage();
         }
 
-        const cropDimensions = calculateBoundingBox(vo, false, false, false, false);
-
+        const cropDimensions = calculateBoundingBox(vo, false, true, false, true);
+    
         // Преобразуем в изображение
         to[vo].toImage({
-            x: cropDimensions.x_min - 50,
-            y: cropDimensions.y_min - 50,
-            width: cropDimensions.x_max + 100,
-            height: cropDimensions.y_max + 200,
+            x: cropDimensions.x_min - 30,
+            y: cropDimensions.y_min - 30,
+            width: cropDimensions.x_max + 10,
+            height: cropDimensions.y_max + 10,
             callback: function(imageResult) {
                 var img = new Image();
                 img.src = imageResult.src;
@@ -16220,7 +16226,7 @@ function SimpleCad() {
                     // Позиционируем изображение по центру по горизонтали
                     // и с отступом 200 единиц сверху
                     var x = (pdfWidth - imgWidth) / 2;
-                    var y = 10; // Фиксированный отступ сверху
+                    var y = (pdfHeight - imgHeight) / 2;
                     
                     // Добавляем изображение в PDF
                     pdf.addImage(
@@ -16229,7 +16235,6 @@ function SimpleCad() {
                         x, y,
                         imgWidth, imgHeight
                     );
-                    
                     // Обрабатываем следующую группу
                     processTemplateGroups(groups, index + 1);
                 };
