@@ -1185,6 +1185,8 @@ function SimpleCad() {
             child.destroy();  
         })
         to[vo].draw();
+
+        return children.length > 0;
     } 
 
     /**
@@ -2387,6 +2389,7 @@ function SimpleCad() {
      * @param {Object} actionParams - Параметры для выполнения действия
      */
     function sendServerRequest(actionType, actionParams) {
+        return
         // Формируем основные данные для запроса
         var requestData = {
             type: actionType,
@@ -2497,7 +2500,7 @@ function SimpleCad() {
                 // Для остальных типов просто передаем параметры
                 requestData.data = actionParams;
         }
-        return
+        
         // Выполняем AJAX-запрос
         $.ajax({
             url: Ds,
@@ -3159,35 +3162,35 @@ function SimpleCad() {
     }
 
     function le() {
-        var e = he();
-        if ("undefined" == typeof ro[vo]) {
-            var t = new Image;
-            t.onload = function() {
-                ro[vo] = new Konva.Image({
-                    x: e.x,
-                    y: e.y,
-                    image: t,
-                    width: 16,
-                    height: 16,
-                    draggable: !0,
-                    id: "move_image__" + vo
-                }), ro[vo].on("mouseover", function() {
-                    document.body.style.cursor = "pointer"
-                }), ro[vo].on("mouseout", function() {
-                    document.body.style.cursor = "default"
-                }), ro[vo].on("dragstart", function() {
-                    de()
-                }), ro[vo].on("dragend", function() {
-                    pe()
-                }), ro[vo].on("dragmove", function() {
-                    me()
-                }), to[vo].add(ro[vo]), to[vo].draw()
-            }, t.src = Ys + "online/move.png"
-        } else ro[vo].setAttrs({
-            visible: !0,
-            x: e.x,
-            y: e.y
-        }), to[vo].draw()
+        // var e = he();
+        // if ("undefined" == typeof ro[vo]) {
+        //     var t = new Image;
+        //     t.onload = function() {
+        //         ro[vo] = new Konva.Image({
+        //             x: e.x,
+        //             y: e.y,
+        //             image: t,
+        //             width: 16,
+        //             height: 16,
+        //             draggable: !0,
+        //             id: "move_image__" + vo
+        //         }), ro[vo].on("mouseover", function() {
+        //             document.body.style.cursor = "pointer"
+        //         }), ro[vo].on("mouseout", function() {
+        //             document.body.style.cursor = "default"
+        //         }), ro[vo].on("dragstart", function() {
+        //             de()
+        //         }), ro[vo].on("dragend", function() {
+        //             pe()
+        //         }), ro[vo].on("dragmove", function() {
+        //             me()
+        //         }), to[vo].add(ro[vo]), to[vo].draw()
+        //     }, t.src = Ys + "online/move.png"
+        // } else ro[vo].setAttrs({
+        //     visible: !0,
+        //     x: e.x,
+        //     y: e.y
+        // }), to[vo].draw()
     }
 
     function ce() {
@@ -5323,6 +5326,7 @@ function SimpleCad() {
                     
                     // Clean up
                     document.body.removeChild(input);
+                    document.removeEventListener('mousedown', handleOutsideClick);
                     
                     // Update any angle-related data/geometry if needed
                     if (typeof recalculatePathAnglesByPoint === 'function') {
@@ -5337,7 +5341,6 @@ function SimpleCad() {
                             $inputAngle = $('.nde_tbl_row_size_ang_ang_inp > [data-focus="'+ 2 * textObj.attrs.angle_num_counter +'"]')
                             
                             if ($inputAngle.length > 0) {
-                                console.log($inputAngle)
                                 $inputAngle.val(newAngle * signAngle);
                             }
                             
@@ -5364,15 +5367,20 @@ function SimpleCad() {
                     if (event.key === 'Enter') {
                         updateAngle();
                     } else if (event.key === 'Escape') {
-                        // Cancel editing
-                        textObj.visible(true);
-                        to[vo].draw();
-                        document.body.removeChild(input);
+                        updateAngle();
                     }
                 });
                 
-                // Update on blur
-                input.addEventListener('blur', updateAngle);
+                // Close editor when clicking outside the input
+                const handleOutsideClick = function(e) {
+                    // Check if the click is outside the input element
+                    if (e.target !== input) {
+                        updateAngle();
+                    }
+                };
+                
+                // Add the click event listener to the document
+                document.addEventListener('mousedown', handleOutsideClick);
             });
             $s[vo].add(w)
         }
@@ -5832,7 +5840,8 @@ function SimpleCad() {
             line_num_counter: lineCounter,
             listening: y_("listening_konva_text_line_length"), // Реагирование на события мыши из настроек
             zavalc_start_end: zavalcStartEnd,
-        });     
+            id: "size_text_" + parentId + "_" + lineCounter,
+        });
 
         // Добавляем обработчики событий для линии подсветки
         dimensionText.on("mouseenter", function(e) {
@@ -8617,7 +8626,7 @@ function SimpleCad() {
         }
         
         // Очистка содержимого модального окна и удаление фона
-        $("#modal_info_contents").html("");
+        // $("#modal_info_contents").html("");
         $(".modal-backdrop").remove();
     }
 
@@ -12841,7 +12850,6 @@ function SimpleCad() {
         // Сохраняем идентификатор родительской линии и сам элемент
         hi.pline_id = e.target.attrs.parent_id;
         hi.parent = Bi.find("#" + hi.pline_id);
-        
         // Сохраняем координаты клика
         hi.layerX = e.evt.layerX;
         hi.layerY = e.evt.layerY;
@@ -12903,9 +12911,127 @@ function SimpleCad() {
             hi.nearest_point_num_in_pline = hi.segment_num;
             hi.farthest_point_num_in_pline = hi.segment_num + 1;
         }
+                
+        // Сохраняем ссылку на текстовый объект
+        const textObj = Bi.find("#size_text_" + hi.pline_id + "_" + (hi.segment_num + 1))[0];
+
+        // Создаем элемент ввода для редактирования длины сегмента
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = hi.segment_length;
+        input.style.position = 'absolute';
+        input.style.zIndex = '10000';
         
-        // Показываем модальное окно для редактирования длины выбранного сегмента
-        showModalWindow("pline_segment_highlight_set_length", {});
+        // Позиционируем поле ввода в том же месте, где и текст
+        const absPos = textObj.getAbsolutePosition();
+        const stage = textObj.getStage();
+        const containerRect = stage.container().getBoundingClientRect();
+        
+        input.style.left = `${containerRect.left + absPos.x}px`;
+        input.style.top = `${containerRect.top + absPos.y}px`;
+        input.style.width = '60px';
+        input.style.fontSize = '14px';
+        input.style.fontFamily = 'Arial';
+        input.style.textAlign = 'center';
+        
+        // Скрываем оригинальный текст на время редактирования
+        textObj.visible(false);
+        to[vo].draw();
+        
+        // Добавляем поле ввода на страницу
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+        
+        // Функция для обновления длины сегмента с валидацией
+        const updateSegmentLength = () => {
+            // Получаем и валидируем введенное значение
+            let newLength = parseFloat(input.value);
+            
+            // Базовая проверка на NaN
+            if (isNaN(newLength)) {
+                newLength = hi.segment_length;
+            } else {                
+                // Проверяем минимальную длину сегмента (если требуется)
+                if (newLength <= 0) {
+                    newLength = 15; // Минимальная допустимая длина
+                }
+            }
+            
+            // Преобразуем введенное значение в числовой формат
+            var h = parseNumericValue(newLength);
+            
+            // Проверка и установка минимальной длины для режима "sznde"
+            if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                var u = isStartOrBeforeEndIndex(hi.segment_num, hi.parent[0].id());
+                var f = u ? 10 : 17;
+                h = Math.abs(h);
+                h = Math.round_precision(h, 1);
+                if (h < f) h = f;
+            }
+            
+            // Вычисляем разницу между старой и новой длиной
+            var b = Math.round(1e3 * hi.segment_length) - Math.round(1e3 * h);
+            b = parseNumericValue((b / 1e3).toFixed(yi.length.prec));
+            
+            // Применяем изменения к полилинии в зависимости от режима
+            if (-1 !== $.inArray(ei.type, ["sznde"])) {
+                var v = !!(hi.nearest_point_num_in_pline > hi.farthest_point_num_in_pline);
+                adjustElementAngle(hi.parent[0].id(), hi.segment_num, h, v);
+                refreshCurrentLayer();
+                updatePolylineSegmentLengths(hi.parent[0].id(), {
+                    mode: "length_one",
+                    num: hi.segment_num,
+                    val: h
+                });
+                processPolylineParameters(hi.parent[0]);
+                adjustPolylineBreaks(hi.parent[0]);
+                updateElementParametersDisplay(hi.parent[0]);
+                refreshCurrentLayer();
+            } else {
+                Zr(hi.parent[0], hi.nearest_point_num_in_pline, hi.farthest_point_num_in_pline, b);
+                refreshCurrentLayer();
+            }
+            
+            // Обновляем текст с новой длиной на актуальное значение после всех корректировок
+            textObj.text(h.toFixed(yi.length.prec));
+            
+            // Делаем текст снова видимым
+            textObj.visible(true);
+            to[vo].draw();
+            
+            // Удаляем поле ввода
+            document.body.removeChild(input);
+            
+            no[vo].hide();
+            so[vo].hide();
+            to[vo].draw();
+            mi = false;
+
+            // Закрываем модальное окно, если оно было открыто
+            $("#modal_html").modal("hide");
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+        
+        // Обрабатываем события клавиатуры
+        input.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                updateSegmentLength();
+            } else if (event.key === 'Escape') {                
+                updateSegmentLength();
+            }
+        });
+        
+        // Close editor when clicking outside the input
+        const handleOutsideClick = function(e) {
+            // Check if the click is outside the input element
+            if (e.target !== input) {
+                updateSegmentLength();
+            }
+        };
+        
+        // Add the click event listener to the document
+        document.addEventListener('mousedown', handleOutsideClick);
     }
 
     function Zr(e, t, _, a) {
@@ -16153,6 +16279,7 @@ function SimpleCad() {
 
         // Группируем шаблоны по характеристикам        
         if (Object.keys(templateStorage).length > 0) {
+            removeStartAndEndIndicators()
             // Сохраняем текущее состояние шаблона
             saveTemplateState(currentTemplateId);
             const groupedTemplates = groupTemplatesByCharacteristics();
@@ -16363,6 +16490,7 @@ function SimpleCad() {
                     for (let i = 0; i < texts.length; i++) {
                         texts[i].remove()
                     }
+                    to[vo].draw();
                     processTemplateGroups(groups, index + 1);
                 };
             }
@@ -16763,7 +16891,7 @@ function SimpleCad() {
      * @param {string} templateName - Название шаблона
      * @returns {Object} - Сохраненный шаблон
      */
-    function saveTemplateState(templateId, templateName) {
+    function saveTemplateState(templateId, templateName) {        
         var templateData = extractFigureDataFromCurrentLayer();
 
         // Если нет данных, создаем пустой шаблон
@@ -16804,8 +16932,7 @@ function SimpleCad() {
         //     //     type: "error"
         //     // });
         //     return false;
-        // }
-        
+        // }                
         // Очищаем текущий холст
         handleElementDeletion({'type':'trash','trash_subtype':'top_right'})
         
@@ -16832,10 +16959,11 @@ function SimpleCad() {
      */
     function addNewTemplate() {
         // Сохраняем текущий шаблон, если он существует
+        var is_indicators = removeStartAndEndIndicators()
+
         if (currentTemplateId) {
             saveTemplateState(currentTemplateId);
         }
-        
         // Генерируем новый ID для шаблона
         templateIdCounter++;
         var newTemplateId = templateIdCounter;
@@ -16871,11 +16999,15 @@ function SimpleCad() {
             };
             
             // Очищаем холст для нового шаблона
-            handleElementDeletion({'type':'trash','trash_subtype':'top_right'})            
+            handleElementDeletion({'type':'trash','trash_subtype':'top_right'})         
         }
         
         // Добавляем вкладку в интерфейс
         addTemplateTab(newTemplateId, newTemplateName);
+
+        if (is_indicators) {
+            $('[data-element="pline"]').trigger("click");
+        }
         
         // Устанавливаем новый шаблон как текущий
         currentTemplateId = newTemplateId;
@@ -16959,7 +17091,9 @@ function SimpleCad() {
             if (currentTemplateId) {
                 saveTemplateState(currentTemplateId);
             }
-            
+            updateUI()
+            resetCADState()
+            setDefaultMode()
             // Загружаем выбранный шаблон
             loadTemplateState(templateId);
         });
@@ -17298,7 +17432,7 @@ function SimpleCad() {
             draggable_konva_text_angle: {
                 default: !1,
                 glzabor: !1,
-                sznde: !0,
+                sznde: !1,
                 roof: !1
             },
             listening_konva_text_angle: {
@@ -17310,7 +17444,7 @@ function SimpleCad() {
             draggable_konva_text_line_length: {
                 default: !1,
                 glzabor: !1,
-                sznde: !0,
+                sznde: !1,
                 roof: !1
             },
             listening_konva_text_line_length: {
