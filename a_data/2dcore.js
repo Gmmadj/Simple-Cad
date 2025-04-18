@@ -5299,8 +5299,8 @@ function SimpleCad() {
                     } else {
                         // Apply additional validation logic
                         newAngle = Math.round_precision_nearest ? 
-                            Math.round_precision_nearest(newAngle, 5) : 
-                            parseFloat(newAngle.toFixed(5));
+                            Math.round_precision_nearest(newAngle, 1) : 
+                            newAngle.toFixed(0);
                         
                         // Fix negative zero
                         if (newAngle == -0) {
